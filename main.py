@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 
 app = FastAPI()
-
-
 @app.get("/backups")
 async def list_backups():
     return {"message": "backups"}

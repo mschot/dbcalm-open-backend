@@ -1,13 +1,18 @@
+#load environment variables from .env file
 ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
 
-ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+DEV_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
+requirements:
+	source $(DEV_DIR)/../.venv/bin/activate && \
+	pip install -r requirements.txt
 
 #REQUIRES sudo, to add cron e.g. sudo make addcron
 addcron:
-	echo  "* * * * *    root    $(ROOT_DIR)/cron/dbtestscript.sh" > /etc/cron.d/backrest-dbtest
+	echo  "* * * * *    root    $(DEV_DIR)/cron/dbtestscript.sh" > /etc/cron.d/backrest-dbtest
 
 #REQUIRES sudo to remove cron, e.g. sudo make removecron
 removecron:

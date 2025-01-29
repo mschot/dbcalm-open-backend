@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
-install_requires:
+.PHONY: setup
+setup:
 	source .venv/bin/activate && \
-	pip install -r requirements.txt
-
+	python3 create_config_file.py
 
