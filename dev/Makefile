@@ -6,9 +6,15 @@ endif
 
 DEV_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
+SHELL := /bin/bash
+
+.PHONY: dev
+dev:
+	cd .. && fastapi dev main.py
+	
 requirements:
 	source $(DEV_DIR)/../.venv/bin/activate && \
-	pip install -r requirements.txt
+	pip install -r ../requirements.txt
 
 #REQUIRES sudo, to add cron e.g. sudo make addcron
 addcron:

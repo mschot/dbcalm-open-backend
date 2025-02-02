@@ -1,17 +1,18 @@
+from backrest.config.config import Config
 import os
 import yaml
 
 
-class Config:
-    project_name = 'backrest'
-    
-    def __init__(self):
-        self.config_path = '/etc/'+ self.project_name + '/config.yml'   
-
+class YamlConfig(Config):
     def value(self, key):        
         with open(self.config_path, 'r') as file:
             config = yaml.safe_load(file)
-        return config[key]
+            value = config.get(key)
+            if value is None:
+                return None
+            if value.lower() == 'true' or value == '1' or value == True:
+                return '1'                        
+        return value
 
     def validate_config_file(self):        
         if not os.path.exists(self.config_path):
