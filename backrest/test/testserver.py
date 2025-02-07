@@ -1,6 +1,5 @@
-import client, server
+import server
 from os import path
-from time import sleep
 
 server_host = "127.0.0.1"
 server_port = 35689

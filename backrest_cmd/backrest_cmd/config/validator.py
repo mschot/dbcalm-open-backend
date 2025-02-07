@@ -23,7 +23,7 @@ class Validator():
 
     def validate(self) -> None:
         for key in self.should_exist:
-            if self.config.value(key) == '' or self.config.value(key) == None:
+            if self.config.value(key) == '' or self.config.value(key) is None:
                raise Exception(f"Missing required config parameter: {key} in {self.config.config_path}")
                         
         # Check if backup path exists

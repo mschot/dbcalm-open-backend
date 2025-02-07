@@ -17,24 +17,24 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         ]         
 
         ## Add host to the command
-        if self.config.value('db_host') == None:
+        if self.config.value('db_host') is None:
             host = 'localhost'
         else:
             host = self.config.value('db_host')
         command.append('--host=' + host)
 
         ## Add option for incremental backups
-        if incremental_base_dir != None:
+        if incremental_base_dir is not None:
             command.append('--incremental-basedir=' + incremental_base_dir)           
         
         ## Add option for stream backups
         stream = self.config.value('stream')
-        if stream == True:
+        if stream:
             command.append('--stream=xbstream')            
 
         ## Add option for compression
         compression = self.config.value('compression')
-        if compression == None and stream == True:
+        if compression is None and stream:
                 compression = self.default_stream_compression
 
         match compression:
@@ -49,11 +49,11 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             
         ## Add option to forward to another command (or write to file)
         forward = self.config.value('forward')
-        if stream == True and forward == None:
+        if stream and forward is None:
             timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
             command.append('> ' + self.config.value('backup_path') + '/backup-'+ timestamp +'.xbstream')
 
-        if forward != None:
+        if forward is not None:
             command.append('| ' + forward)
 
         return command

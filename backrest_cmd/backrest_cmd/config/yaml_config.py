@@ -10,7 +10,7 @@ class YamlConfig(Config):
             value = config.get(key)
             if value is None:
                 return None
-            if value.lower() == 'true' or value == '1' or value == True:
+            if value.lower() == 'true' or value == '1' or value is True:
                 return '1'                        
         return value
 
@@ -18,7 +18,7 @@ class YamlConfig(Config):
         if not os.path.exists(self.config_path):
             try:
                 self.create_config_file()
-            except Exception as e:
+            except Exception:
                 raise Exception(f"Configuration file could not be created: {self.config_path} run the command with sudo")
         
         with open(self.config_path, 'r') as file:

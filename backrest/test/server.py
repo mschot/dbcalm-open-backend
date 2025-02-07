@@ -29,7 +29,7 @@ class SSLServer:
             total_data = 0
             data = sock.recv(self.chunk_size)                      
             print(data)
-            if data != None:
+            if data is not None:
                 total_data += len(data)
                 print(data.decode())                
 
