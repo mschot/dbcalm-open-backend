@@ -17,8 +17,9 @@ class Validator():
         
     ]
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, command_runner = False) -> None:
         self.config = config
+        self.command_runner = command_runner
         pass
 
     def validate(self) -> None:
@@ -27,11 +28,11 @@ class Validator():
                raise Exception(f"Missing required config parameter: {key} in {self.config.config_path}")
                         
         # Check if backup path exists
-        if not os.path.exists(self.config.value('backup_path')):
+        if self.command_runner and not os.path.exists(self.config.value('backup_path')):
             raise Exception(f"Backup path does not exist: {self.config.value('backup_path')}")
 
         # Check if backup path is writable by the current user
-        if not os.access(self.config.value('backup_path'), os.W_OK):
+        if self.command_runner and not os.access(self.config.value('backup_path'), os.W_OK):
             raise Exception(f"Backup path is not writable by current user: {self.config.value('backup_path')}")
 
         # Check if db_host is reachable

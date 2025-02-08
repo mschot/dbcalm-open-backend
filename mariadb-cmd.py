@@ -1,4 +1,4 @@
-from backrest.config import config_factory
+from backrest.config.config_factory import config_factory
 from backrest.config.validator import Validator
 from backrest_cmd.adapter.adapter_factory import adapter_factory
 from backrest.config.config import Config
@@ -10,7 +10,8 @@ from select import select
 import json
 
 config = config_factory('yaml')
-Validator(config).validate()
+command_runner = True
+Validator(config, command_runner).validate()
 
 if config.value('db_type') != 'mariadb':
     raise Exception('MariaDB is not set as db_type in ' + Config.config_path +' , exiting!!')

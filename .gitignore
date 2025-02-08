@@ -1,1 +1,8 @@
 __pycache__
+dist/*
+build/*
+*.egg-info
+*.pyc
+.venv/*
+.ruff_cache/*
+*.spec
