@@ -10,7 +10,7 @@ ExecStart=/usr/bin/mariadb-cmd
 Restart=always
 Environment="PATH=/usr/bin:/bin"
 RuntimeDirectory=backrest
-RunTimeMode=0770
+RuntimeDirectoryMode=2774
 
 [Install]
 WantedBy=multi-user.target

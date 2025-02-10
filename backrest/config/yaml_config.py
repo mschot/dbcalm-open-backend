@@ -5,7 +5,7 @@ import yaml
 
 class YamlConfig(Config):
     def value(self, key):        
-        with open(self.config_path, 'r') as file:
+        with open(self.CONFIG_PATH, 'r') as file:
             config = yaml.safe_load(file)
             value = config.get(key)
             if value is None:
@@ -15,13 +15,13 @@ class YamlConfig(Config):
         return value
 
     def validate_config_file(self):        
-        if not os.path.exists(self.config_path):
+        if not os.path.exists(self.CONFIG_PATH):
             try:
                 self.create_config_file()
             except Exception:
-                raise Exception(f"Configuration file could not be created: {self.config_path} run the command with sudo")
+                raise Exception(f"Configuration file could not be created: {self.CONFIG_PATH} run the command with sudo")
         
-        with open(self.config_path, 'r') as file:
+        with open(self.CONFIG_PATH, 'r') as file:
             config = yaml.safe_load(file)
         
         required_params = ['dbtype', 'username', 'password', 'host']
@@ -32,13 +32,13 @@ class YamlConfig(Config):
         return config
     
     def create_config_file(self):
-        if os.path.exists(self.config_path):
-            return print(f"Configuration file already exists: {self.config_path}")
+        if os.path.exists(self.CONFIG_PATH):
+            return print(f"Configuration file already exists: {self.CONFIG_PATH}")
 
-        os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+        os.makedirs(os.path.dirname(self.CONFIG_PATH), exist_ok=True)
         
         config = self.config_template()
-        with open(self.config_path, 'w') as file:
+        with open(self.CONFIG_PATH, 'w') as file:
             yaml.dump(config, file)
         
         return config

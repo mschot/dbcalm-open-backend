@@ -8,13 +8,16 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         self.config = config    
     
     def build(self, identifier: str, incremental_base_dir: str = None) -> list:                
-        command = [
-            'mariabackup', 
-            '--backup', 
-            '--target-dir=' + self.config.value('backup_path').rstrip('/') + '/' + identifier,
-            '--user=' + self.config.value('db_user'),
-            '--password=' + self.config.value('db_password'),
-        ]         
+        command = ['mariabackup']         
+
+        if self.config.value('backup_credentials_file') is not None:
+            command.append('--defaults-file=' + self.config.value('backup_credentials_file'))
+        else:
+            command.append('--defaults-file=' + '/etc/' + self.config.PROJECT_NAME + '/backup_credentials.cnf')                                            
+
+       ## Add options for backup
+        command.append('--backup')
+        command.append('--target-dir=' + self.config.value('backup_dir') + '/' + identifier)        
 
         ## Add host to the command
         if self.config.value('db_host') is None:

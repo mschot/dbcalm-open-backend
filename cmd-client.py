@@ -2,7 +2,9 @@ import socket
 import sys
 import json
 from select import select
+from backrest.config.config_factory import config_factory
 
+config = config_factory()
 QUEUED_CODE = 202
 def process_data(data):
     response = json.loads(data.decode())
@@ -14,7 +16,7 @@ def send_command():
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
     # Connect the socket to the port where the server is listening
-    server_address = '/var/run/backrest/mariadb_socket'
+    server_address = config.CMD_SOCKET_PATH
     print(sys.stderr, 'connecting to %s' % server_address)
     try:
         sock.connect(server_address)

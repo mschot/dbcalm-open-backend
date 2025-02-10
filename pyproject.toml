@@ -7,7 +7,8 @@ name="backrest"
 version="0.0.1"
 requires-python = ">= 3.0"
 dependencies = [
-    "fastapi[standard]"    
+    "fastapi[standard]",
+    "sqlmodel"
 ]
 
 [tool.setuptools.packages.find]

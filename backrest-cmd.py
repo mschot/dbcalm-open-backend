@@ -2,19 +2,21 @@ from backrest.config.config_factory import config_factory
 from backrest.config.validator import Validator
 from backrest_cmd.adapter.adapter_factory import adapter_factory
 from backrest.config.config import Config
+from backrest.data.adapter.adapter_factory import adapter_factory as data_adapter_factory
 import socket
 import os
+import stat
 import threading
 from queue import Queue
 from select import select
 import json
 
-config = config_factory('yaml')
+config = config_factory()
 command_runner = True
 Validator(config, command_runner).validate()
 
 if config.value('db_type') != 'mariadb':
-    raise Exception('MariaDB is not set as db_type in ' + Config.config_path +' , exiting!!')
+    raise Exception('MariaDB is not set as db_type in ' + Config.CONFIG_PATH +' , exiting!!')
 
 commands = {
     'full_backup': [
@@ -26,17 +28,11 @@ commands = {
     ]
 }
 
-def process_queue(queue: Queue):    
-    #@TODO save pid info in writer (db/api)
-    #cd @TODO save output in writer (db/api)
-    #@TODO write error to writer (db/api) 
+def process_queue(queue: Queue):        
     while True:
         try:
-            output = queue.get(block=True)  # Waits for an item
-            pid = output["pid"]
-            print(f"PID {pid} Finished: Return Code: {output['returncode']}")
-            print(f"STDOUT:\n{output['stdout']}")
-            print(f"STDERR:\n{output['stderr']}")   
+            _process = queue.get(block=True)  
+            # we can do something here with the process if needed            
             queue.task_done()         
         except Exception as e:
             print("Error processing queue:", e)
@@ -57,7 +53,7 @@ def process_data(data: bytes):
     
     print('going to process:' + data.decode())
 
-    adapter = adapter_factory(config)
+    adapter = adapter_factory()
     # get the method from the adapter based on command called
     method = getattr(adapter, command_data['cmd'])        
     # unpack arguments and call commands
@@ -69,9 +65,21 @@ def process_data(data: bytes):
 
     return {'code': 202, 'status': 'Accepted' }
 
-def start_server():
-    #todo create folder on startup and set permissions to mysql:backrest
-    server_address = '/var/run/backrest/mariadb_socket'
+def apply_parent_permissions(file_path):    
+    parent_dir = os.path.dirname(file_path)  # Get parent directory
+
+    # Get the parent directory's mode (permissions)
+    parent_stat = os.stat(parent_dir)
+    parent_mode = stat.S_IMODE(parent_stat.st_mode)  # Extract permission bits
+
+    print(f"Parent directory permissions: {oct(parent_mode)}")
+    # Set the file to have the same permissions as the parent directory
+    os.chmod(file_path, parent_mode)
+
+    print(f"Applied permissions {oct(parent_mode)} to {file_path}")
+
+def start_server():       
+    server_address = Config.CMD_SOCKET_PATH
 
     try:
         os.unlink(server_address)
@@ -81,9 +89,12 @@ def start_server():
 
     # Create a UDS socket
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
+    
     print('starting up on %s' % server_address)
     sock.bind(server_address)
+    # apply parent folder permission (set in systemd unit file)
+    # to socket so client can write to it
+    apply_parent_permissions(server_address)
 
     # Listen for incoming connections
     sock.listen(1)
@@ -109,8 +120,10 @@ def start_server():
                         connection.sendall(json.dumps(response).encode('utf-8'))
                         break                    
                         
-        except Exception:
-            print("Exception")
+        except Exception as e:
+            response = {'code': 500, 'status': 'error'}
+            connection.sendall(json.dumps(response).encode('utf-8'))
+            print("Exception" + str(e))
             # @TODO log exception  and let it continue finally will close connextion and restart server.
             pass            
                     
