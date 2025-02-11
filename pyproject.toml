@@ -8,7 +8,9 @@ version="0.0.1"
 requires-python = ">= 3.0"
 dependencies = [
     "fastapi[standard]",
-    "sqlmodel"
+    "sqlmodel",
+    "pyinstaller",
+    "uvicorn"
 ]
 
 [tool.setuptools.packages.find]

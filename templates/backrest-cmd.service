@@ -6,7 +6,7 @@ After=network.target
 User=mysql
 Group=backrest
 WorkingDirectory=/usr/bin/
-ExecStart=/usr/bin/mariadb-cmd
+ExecStart=/usr/bin/backrest-cmd
 Restart=always
 Environment="PATH=/usr/bin:/bin"
 RuntimeDirectory=backrest

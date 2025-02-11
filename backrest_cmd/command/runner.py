@@ -41,19 +41,17 @@ class Runner():
             end_time = datetime.now()            
             stdout, stderr = process.communicate()
             #save changes to db
-            process_rep = self.update_process(
+            self.update_process(
                 processModel, 
                 end_time, 
                 stdout, 
                 stderr, 
                 process.returncode
-            )
-            # Put the process representation in the output queue
-            self.output_queue.put(process_rep)
+            )            
 
         # Run the output capture in a separate thread
         threading.Thread(target=capture_output, daemon=True).start()
-        return self.output_queue
+        return processModel
        
     def log(self, content: str) -> None:
         #TODO add some sort of logging functionality
