@@ -1,5 +1,5 @@
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field,  Column, JSON
 from typing import Optional
 from datetime import datetime
 
@@ -13,3 +13,5 @@ class Process(SQLModel, table=True):
     return_code: Optional[int] = None
     start_time: datetime
     end_time: Optional[datetime] = None
+    type: str
+    args: dict = Field(default_factory=dict, sa_column=Column(JSON))

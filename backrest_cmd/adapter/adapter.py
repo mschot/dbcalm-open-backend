@@ -13,7 +13,7 @@ class Adapter(ABC):
         pass
 
     @abstractmethod
-    def incremental_backup(self, identifier: str, build_from_identifier: str) -> Queue:
+    def incremental_backup(self, identifier: str, from_identifier: str) -> Queue:
         pass
 
     @abstractmethod

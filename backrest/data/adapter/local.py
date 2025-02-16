@@ -7,15 +7,17 @@ from backrest.config.config import Config
 
 class Local(Adapter):
     def __init__(self):
-        self.session  = self.session()
+        self.session  = self.session()            
         super().__init__()
 
     def session(self) -> Session:        
         engine = create_engine('sqlite:///' + Config.DB_PATH)
         SQLModel.metadata.create_all(engine)
         return Session(engine)
-    
-    def get(self, model: SQLModel, query: Query) -> SQLModel:
+        
+    def get(self, model: SQLModel, query: dict) -> SQLModel|None:            
+        if len(self.list(model, query)) == 0:
+            return None
         return self.list(model, query)[0]
     
     def create(self, model: SQLModel) -> SQLModel:
@@ -34,10 +36,10 @@ class Local(Adapter):
         self.session.refresh(model)         
         return model
 
-    def list(self, model: SQLModel, query: Query) -> list[SQLModel]:        
-        return self.session.query(model).filter(query).all()
+    def list(self, model: SQLModel, query: dict) -> list[SQLModel]:           
+        return self.session.query(model).filter_by(**query).all()
     
-    def delete(self, model: SQLModel) -> None:
+    def delete(self, model: SQLModel, _: dict) -> None:
         self.session.delete(model)
         self.session.commit()
-        return
+        return                

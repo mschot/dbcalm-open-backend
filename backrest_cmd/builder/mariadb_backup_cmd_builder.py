@@ -54,7 +54,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         forward = self.config.value('forward')
         if stream and forward is None:
             timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-            command.append('> ' + self.config.value('backup_path') + '/backup-'+ timestamp +'.xbstream')
+            command.append('> ' + self.config.value('backup_dir') + '/backup-'+ timestamp +'.xbstream')
 
         if forward is not None:
             command.append('| ' + forward)
@@ -64,7 +64,8 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
     def build_full_backup_cmd(self, identifier: str) -> list:
         return self.build(identifier)
     
-    def build_incremental_backup_cmd(self, identifier: str, build_from_identifier: str) -> list:
-        return self.build_incremental_backup_cmd(identifier, build_from_identifier)
+    def build_incremental_backup_cmd(self, identifier: str, from_identifier: str) -> list:
+        incremental_base_dir = self.config.value('backup_dir') + '/' + from_identifier
+        return self.build(identifier, incremental_base_dir)
     
     

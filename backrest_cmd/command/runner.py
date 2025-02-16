@@ -6,14 +6,21 @@ from backrest.data.model.process import Process
 from backrest.data.adapter.adapter_factory import adapter_factory as data_adapter_factory
 
 class Runner():
-    def __init__(self):
-        
-        self.output_queue = Queue()
+    def __init__(self):        
         self.data_adapter = data_adapter_factory()
         pass    
 
-    def create_process(self, pid, command, start_time) -> Process:        
-        process = self.data_adapter.create(Process(pid=pid, command=command, start_time=start_time, status='running'))    
+    def create_process(self, pid, command, start_time, command_type, args) -> Process:        
+        process = self.data_adapter.create(
+            Process(
+                pid=pid, 
+                command=command, 
+                start_time=start_time, 
+                type=command_type, 
+                args=args, 
+                status='running'
+            )
+        )    
         return process
     
     def update_process(self, process: Process, end_time, stdout, stderr, returncode) -> Process:
@@ -26,17 +33,17 @@ class Runner():
         self.data_adapter.update(process)
         return Process
 
-    def execute(self, command: list) -> Queue:
+    def execute(self, command: list, command_type: str, args: dict={}) -> Process:
         start_time = datetime.now()        
         process = subprocess.Popen(
             command, 
             stdout=subprocess.PIPE, 
             stderr=subprocess.PIPE,
-            text=True
+            text=True         
         )
 
-        processModel = self.create_process(process.pid, ' '.join(command), start_time)        
-                        
+        processModel = self.create_process(process.pid, ' '.join(command), start_time, command_type, args)        
+        queue = Queue()                
         def capture_output():        
             end_time = datetime.now()            
             stdout, stderr = process.communicate()
@@ -47,11 +54,14 @@ class Runner():
                 stdout, 
                 stderr, 
                 process.returncode
-            )            
+            )
+            #put process in queue to be picked up when done
+            queue.put(processModel)
+            
 
         # Run the output capture in a separate thread
         threading.Thread(target=capture_output, daemon=True).start()
-        return processModel
+        return processModel, queue
        
     def log(self, content: str) -> None:
         #TODO add some sort of logging functionality

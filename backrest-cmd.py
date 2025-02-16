@@ -2,12 +2,16 @@ from backrest.config.config_factory import config_factory
 from backrest.config.validator import Validator
 from backrest_cmd.adapter.adapter_factory import adapter_factory
 from backrest.config.config import Config
+from backrest.data.adapter.adapter_factory import adapter_factory as data_adapter_factory
+from backrest.data.transformer.process_to_backup import process_to_backup
+from queue import Queue
 import socket
 import os
 import stat
 from select import select
 import json
 import time
+import threading
 
 config = config_factory()
 command_runner = True
@@ -17,14 +21,51 @@ if config.value('db_type') != 'mariadb':
     raise Exception('MariaDB is not set as db_type in ' + Config.CONFIG_PATH +' , exiting!!')
 
 commands = {
-    'full_backup': [
-        'identifier'
-    ],
-    'incremental_backup': [
-        'identifier',
-        'from_identifier'
-    ]
+    'full_backup': {
+        'identifier': 'unique|required',
+    },
+    
+    'incremental_backup': {
+        'identifier': 'unique|required',
+        'from_identifier': 'required'
+    }
 }
+
+def process_queue(queue: Queue):        
+    while True:
+        try:            
+            process = queue.get(block=True)  
+            if process.return_code == 0:
+                queue.task_done()         
+                
+            data_adapter = data_adapter_factory()
+            if process.type == 'backup':
+                backup = process_to_backup(process)
+                data_adapter.create(backup)                
+            elif process.type == 'restore':
+                print("Restore completed successfully")                                      
+            
+        except Exception as e:
+            print("Error processing queue:", e)  
+
+
+def validate_command(command_data: dict):
+    if(command_data['cmd'] not in commands.keys()):
+        return {'code': 403, 'status': 'Invalid command' }
+
+    ### NEED TO START HERE NEXT                
+    expected_args_len = len(commands[command_data['cmd']])
+    args_len = len(command_data['args'])
+    if(expected_args_len != args_len):
+        return {'code': 403, 'status': 'command %s expected %d arguments but received %d ' % 
+            (command_data['cmd'], expected_args_len, args_len) }
+    
+
+    
+
+    
+    
+
 
 def process_data(data: bytes):
     command_data = json.loads(data.decode())
@@ -41,7 +82,10 @@ def process_data(data: bytes):
     # get the method from the adapter based on command called
     method = getattr(adapter, command_data['cmd'])        
     # unpack arguments and call commands
-    process = method(*command_data['args'].values())
+    process, queue = method(*command_data['args'].values())    
+
+    # Start a thread to process the queue
+    threading.Thread(target=process_queue, args=(queue,)).start()
     
     return {'code': 202, 'status': 'Accepted', 'pid': process.pid, 'created_at': process.start_time.strftime("%Y%m%d%H%M%S") }
 
@@ -81,7 +125,7 @@ def start_server():
     
     sock.bind(Config.CMD_SOCKET_PATH)
     # apply parent folder permission (set in systemd unit file)
-    # to socket so client can write to it
+    # to socket so client can write to it as user will be different
     apply_parent_permissions(Config.CMD_SOCKET_PATH)
 
     # Listen for incoming connections
