@@ -1,53 +1,17 @@
-from backrest.config.config import Config
-import os
+from pathlib import Path
+
 import yaml
+
+from backrest.config.config import Config
 
 
 class YamlConfig(Config):
-    def value(self, key):        
-        with open(self.CONFIG_PATH, 'r') as file:
+    def value(self, key: str) -> str:
+        with Path.open(self.CONFIG_PATH) as file:
             config = yaml.safe_load(file)
             value = config.get(key)
             if value is None:
                 return None
-            if value.lower() == 'true' or value == '1' or value is True:
-                return '1'                        
-        return value
-
-    def validate_config_file(self):        
-        if not os.path.exists(self.CONFIG_PATH):
-            try:
-                self.create_config_file()
-            except Exception:
-                raise Exception(f"Configuration file could not be created: {self.CONFIG_PATH} run the command with sudo")
-        
-        with open(self.CONFIG_PATH, 'r') as file:
-            config = yaml.safe_load(file)
-        
-        required_params = ['dbtype', 'username', 'password', 'host']
-        for param in required_params:
-            if param not in config:
-                raise ValueError(f"Missing required parameter: {param}")
-        
-        return config
-    
-    def create_config_file(self):
-        if os.path.exists(self.CONFIG_PATH):
-            return print(f"Configuration file already exists: {self.CONFIG_PATH}")
-
-        os.makedirs(os.path.dirname(self.CONFIG_PATH), exist_ok=True)
-        
-        config = self.config_template()
-        with open(self.CONFIG_PATH, 'w') as file:
-            yaml.dump(config, file)
-        
-        return config
-    
-    def config_template(self):
-        return {
-            'dbtype': 'mariadb',
-            'username': 'admin',
-            'password': 'admin',
-            'host': 'localhost',
-            'backup_path': '/var/lib/backrest/backups',
-        }
+            if value.lower() == "true" or value == "1" or value is True:
+                return "1"
+        return str(value)

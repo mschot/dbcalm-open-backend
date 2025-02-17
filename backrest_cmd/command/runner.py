@@ -1,30 +1,46 @@
 import subprocess
 import threading
+from datetime import datetime, timezone
 from queue import Queue
-from datetime import datetime
+from typing import Optional
+
+from backrest.data.adapter.adapter_factory import (
+    adapter_factory as data_adapter_factory,
+)
 from backrest.data.model.process import Process
-from backrest.data.adapter.adapter_factory import adapter_factory as data_adapter_factory
 
-class Runner():
-    def __init__(self):        
+
+class Runner:
+    def __init__(self) -> None:
         self.data_adapter = data_adapter_factory()
-        pass    
 
-    def create_process(self, pid, command, start_time, command_type, args) -> Process:        
-        process = self.data_adapter.create(
+    def create_process(
+            self, pid: int,
+            command: str,
+            start_time: datetime,
+            command_type: str,
+            args: Optional[dict]=None,
+        ) -> Process:
+        return self.data_adapter.create(
             Process(
-                pid=pid, 
-                command=command, 
-                start_time=start_time, 
-                type=command_type, 
-                args=args, 
-                status='running'
-            )
-        )    
-        return process
-    
-    def update_process(self, process: Process, end_time, stdout, stderr, returncode) -> Process:
-        status = 'success' if returncode == 0 else 'failed'        
+                pid=pid,
+                command=command,
+                start_time=start_time,
+                type=command_type,
+                args=args,
+                status="running",
+            ),
+        )
+
+    def update_process(
+            self,
+            process: Process,
+            end_time: datetime,
+            stdout: str,
+            stderr: str,
+            returncode: int,
+        ) -> Process:
+        status = "success" if returncode == 0 else "failed"
         process.output = stdout
         process.error = stderr
         process.return_code = returncode
@@ -33,39 +49,45 @@ class Runner():
         self.data_adapter.update(process)
         return Process
 
-    def execute(self, command: list, command_type: str, args: dict={}) -> Process:
-        start_time = datetime.now()        
-        process = subprocess.Popen(
-            command, 
-            stdout=subprocess.PIPE, 
+    def execute(
+            self,
+            command: list,
+            command_type: str,
+            args: Optional[dict]=None,
+        ) -> Process:
+        if args is None:
+            args = {}
+        start_time = datetime.now(tz=timezone.utc)
+        process = subprocess.Popen(  # noqa: S603
+            command,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True         
+            text=True,
         )
 
-        processModel = self.create_process(process.pid, ' '.join(command), start_time, command_type, args)        
-        queue = Queue()                
-        def capture_output():        
-            end_time = datetime.now()            
+        process_model = self.create_process(
+            process.pid,
+            " ".join(command),
+            start_time,
+            command_type,
+            args,
+        )
+        queue = Queue()
+        def capture_output() -> None:
+            end_time = datetime.now(tz=timezone.utc)
             stdout, stderr = process.communicate()
             #save changes to db
             self.update_process(
-                processModel, 
-                end_time, 
-                stdout, 
-                stderr, 
-                process.returncode
+                process_model,
+                end_time,
+                stdout,
+                stderr,
+                process.returncode,
             )
             #put process in queue to be picked up when done
-            queue.put(processModel)
-            
+            queue.put(process_model)
+
 
         # Run the output capture in a separate thread
         threading.Thread(target=capture_output, daemon=True).start()
-        return processModel, queue
-       
-    def log(self, content: str) -> None:
-        #TODO add some sort of logging functionality
-        # and remove any password fields
-        
-        print(content)
-        pass
+        return process_model, queue

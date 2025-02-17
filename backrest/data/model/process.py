@@ -1,7 +1,9 @@
 
-from sqlmodel import SQLModel, Field,  Column, JSON
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from sqlmodel import JSON, Column, Field, SQLModel
+
 
 class Process(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

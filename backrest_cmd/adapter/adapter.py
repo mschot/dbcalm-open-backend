@@ -2,11 +2,11 @@
 from abc import ABC, abstractmethod
 from queue import Queue
 
+
 class Adapter(ABC):
 
-    def __init__(self):
-        self.default_stream_compression = 'gzip'
-        pass
+    def __init__(self) -> None:
+        self.default_stream_compression = "gzip"
 
     @abstractmethod
     def full_backup(self, identifier: str) -> Queue:
@@ -20,4 +20,3 @@ class Adapter(ABC):
     def restore(self) -> Queue:
         pass
 
-    

@@ -15,3 +15,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = ["backrest_cmd*", "backrest*"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D",  "TD", "BLE", "T201", "FA100"]
