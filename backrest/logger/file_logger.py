@@ -9,6 +9,7 @@ class FileLogger:
     def __init__(self) -> None:
         self.config = config_factory()
         self.logger = logging.getLogger(self.config.PROJECT_NAME)
+        self.logger.setLevel(logging.DEBUG)
 
         # Determine log file location
         log_file = f"/var/log/{self.config.PROJECT_NAME}/{self.config.PROJECT_NAME}.log"

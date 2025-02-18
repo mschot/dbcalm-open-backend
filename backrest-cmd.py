@@ -26,8 +26,13 @@ logger = logger_factory()
 def process_data(data: bytes) -> dict:
     command_data = json.loads(data.decode())
 
-    valid, message = CommandValidator.validate(command_data)
+    validator = CommandValidator()
+    valid, message = validator.validate(command_data)
     if(not valid):
+        logger.error(
+            "%s, command: %s ,arguments: %s",
+            message, command_data["cmd"], command_data["args"])
+
         return {"code": 403, "status": message }
 
     adapter = adapter_factory()

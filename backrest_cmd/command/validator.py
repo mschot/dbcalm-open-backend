@@ -7,16 +7,16 @@ from backrest.data.model.backup import Backup
 
 class Validator:
     def __init__(self) -> None:
-            self.commands = {
-        "full_backup": {
-            "identifier": "unique|required",
-        },
+        self.commands = {
+            "full_backup": {
+                "identifier": "unique|required",
+            },
 
-        "incremental_backup": {
-            "identifier": "unique|required",
-            "from_identifier": "required",
-        },
-    }
+            "incremental_backup": {
+                "identifier": "unique|required",
+                "from_identifier": "required",
+            },
+        }
 
     def required_args(self, command: str) -> list:
         return [
@@ -31,7 +31,7 @@ class Validator:
             ]
 
     def validate(self, command_data: dict) -> tuple[bool, str]:
-        if(command_data["cmd"] not in self.commands):
+        if command_data["cmd"] not in self.commands:
             return False, "Invalid command"
 
         # check if all required arguments are present

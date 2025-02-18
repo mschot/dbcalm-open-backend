@@ -4,7 +4,7 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from backrest.config.config import Config
 from backrest.data.adapter.adapter import Adapter
-from backrest.logger import logger_factory
+from backrest.logger.logger_factory import logger_factory
 
 
 class Local(Adapter):

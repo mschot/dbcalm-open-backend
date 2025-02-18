@@ -35,3 +35,4 @@ class ProcessQueueHandler:
                 self.logger.debug("Backup %s created", backup.identifier)
             elif process.type == "restore":
                 self.logger.debug("Restore completed successfully")
+            break
