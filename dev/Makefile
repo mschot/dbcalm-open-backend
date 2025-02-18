@@ -11,10 +11,6 @@ SHELL := /bin/bash
 .PHONY: dev
 dev:
 	cd .. && fastapi dev main.py
-	
-requirements:
-	source $(DEV_DIR)/../.venv/bin/activate && \
-	pip install -r ../requirements.txt
 
 #REQUIRES sudo, to add cron e.g. sudo make addcron
 addcron:
@@ -27,5 +23,4 @@ removecron:
 .SILENT:
 checkdb:
 	mysql -u ${MYSQL_USER} -p${MYSQL_PWD} -e "SELECT * FROM test.test ORDER BY created_at DESC LIMIT 10";
-	
-	
+

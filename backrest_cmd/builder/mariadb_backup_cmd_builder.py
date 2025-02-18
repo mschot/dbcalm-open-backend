@@ -1,5 +1,4 @@
 
-from datetime import datetime, timezone
 from typing import Optional
 
 from backrest.config.yaml_config import Config
@@ -18,19 +17,21 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         command = ["mariabackup"]
 
         if self.config.value("backup_credentials_file") is not None:
-            command.append(f"""--defaults-file=
-                           { self.config.value("backup_credentials_file")}""")
+            command.append(
+                f"--defaults-file={ self.config.value("backup_credentials_file") }",
+            )
         else:
             command.append(
-                f"""--defaults-file=
-                /etc/{ self.config.PROJECT_NAME }/backup_credentials.cnf""",
+                (
+                    f"--defaults-file=/etc/{ self.config.PROJECT_NAME }/"
+                    "backup_credentials.cnf"
+                ),
             )
 
        ## Add options for backup
         command.append("--backup")
         command.append(
-            f"""--target-dir=
-                {self.config.value("backup_dir")}/{identifier}""",
+            f"""--target-dir={self.config.value("backup_dir")}/{identifier}""",
             )
 
         ## Add host to the command
@@ -42,7 +43,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
 
         ## Add option for incremental backups
         if incremental_base_dir is not None:
-            command.append("--incremental-basedir=" + incremental_base_dir)
+            command.append(f"--incremental-basedir={incremental_base_dir}")
 
         ## Add option for stream backups
         stream = self.config.value("stream")
@@ -54,22 +55,25 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         if compression is None and stream:
                 compression = self.default_stream_compression
 
+        extension = ""
         match compression:
             case "gzip":
                 command.append("| gzip")
+                extension = ".gz"
             case "zstd":
                 # explanation of the command:
                 # - = read from stdin
                 # -c = write to stdout
                 # -T0 = use all available threads
                 command.append("| zstd - -c -T0")
+                extension = ".zst"
 
         ## Add option to forward to another command (or write to file)
         forward = self.config.value("forward")
         if stream and forward is None:
-            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d%H%M%S")
             command.append(
-                f"> { self.config.value("backup_dir") }/backup-{ timestamp }.xbstream",
+                f"> { self.config.value("backup_dir") }/"
+                f"backup-{ identifier }.xbstream{extension}",
             )
 
         if forward is not None:
@@ -85,9 +89,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             identifier: str,
             from_identifier: str,
         ) -> list:
-        incremental_base_dir = f"""
-            { self.config.value("backup_dir") }/{ from_identifier }
-        """
+        incremental_base_dir = (
+            f"{ self.config.value("backup_dir") }/{ from_identifier }"
+        )
         return self.build(identifier, incremental_base_dir)
-
-

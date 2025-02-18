@@ -7,7 +7,7 @@ from backrest_cmd.adapter.mariadb import Mariadb
 from backrest_cmd.builder.mariadb_backup_cmd_builder_factory import (
     mariadb_backup_cmd_builder_factory,
 )
-from backrest_cmd.command.runner_factory import runner_factory
+from backrest_cmd.process.runner_factory import runner_factory
 
 
 def mariadb_factory(config: Config) -> Mariadb:

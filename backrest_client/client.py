@@ -5,9 +5,13 @@ import socket
 from select import select
 
 from backrest.config.config import Config
+from backrest.logger.logger_factory import logger_factory
 
 
 class Client:
+    def __init__(self) -> None:
+        self.logger = logger_factory()
+
     def connect(self) -> socket.socket | None:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
@@ -16,6 +20,7 @@ class Client:
         try:
             sock.connect(server_address)
         except OSError:
+            self.logger.exception("error connecting to socket %s", server_address)
             return None
 
         return sock
@@ -36,8 +41,7 @@ class Client:
 
 
     def command(self, cmd: str, args: dict) -> dict:
-        # Create a UDS socket
-
+        # Connect to UDS socket
         sock = self.connect()
         if sock is None:
             return {"code": 500, "status": "Error connecting to command socket"}

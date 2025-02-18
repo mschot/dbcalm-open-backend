@@ -4,11 +4,13 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from backrest.config.config import Config
 from backrest.data.adapter.adapter import Adapter
+from backrest.logger import logger_factory
 
 
 class Local(Adapter):
     def __init__(self) -> None:
         self.session  = self.session()
+        self.logger = logger_factory()
         super().__init__()
 
     def session(self) -> Session:
@@ -25,8 +27,8 @@ class Local(Adapter):
         self.session.add(model)
         try:
             self.session.commit()
-        except Exception as e:
-            print(vars(e))
+        except Exception:
+            self.logger.exception("error committing")
             self.session.rollback()
             raise
         return model

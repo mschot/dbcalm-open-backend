@@ -1,7 +1,7 @@
 from backrest.data.model.process import Process
 from backrest_cmd.adapter import adapter
 from backrest_cmd.builder.backup_cmd_builder import BackupCommandBuilder
-from backrest_cmd.command.runner import Runner
+from backrest_cmd.process.runner import Runner
 
 
 class Mariadb(adapter.Adapter):

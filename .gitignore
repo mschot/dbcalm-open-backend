@@ -6,3 +6,5 @@ build/*
 .venv/*
 .ruff_cache/*
 *.spec
+*.sqlite
+*.sqlite3
