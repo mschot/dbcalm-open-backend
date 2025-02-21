@@ -9,7 +9,12 @@ class Adapter(ABC):
         self.default_stream_compression = "gzip"
 
     @abstractmethod
-    def list(self: BaseModel, query: dict) -> list[BaseModel]:
+    def list(
+        self: BaseModel,
+        query: dict,
+        page:int | None = 1,
+        per_page: int | None = 100,
+    ) -> list[BaseModel]:
         pass
 
     @abstractmethod

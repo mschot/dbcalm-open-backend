@@ -8,8 +8,7 @@ def now() -> datetime:
     return datetime.now(tz=UTC)
 
 class Backup(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    identifier: str
+    identifier: str = Field(primary_key=True)
     from_identifier: str | None = None
     start_time: datetime = Field(
         default_factory=now,

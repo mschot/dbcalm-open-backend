@@ -21,7 +21,7 @@ class Local(Adapter):
     def get(self, model: SQLModel, query: dict) -> SQLModel|None:
         if len(self.list(model, query)) == 0:
             return None
-        return self.list(model, query)[0]
+        return self.list(model, query)[0][0]
 
     def create(self, model: SQLModel) -> SQLModel:
         self.session.add(model)
@@ -39,8 +39,20 @@ class Local(Adapter):
         self.session.refresh(model)
         return model
 
-    def list(self, model: SQLModel, query: dict) -> list[SQLModel]:
-        return self.session.query(model).filter_by(**query).all()
+    def list(self, model: SQLModel,
+        query: dict | None = None,
+        page:int | None = 1,
+        per_page: int | None = 100,
+    ) -> list[SQLModel]:
+        if query is None:
+            query = {}
+
+        select = self.session.query(model)
+        if query is not None:
+            select = select.filter_by(**query)
+        count = select.count()
+        items = select.offset((page - 1) * per_page).limit(per_page).all()
+        return items, count
 
     def delete(self, model: SQLModel) -> None:
         self.session.delete(model)
