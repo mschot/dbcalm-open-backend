@@ -35,9 +35,9 @@ async def issue_token(
             raise HTTPException(status_code=400, detail="Invalid client credentials")
 
         payload = {
-            "sub": request_data.client_id,
+            "sub": client.id,
             "exp": time.time() + 3600,
-            "scopes": client["scopes"],
+            "scopes": client.scopes,
         }
         token = jwt.encode(payload, jwt_secret_key, algorithm=jwt_algorithm)
         return {"access_token": token, "token_type": "bearer"}
