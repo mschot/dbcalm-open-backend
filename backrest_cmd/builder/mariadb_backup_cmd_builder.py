@@ -1,5 +1,4 @@
 
-from typing import Optional
 
 from backrest.config.yaml_config import Config
 from backrest_cmd.builder.backup_cmd_builder import BackupCommandBuilder
@@ -12,7 +11,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
     def build(
             self,
             identifier: str,
-            incremental_base_dir: Optional[str] = None,
+            incremental_base_dir: str | None = None,
         ) -> list:
         command = ["mariabackup"]
 

@@ -9,13 +9,14 @@ from backrest.config.config import Config
 class Validator:
     ## This class is used to validate the configuration
     ## It checks if the configuration has the required keys
-    ## It will probably need changing in the future as these checks are very basic
 
     def __init__(self, config: Config) -> None:
         self.config = config
         self.should_exist = [
         "db_type",
         "backup_dir",
+        "jwt_secret_key",
+        "jwt_algorithm",
     ]
 
     def validate(self) -> None:

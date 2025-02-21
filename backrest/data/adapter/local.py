@@ -16,7 +16,7 @@ class Local(Adapter):
     def session(self) -> Session:
         engine = create_engine("sqlite:///" + Config.DB_PATH)
         SQLModel.metadata.create_all(engine)
-        return Session(engine)
+        return Session(engine, expire_on_commit=False)
 
     def get(self, model: SQLModel, query: dict) -> SQLModel|None:
         if len(self.list(model, query)) == 0:
@@ -42,6 +42,6 @@ class Local(Adapter):
     def list(self, model: SQLModel, query: dict) -> list[SQLModel]:
         return self.session.query(model).filter_by(**query).all()
 
-    def delete(self, model: SQLModel, _: dict) -> None:
+    def delete(self, model: SQLModel) -> None:
         self.session.delete(model)
         self.session.commit()

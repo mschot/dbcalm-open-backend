@@ -1,8 +1,7 @@
 import subprocess
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from queue import Queue
-from typing import Optional
 
 from backrest.data.adapter.adapter_factory import (
     adapter_factory as data_adapter_factory,
@@ -19,7 +18,7 @@ class Runner:
             command: str,
             start_time: datetime,
             command_type: str,
-            args: Optional[dict]=None,
+            args: dict | None=None,
         ) -> Process:
         return self.data_adapter.create(
             Process(
@@ -53,11 +52,11 @@ class Runner:
             self,
             command: list,
             command_type: str,
-            args: Optional[dict]=None,
+            args: dict | None=None,
         ) -> Process:
         if args is None:
             args = {}
-        start_time = datetime.now(tz=timezone.utc)
+        start_time = datetime.now(tz=UTC)
         process = subprocess.Popen(  # noqa: S603
             command,
             stdout=subprocess.PIPE,
@@ -74,7 +73,7 @@ class Runner:
         )
         queue = Queue()
         def capture_output() -> None:
-            end_time = datetime.now(tz=timezone.utc)
+            end_time = datetime.now(tz=UTC)
             stdout, stderr = process.communicate()
             #save changes to db
             self.update_process(
