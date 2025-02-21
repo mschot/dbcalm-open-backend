@@ -1,18 +1,11 @@
 import os
-from datetime import UTC, datetime
-from typing import Annotated, Any
 
 import uvicorn
-from fastapi import Depends, FastAPI, Response
+from fastapi import FastAPI
 
-from backrest.api.model.request.backup_request import BackupRequest
-from backrest.api.model.response.status_request import StatusResponse
-from backrest.auth.routes import authorize, token
-from backrest.auth.verify_token import verify_token
 from backrest.config.config_factory import config_factory
 from backrest.config.validator import Validator, ValidatorError
-from backrest.util.kebab import kebab_case
-from backrest_client.client import Client
+from backrest.routes import authorize, create_backups, list_backups, status, token
 
 config = config_factory()
 Validator(config).validate()
@@ -21,57 +14,9 @@ app = FastAPI()
 
 app.include_router(authorize.router, prefix="/auth", tags=["Authentication"])
 app.include_router(token.router, prefix="/auth", tags=["Authentication"])
-
-@app.get("/backups")
-async def list_backups(
-    _: Annotated[dict, Depends(verify_token)],
-) -> dict[str, Any]:
-    return {"message": "backups"}
-
-@app.post("/backups")
-async def create_backup(
-    request: BackupRequest,
-    response: Response,
-    _: Annotated[dict, Depends(verify_token)],
-) -> StatusResponse :
-    client = Client()
-
-    if request.identifier is None:
-        identifier = datetime.now(tz=UTC).strftime("%Y-%m-%d-%H-%M-%S")
-    else:
-        identifier = kebab_case(identifier)
-
-    if request.from_identifier is None:
-        process = client.command("full_backup", {"identifier": identifier})
-    else:
-        process = client.command(
-            "incremental_backup",
-            {"identifier": identifier, "from_identifier": request.from_identifier},
-        )
-
-    accepted_code = 202
-    if process["code"] == accepted_code:
-        response.status_code = accepted_code
-        pid = str(process["pid"]) + process["created_at"]
-        return StatusResponse(
-            pid = pid,
-            link = f"/status/{pid}",
-            status=process["status"],
-        )
-    response.status_code = 500
-    return StatusResponse(status="Error")
-
-@app.get("/status/{status_id}")
-async def get_status(
-    status_id: int,
-    _: Annotated[dict, Depends(verify_token)],
-) -> StatusResponse:
-    return {
-        "id": status_id,
-        "status": "completed",
-        "type": "backup",
-        "link": "/backups/{backup_id}",
-    }
+app.include_router(create_backups.router, tags=["Backups"])
+app.include_router(list_backups.router, tags=["Backups"])
+app.include_router(status.router, tags=["Status"])
 
 if __name__ == "__main__":
 

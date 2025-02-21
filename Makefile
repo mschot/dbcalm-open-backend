@@ -11,4 +11,9 @@ hooks:
 dbsymlink:
 	ln -s /var/lib/backrest/db.sqlite3 db.sqlite3
 
+socket:
+	mkdir /var/run/backrest
+	chown backrest:backrest /var/run/backrest
+	chmod 770 /var/run/backrest
+
 

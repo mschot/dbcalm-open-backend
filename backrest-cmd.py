@@ -59,10 +59,13 @@ def apply_parent_permissions(file_path: Path) -> None:
     Path.chmod(file_path, parent_mode)
 
 def unlink_socket(count: int = 0) -> bool:
+    socket_path = Path(Config.CMD_SOCKET_PATH)
+    if not socket_path.exists():
+        return True
     try:
-        Path.unlink(Config.CMD_SOCKET_PATH)
+        socket_path.unlink()
     except OSError:
-        if Path.exists(Config.CMD_SOCKET_PATH):
+        if socket_path.exists():
             time.sleep(0.2)
             try_for = 10
             if count < try_for:
