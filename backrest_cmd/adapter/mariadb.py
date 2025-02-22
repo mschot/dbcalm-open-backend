@@ -1,3 +1,7 @@
+import os
+import tempfile
+
+from backrest.config.config_factory import config_factory
 from backrest.data.model.process import Process
 from backrest_cmd.adapter import adapter
 from backrest_cmd.builder.backup_cmd_builder import BackupCommandBuilder
@@ -12,6 +16,7 @@ class Mariadb(adapter.Adapter):
         ) -> None:
         self.command_builder = command_builder
         self.command_runner = command_runner
+        self.config = config_factory()
 
     def full_backup(self, identifier: str) -> Process:
         command = self.command_builder.build_full_backup_cmd(identifier)
@@ -32,9 +37,23 @@ class Mariadb(adapter.Adapter):
             {"identifier": identifier, "from_identifier": from_identifier},
         )
 
-    def restore(self) -> None:
-        command = self.command_builder.build()
-        self.command_runner.execute(command)
+    def restore_backup(self, identifier_list: list) -> Process:
+        full_backup_identifier = identifier_list[0]
+        base_dir = f"{self.config.value('backup_dir')}/{full_backup_identifier}"
+        with tempfile.TemporaryDirectory(delete=False) as tmp_dir:
+           os.system(f"cp -r {base_dir} {tmp_dir}/")  # noqa: S605
+
+        commands = self.command_builder.build_restore_cmds(
+            f"{tmp_dir}/{full_backup_identifier}",
+            identifier_list,
+        )
+
+        return self.command_runner.execute_consecutive(
+            commands,
+            "restore",
+            {"identifier_list": identifier_list},
+        )
+
 
 
 

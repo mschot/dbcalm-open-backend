@@ -7,7 +7,7 @@ from backrest.config.config_factory import config_factory
 # OAuth2 scheme for receiving tokens
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-### 3️⃣ TOKEN VERIFICATION ###
+
 def verify_token(token: str = Depends(oauth2_scheme)) -> dict:
     config = config_factory()
     jwt_algorithm  = config.value("jwt_algorithm")

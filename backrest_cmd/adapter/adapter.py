@@ -1,6 +1,7 @@
 
 from abc import ABC, abstractmethod
-from queue import Queue
+
+from backrest.data.model.process import Process
 
 
 class Adapter(ABC):
@@ -9,14 +10,14 @@ class Adapter(ABC):
         self.default_stream_compression = "gzip"
 
     @abstractmethod
-    def full_backup(self, identifier: str) -> Queue:
+    def full_backup(self, identifier: str) -> Process:
         pass
 
     @abstractmethod
-    def incremental_backup(self, identifier: str, from_identifier: str) -> Queue:
+    def incremental_backup(self, identifier: str, from_identifier: str) -> Process:
         pass
 
     @abstractmethod
-    def restore(self) -> Queue:
+    def restore_backup(self, identifier_list: list) -> Process:
         pass
 

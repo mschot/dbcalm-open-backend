@@ -14,12 +14,19 @@ class Local(Adapter):
         super().__init__()
 
     def session(self) -> Session:
-        engine = create_engine("sqlite:///" + Config.DB_PATH)
+        engine = create_engine(
+            "sqlite:///" + Config.DB_PATH,
+            pool_size=5,
+            max_overflow=10,
+            pool_pre_ping=True,
+            pool_recycle=3600,
+            echo=False,
+        )
         SQLModel.metadata.create_all(engine)
         return Session(engine, expire_on_commit=False)
 
     def get(self, model: SQLModel, query: dict) -> SQLModel|None:
-        if len(self.list(model, query)) == 0:
+        if len(self.list(model, query)[0]) == 0:
             return None
         return self.list(model, query)[0][0]
 
@@ -57,3 +64,4 @@ class Local(Adapter):
     def delete(self, model: SQLModel) -> None:
         self.session.delete(model)
         self.session.commit()
+

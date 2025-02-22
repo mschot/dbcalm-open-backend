@@ -16,6 +16,9 @@ class Validator:
                 "identifier": "unique|required",
                 "from_identifier": "required",
             },
+            "restore_backup": {
+                "identifier_list": "required",
+            },
         }
 
     def required_args(self, command: str) -> list:

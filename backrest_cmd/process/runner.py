@@ -53,7 +53,8 @@ class Runner:
             command: list,
             command_type: str,
             args: dict | None=None,
-        ) -> Process:
+            queue: Queue | None=None,
+        ) -> tuple[Process, Queue]:
         if args is None:
             args = {}
         start_time = datetime.now(tz=UTC)
@@ -71,7 +72,8 @@ class Runner:
             command_type,
             args,
         )
-        queue = Queue()
+        if queue is None:
+            queue = Queue()
         def capture_output() -> None:
             end_time = datetime.now(tz=UTC)
             stdout, stderr = process.communicate()
@@ -90,3 +92,27 @@ class Runner:
         # Run the output capture in a separate thread
         threading.Thread(target=capture_output, daemon=True).start()
         return process_model, queue
+
+    def execute_consecutive(
+            self,
+            commands: list[list],
+            command_type: str,
+            args: dict | None=None,
+        ) -> tuple[list[Process], None]:
+        processes = []
+
+        queue = Queue()
+        def run_commands() -> None:
+            for command in commands:
+                #were passing the queue in to be used for all commands
+                self.execute(command, command_type, args, queue)
+                # Wait for previous command to complete
+                process_model = queue.get()
+                processes.append(process_model)
+                if process_model.return_code != 0:
+                    break
+
+        # Run commands consecutively in separate thread
+        threading.Thread(target=run_commands, daemon=True).start()
+
+        return processes, queue

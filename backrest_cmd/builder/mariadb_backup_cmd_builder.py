@@ -92,3 +92,50 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             f"{ self.config.value("backup_dir") }/{ from_identifier }"
         )
         return self.build(identifier, incremental_base_dir)
+
+    def build_restore_cmds(self, full_backup_path : str, identifier_list: list) -> list:
+        command_list = []
+        _ = identifier_list.pop(0)
+        command = ["mariabackup"]
+        command.append("--prepare")
+        command.append("--target-dir")
+        command.append(full_backup_path)
+                # Don't close redo log if there are more incremental backups to apply
+        if len(identifier_list) > 0:
+            command.append("--apply-log-only")
+        command_list.append(command)
+
+
+        while len(identifier_list) > 0:
+            identifier = identifier_list.pop(0)
+            incremental_left = len(identifier_list)
+            command = self.build_incremental_restore_cmd(
+                full_backup_path,
+                identifier,
+                incremental_left,
+            )
+            command_list.append(command)
+        return command_list
+
+
+    def build_incremental_restore_cmd(
+            self,
+            full_backup_path: str,
+            identifier: str,
+            incremental_left: int,
+        ) -> list:
+        command = ["mariabackup"]
+        command.append("--prepare")
+        command.append("--target-dir")
+        command.append(full_backup_path)
+        command.append("--incremental-dir")
+        command.append(self.config.value("backup_dir") + "/" + identifier)
+        # Don't close redo log if there are more incremental backups to apply
+        if incremental_left > 0:
+            command.append("--apply-log-only")
+
+        return command
+
+
+
+

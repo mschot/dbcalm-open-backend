@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 
 from backrest.api.model.request.backup_request import BackupRequest
-from backrest.api.model.response.status_request import StatusResponse
+from backrest.api.model.response.status_response import StatusResponse
 from backrest.auth.verify_token import verify_token
 from backrest.util.kebab import kebab_case
 from backrest_client.client import Client

@@ -5,7 +5,14 @@ from fastapi import FastAPI
 
 from backrest.config.config_factory import config_factory
 from backrest.config.validator import Validator, ValidatorError
-from backrest.routes import authorize, create_backups, list_backups, status, token
+from backrest.routes import (
+    authorize,
+    create_backups,
+    list_backups,
+    restore,
+    status,
+    token,
+)
 
 config = config_factory()
 Validator(config).validate()
@@ -16,6 +23,7 @@ app.include_router(authorize.router, prefix="/auth", tags=["Authentication"])
 app.include_router(token.router, prefix="/auth", tags=["Authentication"])
 app.include_router(create_backups.router, tags=["Backups"])
 app.include_router(list_backups.router, tags=["Backups"])
+app.include_router(restore.router, tags=["Backups"])
 app.include_router(status.router, tags=["Status"])
 
 if __name__ == "__main__":

@@ -11,4 +11,8 @@ class BackupCommandBuilder(ABC):
     def build_incremental_backup_cmd(self: str, from_identifier: str) -> list:
         pass
 
+    @abstractmethod
+    def build_restore_cmds(self: str) -> list:
+        pass
+
 
