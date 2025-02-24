@@ -12,7 +12,10 @@ class BackupCommandBuilder(ABC):
         pass
 
     @abstractmethod
-    def build_restore_cmds(self: str) -> list:
+    def build_restore_cmds(
+            self: str,
+            identifier_list: list,
+        ) -> list:
         pass
 
 

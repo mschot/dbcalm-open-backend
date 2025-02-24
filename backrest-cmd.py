@@ -44,10 +44,14 @@ def process_data(data: bytes) -> dict:
     queue_hander = ProcessQueueHandler(queue)
 
     # Start a thread to process the queue
-    threading.Thread(target=queue_hander.handle).start()
+    threading.Thread(target=queue_hander.handle, daemon=False).start()
 
-    return {"code": 202, "status": "Accepted", "pid": process.pid,
-            "created_at": process.start_time.strftime("%Y%m%d%H%M%S") }
+    command_id = (process[0].command_id
+                 if isinstance(process, list)
+                 else process.command_id)
+
+    return {"code": 202, "status": "Accepted", "id": command_id }
+
 
 def apply_parent_permissions(file_path: Path) -> None:
     parent_dir = file_path.parent  # Get parent directory

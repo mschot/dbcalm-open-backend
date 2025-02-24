@@ -2,14 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File",
+            "name": "Python Debugger: cmd",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",                    
-            "env": {                
+            "program": "${cwd}/backrest-cmd.py",
+            "console": "integratedTerminal",
+            "env": {
                 "PYTHONDONTWRITEBYTECODE": "1"
             }
-        }        
+        }
     ]
 }

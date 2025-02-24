@@ -51,10 +51,9 @@ async def restore_backup(
     accepted_code = 202
     if process["code"] == accepted_code:
         response.status_code = accepted_code
-        pid = str(process["pid"]) + process["created_at"]
         return StatusResponse(
-            pid = pid,
-            link = f"/status/{pid}",
+            pid = process["id"],
+            link = f"/status/{process["id"]}",
             status=process["status"],
         )
     response.status_code = 500

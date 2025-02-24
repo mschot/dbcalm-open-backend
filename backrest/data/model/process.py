@@ -7,6 +7,7 @@ from sqlmodel import JSON, Column, Field, SQLModel
 class Process(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     command: str
+    command_id: str
     pid: int
     status: str
     output: str | None = None

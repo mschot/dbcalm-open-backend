@@ -16,4 +16,7 @@ socket:
 	chown backrest:backrest /var/run/backrest
 	chmod 770 /var/run/backrest
 
-
+kill:
+	@for pid in $$(ps aux | grep "python -B -c" | grep -v grep | awk '{print $$2}'); do \
+		kill -9 $$pid; \
+	done

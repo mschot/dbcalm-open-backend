@@ -37,7 +37,8 @@ class ProcessQueueHandler:
                 backup = process_to_backup(process)
                 data_adapter.create(backup)
                 self.logger.debug("Backup %s created", backup.identifier)
-            elif process.type == "restore":
+                break
+            if process.type == "restore":
                 self.logger.debug("Restore completed successfully")
             break
 

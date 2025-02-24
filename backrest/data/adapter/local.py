@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlmodel import Session, SQLModel, create_engine
 
 from backrest.config.config import Config
@@ -21,9 +22,17 @@ class Local(Adapter):
             pool_pre_ping=True,
             pool_recycle=3600,
             echo=False,
+            connect_args={"check_same_thread": False},
+
         )
         SQLModel.metadata.create_all(engine)
-        return Session(engine, expire_on_commit=False)
+
+       # Create the database tables if they don't exist
+        session_factory = sessionmaker(bind=engine, expire_on_commit=False)
+
+        session = scoped_session(session_factory)
+
+        return session()
 
     def get(self, model: SQLModel, query: dict) -> SQLModel|None:
         if len(self.list(model, query)[0]) == 0:

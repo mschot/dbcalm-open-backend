@@ -1,12 +1,16 @@
 
 
+from packaging.version import Version
+
 from backrest.config.yaml_config import Config
 from backrest_cmd.builder.backup_cmd_builder import BackupCommandBuilder
 
+APPY_LOG_ONLY_BEFORE_VERSION = Version("10.2")
 
 class MariadbBackupCmdBuilder(BackupCommandBuilder):
-    def __init__(self, config :Config) -> None:
+    def __init__(self, config :Config, server_version: Version) -> None:
         self.config = config
+        self.server_version = server_version
 
     def build(
             self,
@@ -93,16 +97,32 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         )
         return self.build(identifier, incremental_base_dir)
 
-    def build_restore_cmds(self, full_backup_path : str, identifier_list: list) -> list:
+
+    def build_restore_cmds(
+            self,
+            tmp_dir : str,
+            identifier_list: list,
+        ) -> list:
+
         command_list = []
-        _ = identifier_list.pop(0)
-        command = ["mariabackup"]
+        full_backup_id = identifier_list.pop(0)
+        original_backup_path = f"{self.config.value('backup_dir')}/{full_backup_id}"
+
+        # could do shutil.copytree but that would stop api flow
+        #  whereas this will run consecutively using the process
+        #  runner (although will not work on windows)
+        command_list.append(["/usr/bin/cp",  "-r", original_backup_path, tmp_dir])
+        new_backup_path = f"{tmp_dir}/{full_backup_id}"
+
+        command = ["/usr/bin/mariabackup"]
         command.append("--prepare")
         command.append("--target-dir")
-        command.append(full_backup_path)
-                # Don't close redo log if there are more incremental backups to apply
-        if len(identifier_list) > 0:
-            command.append("--apply-log-only")
+        command.append(new_backup_path)
+        # Don't close redo log if there are more incremental backups to apply
+        if self.server_version < APPY_LOG_ONLY_BEFORE_VERSION \
+            and len(identifier_list) > 0:
+                command.append("--apply-log-only")
+
         command_list.append(command)
 
 
@@ -110,9 +130,10 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             identifier = identifier_list.pop(0)
             incremental_left = len(identifier_list)
             command = self.build_incremental_restore_cmd(
-                full_backup_path,
+                new_backup_path,
                 identifier,
                 incremental_left,
+                self.server_version,
             )
             command_list.append(command)
         return command_list
@@ -123,6 +144,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             full_backup_path: str,
             identifier: str,
             incremental_left: int,
+            server_version: str,
         ) -> list:
         command = ["mariabackup"]
         command.append("--prepare")
@@ -131,7 +153,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         command.append("--incremental-dir")
         command.append(self.config.value("backup_dir") + "/" + identifier)
         # Don't close redo log if there are more incremental backups to apply
-        if incremental_left > 0:
+        if server_version < APPY_LOG_ONLY_BEFORE_VERSION and incremental_left > 0:
             command.append("--apply-log-only")
 
         return command

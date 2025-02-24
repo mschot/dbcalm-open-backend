@@ -1,5 +1,5 @@
-import os
-import tempfile
+import uuid
+from pathlib import Path
 
 from backrest.config.config_factory import config_factory
 from backrest.data.model.process import Process
@@ -21,9 +21,9 @@ class Mariadb(adapter.Adapter):
     def full_backup(self, identifier: str) -> Process:
         command = self.command_builder.build_full_backup_cmd(identifier)
         return self.command_runner.execute(
-            command,
-            "backup",
-            {"identifier": identifier},
+            command=command,
+            command_type="backup",
+            args={"identifier": identifier},
         )
 
     def incremental_backup(self, identifier: str, from_identifier: str) -> Process:
@@ -32,29 +32,28 @@ class Mariadb(adapter.Adapter):
             from_identifier,
         )
         return self.command_runner.execute(
-            command,
-            "backup",
-            {"identifier": identifier, "from_identifier": from_identifier},
+            command=command,
+            command_type="backup",
+            args={"identifier": identifier, "from_identifier": from_identifier},
         )
 
+    def get_tmp_dir(self) -> str:
+        tmp_dir = self.config.value("backup_dir") + "/tmp/" + str(uuid.uuid4())  # noqa: S108
+        path = Path(tmp_dir)
+        path.mkdir(parents=True, exist_ok=True)
+        return tmp_dir
+
+
     def restore_backup(self, identifier_list: list) -> Process:
-        full_backup_identifier = identifier_list[0]
-        base_dir = f"{self.config.value('backup_dir')}/{full_backup_identifier}"
-        with tempfile.TemporaryDirectory(delete=False) as tmp_dir:
-           os.system(f"cp -r {base_dir} {tmp_dir}/")  # noqa: S605
+        tmp_dir = self.get_tmp_dir()
 
         commands = self.command_builder.build_restore_cmds(
-            f"{tmp_dir}/{full_backup_identifier}",
+            tmp_dir,
             identifier_list,
         )
 
         return self.command_runner.execute_consecutive(
-            commands,
-            "restore",
-            {"identifier_list": identifier_list},
+            commands=commands,
+            command_type="restore",
+            args={"identifier_list": identifier_list},
         )
-
-
-
-
-
