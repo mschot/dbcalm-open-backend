@@ -57,6 +57,7 @@ class Local(Adapter):
 
     def list(self, model: SQLModel,
         query: dict | None = None,
+        order: dict | None = None,
         page:int | None = 1,
         per_page: int | None = 100,
     ) -> list[SQLModel]:
@@ -67,6 +68,11 @@ class Local(Adapter):
         if query is not None:
             select = select.filter_by(**query)
         count = select.count()
+        if order is not None:
+            for attribute, direction in order.items():
+                select = select.order_by(getattr(model, attribute).asc() \
+                    if direction.lower() == "asc" else getattr(model, attribute).desc())
+
         items = select.offset((page - 1) * per_page).limit(per_page).all()
         return items, count
 

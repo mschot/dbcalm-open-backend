@@ -15,3 +15,13 @@ class ClientRepository:
 
     def get(self, client_id: str) -> Client | None:
         return self.adapter.get(Client, {"id" : client_id})
+
+    def list(
+            self,
+            query: dict | None,
+            order: dict | None,
+            page: int | None = 1,
+            per_page: int | None = 10,
+    ) -> tuple[list[Client], int]:
+        items, total = self.adapter.list(Client, query, order, page, per_page)
+        return items, total

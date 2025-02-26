@@ -15,8 +15,9 @@ class BackupRepository:
     def list(
             self,
             query: dict | None,
+            order: dict | None,
             page: int | None = 1,
-            per_page: int | None = 100,
+            per_page: int | None = 10,
     ) -> tuple[list[Backup], int]:
-        items, total = self.adapter.list(Backup, query, page, per_page)
+        items, total = self.adapter.list(Backup, query, order, page, per_page)
         return items, total

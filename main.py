@@ -2,6 +2,7 @@ import os
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backrest.config.config_factory import config_factory
 from backrest.config.validator import Validator, ValidatorError
@@ -9,6 +10,7 @@ from backrest.routes import (
     authorize,
     create_backups,
     list_backups,
+    list_clients,
     restore,
     status,
     token,
@@ -19,12 +21,27 @@ Validator(config).validate()
 
 app = FastAPI()
 
+# TODO: move to config  # noqa: FIX002
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(authorize.router, prefix="/auth", tags=["Authentication"])
 app.include_router(token.router, prefix="/auth", tags=["Authentication"])
 app.include_router(create_backups.router, tags=["Backups"])
 app.include_router(list_backups.router, tags=["Backups"])
+app.include_router(list_clients.router, tags=["Clients"])
 app.include_router(restore.router, tags=["Backups"])
 app.include_router(status.router, tags=["Status"])
+
 
 if __name__ == "__main__":
 

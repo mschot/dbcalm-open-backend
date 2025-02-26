@@ -12,6 +12,8 @@ class Adapter(ABC):
     def list(
         self: BaseModel,
         query: dict,
+        # order: key = attribute, value = direction (asc/desc)
+        order: dict | None,
         page:int | None = 1,
         per_page: int | None = 100,
     ) -> list[BaseModel]:
