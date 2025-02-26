@@ -21,7 +21,7 @@ async def list_clients(
     items, total = repository.list(query_dict, order_dict, page=page, per_page=per_page)
 
     return {
-        "items": [item.model_dump() for item in items],
+        "items": [item.model_dump(exclude={"secret"}) for item in items],
         "pagination": {
             "total": total,
             "page": page,
