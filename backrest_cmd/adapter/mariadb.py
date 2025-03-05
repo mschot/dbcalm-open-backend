@@ -3,6 +3,7 @@ from pathlib import Path
 
 from backrest.config.config_factory import config_factory
 from backrest.data.model.process import Process
+from backrest.data.types.enum_types import RestoreTarget
 from backrest_cmd.adapter import adapter
 from backrest_cmd.builder.backup_cmd_builder import BackupCommandBuilder
 from backrest_cmd.process.runner import Runner
@@ -44,12 +45,13 @@ class Mariadb(adapter.Adapter):
         return tmp_dir
 
 
-    def restore_backup(self, identifier_list: list) -> Process:
+    def restore_backup(self, identifier_list: list, target: RestoreTarget) -> Process:
         tmp_dir = self.get_tmp_dir()
 
         commands = self.command_builder.build_restore_cmds(
             tmp_dir,
             identifier_list,
+            target,
         )
 
         return self.command_runner.execute_consecutive(

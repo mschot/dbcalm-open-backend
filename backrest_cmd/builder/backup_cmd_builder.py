@@ -1,6 +1,8 @@
 
 from abc import ABC, abstractmethod
 
+from backrest.data.types.enum_types import RestoreTarget
+
 
 class BackupCommandBuilder(ABC):
     @abstractmethod
@@ -14,7 +16,9 @@ class BackupCommandBuilder(ABC):
     @abstractmethod
     def build_restore_cmds(
             self: str,
+            tmp_dir : str,
             identifier_list: list,
+            target: RestoreTarget,
         ) -> list:
         pass
 

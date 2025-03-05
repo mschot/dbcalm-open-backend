@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 
 from backrest.data.model.process import Process
+from backrest.data.types.enum_types import RestoreTarget
 
 
 class Adapter(ABC):
@@ -18,6 +19,6 @@ class Adapter(ABC):
         pass
 
     @abstractmethod
-    def restore_backup(self, identifier_list: list) -> Process:
+    def restore_backup(self, identifier_list: list, target: RestoreTarget) -> Process:
         pass
 

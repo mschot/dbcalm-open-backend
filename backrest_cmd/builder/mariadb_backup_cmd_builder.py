@@ -3,22 +3,34 @@
 from packaging.version import Version
 
 from backrest.config.yaml_config import Config
+from backrest.data.types.enum_types import RestoreTarget
 from backrest_cmd.builder.backup_cmd_builder import BackupCommandBuilder
 
 APPY_LOG_ONLY_BEFORE_VERSION = Version("10.2")
+
+DEFAULT_MARIA_BIN = "/usr/bin/mariabackup"
 
 class MariadbBackupCmdBuilder(BackupCommandBuilder):
     def __init__(self, config :Config, server_version: Version) -> None:
         self.config = config
         self.server_version = server_version
 
+    def executable(self) -> str:
+        if self.config.value("backup_bin") is not None:
+            return self.config.value("backup_bin")
+        return DEFAULT_MARIA_BIN
+
     def build(
             self,
             identifier: str,
             incremental_base_dir: str | None = None,
         ) -> list:
-        command = ["mariabackup"]
+        command = [self.executable()]
 
+        # because mysqladmin only supports group suffixes we use that one so
+        # we can use the same credentials file for both mysqladmin and mariadb
+        # mysqladmin needs to be used to check  whether its running before restore
+        command.append("--defaults-group=mysqladmin-backup")
         if self.config.value("backup_credentials_file") is not None:
             command.append(
                 f"--defaults-file={ self.config.value("backup_credentials_file") }",
@@ -102,6 +114,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             self,
             tmp_dir : str,
             identifier_list: list,
+            target: RestoreTarget,
         ) -> list:
 
         command_list = []
@@ -114,7 +127,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         command_list.append(["/usr/bin/cp",  "-r", original_backup_path, tmp_dir])
         new_backup_path = f"{tmp_dir}/{full_backup_id}"
 
-        command = ["/usr/bin/mariabackup"]
+        command = [self.executable()]
         command.append("--prepare")
         command.append("--target-dir")
         command.append(new_backup_path)
@@ -136,6 +149,12 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
                 self.server_version,
             )
             command_list.append(command)
+
+        if target == RestoreTarget.DATABASE:
+            command = [self.executable()]
+            command.append("--copy-back")
+            command_list.append(command)
+
         return command_list
 
 
@@ -146,7 +165,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             incremental_left: int,
             server_version: str,
         ) -> list:
-        command = ["mariabackup"]
+        command = [self.executable()]
         command.append("--prepare")
         command.append("--target-dir")
         command.append(full_backup_path)

@@ -76,7 +76,12 @@ class Local(Adapter):
         items = select.offset((page - 1) * per_page).limit(per_page).all()
         return items, count
 
-    def delete(self, model: SQLModel) -> None:
+    def delete(self, model: SQLModel, query: dict) -> bool:
+        model = self.get(model, query)
+        if model is None:
+            return False
+
         self.session.delete(model)
         self.session.commit()
+        return True
 

@@ -1,9 +1,13 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from backrest.auth.verify_token import verify_token
+from backrest.data.model.backup import Backup
 from backrest.data.repository.backup import BackupRepository
+from backrest.util.has_attributes_for_dict_keys import (
+    has_attributes_for_dict_keys,
+)
 from backrest.util.parse_query_dict import parse_query_dict
 
 router = APIRouter()
@@ -17,7 +21,13 @@ async def list_backups(
 ) -> dict[str, Any]:
     repository = BackupRepository()
     query_dict = parse_query_dict(query)
+    if not has_attributes_for_dict_keys(Backup, query_dict):
+        raise HTTPException(status_code=400, detail="Invalid query attribute")
+
     order_dict = parse_query_dict(order)
+    if not has_attributes_for_dict_keys(Backup, order_dict):
+        raise HTTPException(status_code=400, detail="Invalid order attribute")
+
     items, total = repository.list(query_dict, order_dict, page=page, per_page=per_page)
 
     return {

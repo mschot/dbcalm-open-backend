@@ -10,7 +10,8 @@ class Adapter(ABC):
 
     @abstractmethod
     def list(
-        self: BaseModel,
+        self,
+        model: BaseModel,
         query: dict,
         # order: key = attribute, value = direction (asc/desc)
         order: dict | None,
@@ -20,18 +21,18 @@ class Adapter(ABC):
         pass
 
     @abstractmethod
-    def create(self: BaseModel) -> BaseModel:
+    def create(self, model: BaseModel) -> BaseModel:
         pass
 
     @abstractmethod
-    def update(self: BaseModel) -> BaseModel:
+    def update(self, model: BaseModel) -> BaseModel:
         pass
 
     @abstractmethod
-    def get(self: BaseModel, query: dict) -> BaseModel:
+    def get(self, model: BaseModel, query: dict) -> BaseModel:
         pass
 
     @abstractmethod
-    def delete(self: BaseModel, query: dict) -> None:
+    def delete(self, model: BaseModel, query: dict) -> bool:
         pass
 
