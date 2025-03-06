@@ -1,1 +1,29 @@
+#!/bin/sh
+
+# Run linter
+echo "Running ruff linter..."
 ruff check . --fix
+
+# Check if there are tests to run
+if [ -d "tests" ]; then
+    echo "Running tests..."
+    # Use the virtual environment python to run pytest
+    VENV_PATH=".venv"
+
+    if [ -d "$VENV_PATH" ]; then
+        $VENV_PATH/bin/python -m pytest tests/ || {
+            echo "Tests failed. Aborting commit."
+            exit 1
+        }
+    else
+        # Fallback to using the system python
+        python -m pytest tests/ || {
+            echo "Tests failed. Aborting commit."
+            exit 1
+        }
+    fi
+
+    echo "All tests passed!"
+else
+    echo "No tests directory found. Skipping tests."
+fi

@@ -3,7 +3,8 @@
 ## Build & Run Commands
 - Run server: `python main.py` or `cd dev && make dev`
 - Lint: `ruff check .` or `ruff check . --fix`
-- Pre-commit hook (runs automatically): `ruff check . --fix`
+- Tests: `.venv/bin/python -m pytest tests/`
+- Pre-commit hook (runs automatically): Runs linter and tests
 - Build command binary: `pyinstaller backrest-cmd.py`
 
 ## Code Style Guidelines

@@ -15,9 +15,21 @@ dependencies = [
     "passlib[bcrypt]",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff",
+]
+
 [tool.setuptools.packages.find]
 include = ["backrest_cmd*", "backrest*"]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["D",  "TD", "BLE", "T201", "FA100"]
+ignore = ["D",  "TD", "BLE", "T201", "FA100", "S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
