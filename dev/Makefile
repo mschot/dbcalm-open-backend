@@ -10,7 +10,7 @@ SHELL := /bin/bash
 
 .PHONY: dev
 dev:
-	cd .. && fastapi dev main.py
+	cd .. && BACKREST_DEV_MODE=1 fastapi dev main.py
 
 #REQUIRES sudo, to add cron e.g. sudo make addcron
 addcron:

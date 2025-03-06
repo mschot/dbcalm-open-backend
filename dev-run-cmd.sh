@@ -5,4 +5,7 @@ if [ ! -d /var/run/$project_name ]; then
   sudo chown $USER:$project_name /var/run/$project_name
 fi
 
+# Enable development mode with longer client timeout (30 seconds)
+export BACKREST_DEV_MODE=1
+
 python3 backrest-cmd.py

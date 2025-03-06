@@ -1,6 +1,18 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
+        {
+            "name": "Python Debugger: FASTAPI - custom",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "BACKREST_DEV_MODE": "1"
+            }
+        },
         {
             "name": "Python Debugger: cmd",
             "type": "debugpy",
@@ -8,7 +20,8 @@
             "program": "${cwd}/backrest-cmd.py",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONDONTWRITEBYTECODE": "1"
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "BACKREST_DEV_MODE": "1"
             }
         }
     ]

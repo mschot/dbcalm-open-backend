@@ -14,6 +14,7 @@ from backrest.config.validator import Validator as ConfigValidator
 from backrest.handler.process_queue_handler import ProcessQueueHandler
 from backrest.logger.logger_factory import logger_factory
 from backrest_cmd.adapter.adapter_factory import adapter_factory
+from backrest_cmd.command.validator import VALID_REQUEST
 from backrest_cmd.command.validator import Validator as CommandValidator
 
 config = config_factory()
@@ -27,13 +28,13 @@ def process_data(data: bytes) -> dict:
     command_data = json.loads(data.decode())
 
     validator = CommandValidator()
-    valid, message = validator.validate(command_data)
-    if(not valid):
+    response_code, message = validator.validate(command_data)
+    if(response_code != VALID_REQUEST):
         logger.error(
             "%s, command: %s ,arguments: %s",
             message, command_data["cmd"], command_data["args"])
 
-        return {"code": 403, "status": message }
+        return {"code": response_code, "status": message }
 
     adapter = adapter_factory()
     # get the method from the adapter based on command called

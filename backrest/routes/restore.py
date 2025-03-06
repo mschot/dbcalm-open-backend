@@ -27,6 +27,9 @@ def get_previous_backups(backup: Backup) -> list[Backup]:
     return all_backups
 
 
+INVALID_REQUEST = 400
+INTERNAL_ERROR = 500
+
 class RestoreRequest(BaseModel):
     identifier: str
     target: RestoreTarget
@@ -61,5 +64,10 @@ async def restore_backup(
             link = f"/status/{process["id"]}",
             status=process["status"],
         )
-    response.status_code = 500
-    return StatusResponse(status="Error")
+
+    if process["code"] >= INVALID_REQUEST and process["code"] < INTERNAL_ERROR:
+        response.status_code = process["code"]
+        return StatusResponse(status=str(process["status"]))
+
+    response.status_code = process["code"]
+    return StatusResponse(status=str(process["status"]))
