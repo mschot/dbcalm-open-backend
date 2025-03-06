@@ -9,12 +9,12 @@ hooks:
 # Adds a symlink to the database file so we can open
 # it in vscode sqlite extension
 dbsymlink:
-	ln -s /var/lib/backrest/db.sqlite3 db.sqlite3
+	ln -s /var/lib/dbcalm/db.sqlite3 db.sqlite3
 
 socket:
-	mkdir /var/run/backrest
-	chown backrest:backrest /var/run/backrest
-	chmod 770 /var/run/backrest
+	mkdir /var/run/dbcalm
+	chown dbcalm:dbcalm /var/run/dbcalm
+	chmod 770 /var/run/dbcalm
 
 kill:
 	@for pid in $$(ps aux | grep "python -B -c" | grep -v grep | awk '{print $$2}'); do \

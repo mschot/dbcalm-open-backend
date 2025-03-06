@@ -5,9 +5,9 @@ from pydantic import BaseModel
 
 from dbcalm.api.model.response.status_response import StatusResponse
 from dbcalm.auth.verify_token import verify_token
+from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.backup import Backup
 from dbcalm.data.repository.backup import BackupRepository
-from dbcalm.data.types.enum_types import RestoreTarget
 from dbcalm_cmd_client.client import Client
 
 

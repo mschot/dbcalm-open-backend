@@ -1,7 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
+
         {
             "name": "Python Debugger: FASTAPI - custom",
             "type": "debugpy",
@@ -10,18 +10,18 @@
             "console": "integratedTerminal",
             "env": {
                 "PYTHONDONTWRITEBYTECODE": "1",
-                "BACKREST_DEV_MODE": "1"
+                "DBCALM_DEV_MODE": "1"
             }
         },
         {
             "name": "Python Debugger: cmd",
             "type": "debugpy",
             "request": "launch",
-            "program": "${cwd}/backrest-cmd.py",
+            "program": "${cwd}/dbcalm-cmd-server.py",
             "console": "integratedTerminal",
             "env": {
                 "PYTHONDONTWRITEBYTECODE": "1",
-                "BACKREST_DEV_MODE": "1"
+                "DBCALM_DEV_MODE": "1"
             }
         }
     ]

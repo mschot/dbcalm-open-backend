@@ -101,7 +101,7 @@ class Validator:
         command = [
             "mysqladmin",
             "--defaults-group-suffix=-backup",
-            "--defaults-file=/etc/backrest/backup_credentials.cnf",
+            "--defaults-file=/etc/dbcalm/backup_credentials.cnf",
             "ping",
         ]
 

@@ -61,8 +61,8 @@ if __name__ == "__main__":
 
         if not os.access(ssl_cert, os.R_OK) or not os.access(ssl_key, os.R_OK):
             msg = (
-                "SSL certificate and/or key file(s) are not",
-                f" readable by {config.PROJECT_NAME}",
+                "SSL certificate and/or key file(s) are not"
+                f" readable by {config.PROJECT_NAME}"
             )
             raise ValidatorError(msg)
 

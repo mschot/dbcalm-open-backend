@@ -3,7 +3,7 @@
 from packaging.version import Version
 
 from dbcalm.config.yaml_config import Config
-from dbcalm.data.types.enum_types import RestoreTarget
+from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm_cmd_server.builder.backup_cmd_builder import BackupCommandBuilder
 
 APPY_LOG_ONLY_BEFORE_VERSION = Version("10.2")

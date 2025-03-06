@@ -4,6 +4,12 @@
 echo "Running ruff linter..."
 ruff check . --fix
 
+#if ruff fails, exit
+if [ $? -ne 0 ]; then
+    echo "Ruff linter failed. Aborting commit."
+    exit 1
+fi
+
 # Check if there are tests to run
 if [ -d "tests" ]; then
     echo "Running tests..."

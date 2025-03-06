@@ -1,15 +1,15 @@
 [Unit]
-Description=Backrest
+Description=Dbcalm
 After=network.target
 
 [Service]
 User=mysql
-Group=backrest
+Group=dbcalm
 WorkingDirectory=/usr/bin/
-ExecStart=/usr/bin/backrest-cmd
+ExecStart=/usr/bin/dbcalm-cmd-server
 Restart=always
 Environment="PATH=/usr/bin:/bin"
-RuntimeDirectory=backrest
+RuntimeDirectory=dbcalm
 RuntimeDirectoryMode=2774
 
 [Install]

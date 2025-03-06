@@ -12,7 +12,7 @@ class TestConfigValidator:
     def config_mock(self) -> MagicMock:
         config = MagicMock()
         # Set CONFIG_PATH attribute in Config for error messages
-        config.Config.CONFIG_PATH = "/etc/backrest/config.yml"
+        config.Config.CONFIG_PATH = "/etc/dbcalm/config.yml"
         # Fix for validator.validate method which uses self.Config
         config.config = config
         # Set default values for required config parameters

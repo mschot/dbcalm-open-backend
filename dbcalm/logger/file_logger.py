@@ -17,20 +17,14 @@ class FileLogger:
 
         # Determine log file location
         log_file = f"/var/log/{self.config.PROJECT_NAME}/{self.config.PROJECT_NAME}.log"
+
         if self.config.value("log_file") is not None:
             log_file = self.config.value("log_file")
 
         log_file_path = Path(log_file)
-        # Ensure the log directory exists
-        log_dir = log_file_path.parent
-        try:
-            if not Path.exists(log_dir):
-                log_dir.mkdir(exist_ok=True)
-        except PermissionError:
-            self.logger.exception(
-                "Error creating log directory, please create %s manually",
-                log_dir,
-            )
+        #if file doesn't exist, create it
+        if not log_file_path.exists():
+            log_file_path.touch()
 
         # Create file handler
         file_handler = logging.FileHandler(log_file)

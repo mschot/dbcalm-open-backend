@@ -10,15 +10,15 @@ SHELL := /bin/bash
 
 .PHONY: dev
 dev:
-	cd .. && BACKREST_DEV_MODE=1 fastapi dev main.py
+	cd .. && DBCALM_DEV_MODE=1 fastapi dev main.py
 
 #REQUIRES sudo, to add cron e.g. sudo make addcron
 addcron:
-	echo  "* * * * *    root    $(DEV_DIR)/cron/dbtestscript.sh" > /etc/cron.d/backrest-dbtest
+	echo  "* * * * *    root    $(DEV_DIR)/cron/dbtestscript.sh" > /etc/cron.d/dbcalm-dbtest
 
 #REQUIRES sudo to remove cron, e.g. sudo make removecron
 removecron:
-	rm /etc/cron.d/backrest-dbtest
+	rm /etc/cron.d/dbcalm-dbtest
 
 .SILENT:
 checkdb:

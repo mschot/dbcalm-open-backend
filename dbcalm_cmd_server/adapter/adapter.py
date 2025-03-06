@@ -1,8 +1,8 @@
 
 from abc import ABC, abstractmethod
 
+from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.process import Process
-from dbcalm.data.types.enum_types import RestoreTarget
 
 
 class Adapter(ABC):

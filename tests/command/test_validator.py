@@ -116,7 +116,7 @@ class TestValidator:
         assert "expected" in message
 
     @patch("dbcalm_cmd_server.command.validator.Validator.validate_others")
-    @patch("backrest.data.adapter.adapter_factory.adapter_factory")
+    @patch("dbcalm.data.adapter.adapter_factory.adapter_factory")
     def test_validate_restore_with_other_checks(
         self,
         mock_adapter_factory: MagicMock,
@@ -214,7 +214,7 @@ class TestValidator:
 
     @patch("pathlib.Path.is_dir")
     @patch("pathlib.Path.iterdir")
-    @patch("backrest.config.config_factory.config_factory")
+    @patch("dbcalm.config.config_factory.config_factory")
     def test_data_dir_empty(
         self,
         mock_config_factory: MagicMock,

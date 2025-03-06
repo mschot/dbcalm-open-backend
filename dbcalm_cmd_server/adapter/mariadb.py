@@ -2,8 +2,8 @@ import uuid
 from pathlib import Path
 
 from dbcalm.config.config_factory import config_factory
+from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.process import Process
-from dbcalm.data.types.enum_types import RestoreTarget
 from dbcalm_cmd_server.adapter import adapter
 from dbcalm_cmd_server.builder.backup_cmd_builder import BackupCommandBuilder
 from dbcalm_cmd_server.process.runner import Runner

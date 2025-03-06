@@ -1,11 +1,11 @@
-# Backrest Project Guide
+# Dbcalm Project Guide
 
 ## Build & Run Commands
 - Run server: `python main.py` or `cd dev && make dev`
 - Lint: `ruff check .` or `ruff check . --fix`
 - Tests: `.venv/bin/python -m pytest tests/`
 - Pre-commit hook (runs automatically): Runs linter and tests
-- Build command binary: `pyinstaller backrest-cmd.py`
+- Build command binary: `pyinstaller dbcalm-cmd-server.py`
 
 ## Code Style Guidelines
 - Python 3.11+ required
@@ -25,7 +25,7 @@
 
 
 ## Project Organization
-- `/backrest`: Core server code
-- `/backrest_client`: Client library for interacting with the command Service tool via unix domain socket
-- `/backrest-cmd.py`: Service tool entry point executing backups and restores
+- `/dbcalm`: Core server code
+- `/dbcalm_client`: Client library for interacting with the command Service tool via unix domain socket
+- `/dbcalm-cmd-server.py`: Service tool entry point executing backups and restores
 - `/dbcalm_cmd_server`: Command Service for interacting with mariabackup and mysqladmin
