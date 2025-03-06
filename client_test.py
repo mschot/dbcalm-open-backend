@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from backrest.logger.logger_factory import logger_factory
-from backrest_client.client import Client
+from dbcalm.logger.logger_factory import logger_factory
+from dbcalm_cmd_client.client import Client
 
 logger = logger_factory()
 

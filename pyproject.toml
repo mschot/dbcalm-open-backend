@@ -22,7 +22,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["backrest_cmd*", "backrest*"]
+include = ["dbcalm_cmd_server*", "backrest*"]
 
 [tool.ruff.lint]
 select = ["ALL"]

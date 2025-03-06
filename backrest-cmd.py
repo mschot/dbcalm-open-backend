@@ -8,14 +8,14 @@ import time
 from pathlib import Path
 from select import select
 
-from backrest.config.config import Config
-from backrest.config.config_factory import config_factory
-from backrest.config.validator import Validator as ConfigValidator
-from backrest.handler.process_queue_handler import ProcessQueueHandler
-from backrest.logger.logger_factory import logger_factory
-from backrest_cmd.adapter.adapter_factory import adapter_factory
-from backrest_cmd.command.validator import VALID_REQUEST
-from backrest_cmd.command.validator import Validator as CommandValidator
+from dbcalm.config.config import Config
+from dbcalm.config.config_factory import config_factory
+from dbcalm.config.validator import Validator as ConfigValidator
+from dbcalm.handler.process_queue_handler import ProcessQueueHandler
+from dbcalm.logger.logger_factory import logger_factory
+from dbcalm_cmd_server.adapter.adapter_factory import adapter_factory
+from dbcalm_cmd_server.command.validator import VALID_REQUEST
+from dbcalm_cmd_server.command.validator import Validator as CommandValidator
 
 config = config_factory()
 validator = ConfigValidator(config)

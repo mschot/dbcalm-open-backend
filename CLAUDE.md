@@ -28,4 +28,4 @@
 - `/backrest`: Core server code
 - `/backrest_client`: Client library for interacting with the command Service tool via unix domain socket
 - `/backrest-cmd.py`: Service tool entry point executing backups and restores
-- `/backrest_cmd`: Command Service for interacting with mariabackup and mysqladmin
+- `/dbcalm_cmd_server`: Command Service for interacting with mariabackup and mysqladmin

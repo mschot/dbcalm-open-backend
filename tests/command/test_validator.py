@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from backrest_cmd.command.validator import (
+from dbcalm_cmd_server.command.validator import (
     CONFLICT,
     INVALID_REQUEST,
     PREREQUISTE_FAILED,
@@ -115,7 +115,7 @@ class TestValidator:
         assert status == INVALID_REQUEST
         assert "expected" in message
 
-    @patch("backrest_cmd.command.validator.Validator.validate_others")
+    @patch("dbcalm_cmd_server.command.validator.Validator.validate_others")
     @patch("backrest.data.adapter.adapter_factory.adapter_factory")
     def test_validate_restore_with_other_checks(
         self,
@@ -144,7 +144,7 @@ class TestValidator:
         assert message == "Test error"
         mock_validate_others.assert_called_once()
 
-    @patch("backrest_cmd.command.validator.Validator.server_dead")
+    @patch("dbcalm_cmd_server.command.validator.Validator.server_dead")
     def test_validate_others_server_dead_check(
         self,
         mock_server_dead: MagicMock,
@@ -164,7 +164,7 @@ class TestValidator:
         assert status == VALID_REQUEST
         assert message is None
 
-    @patch("backrest_cmd.command.validator.Validator.data_dir_empty")
+    @patch("dbcalm_cmd_server.command.validator.Validator.data_dir_empty")
     def test_validate_others_data_dir_empty_check(
         self,
         mock_data_dir_empty: MagicMock,
@@ -184,7 +184,7 @@ class TestValidator:
         assert status == VALID_REQUEST
         assert message is None
 
-    @patch("backrest_cmd.process.runner_factory.runner_factory")
+    @patch("dbcalm_cmd_server.process.runner_factory.runner_factory")
     def test_server_dead(
         self,
         mock_runner_factory: MagicMock,

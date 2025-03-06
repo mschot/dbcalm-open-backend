@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from backrest.config.validator import Validator, ValidatorError
+from dbcalm.config.validator import Validator, ValidatorError
 
 
 class TestConfigValidator:

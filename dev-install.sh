@@ -5,7 +5,7 @@ project_name=${1:-backrest}
 
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root"
-    echo "Please run as root"    
+    echo "Please run as root"
     exit 1
 fi
 
@@ -37,7 +37,7 @@ chown mysql:$project_name /usr/bin/$project_name-cmd
 chmod 750 /usr/bin/$project_name-cmd
 
 #copy service file to /etc/systemd/system/
-cp templates/$project_name-cmd.service /etc/systemd/system/
+cp templates/$project_name-cmd.service /usr/lib/systemd/system/
 systemctl daemon-reload
 systemctl restart $project_name-cmd
 

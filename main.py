@@ -4,9 +4,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backrest.config.config_factory import config_factory
-from backrest.config.validator import Validator, ValidatorError
-from backrest.routes import (
+from dbcalm.config.config_factory import config_factory
+from dbcalm.config.validator import Validator, ValidatorError
+from dbcalm.routes import (
     authorize,
     create_backups,
     create_client,
