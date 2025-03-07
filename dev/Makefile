@@ -8,10 +8,6 @@ DEV_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 SHELL := /bin/bash
 
-.PHONY: dev
-dev:
-	cd .. && DBCALM_DEV_MODE=1 fastapi dev main.py
-
 #REQUIRES sudo, to add cron e.g. sudo make addcron
 addcron:
 	echo  "* * * * *    root    $(DEV_DIR)/cron/dbtestscript.sh" > /etc/cron.d/dbcalm-dbtest
