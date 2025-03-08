@@ -8,7 +8,7 @@ from dbcalm.config.config_factory import config_factory
 from dbcalm.config.validator import Validator, ValidatorError
 from dbcalm.routes import (
     authorize,
-    create_backups,
+    create_backup,
     create_client,
     delete_client,
     list_backups,
@@ -39,7 +39,7 @@ app.add_middleware(
 
 app.include_router(authorize.router, prefix="/auth", tags=["Authentication"])
 app.include_router(token.router, prefix="/auth", tags=["Authentication"])
-app.include_router(create_backups.router, tags=["Backups"])
+app.include_router(create_backup.router, tags=["Backups"])
 app.include_router(list_backups.router, tags=["Backups"])
 app.include_router(list_clients.router, tags=["Clients"])
 app.include_router(delete_client.router, tags=["Clients"])

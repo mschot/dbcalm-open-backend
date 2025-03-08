@@ -6,7 +6,7 @@
             "name": "Python Debugger: FASTAPI - custom",
             "type": "debugpy",
             "request": "launch",
-            "program": "${cwd}/main.py",
+            "program": "${cwd}/dbcalm-api.py",
             "console": "integratedTerminal",
             "env": {
                 "PYTHONDONTWRITEBYTECODE": "1",
@@ -14,7 +14,7 @@
             }
         },
         {
-            "name": "Python Debugger: cmd",
+            "name": "Python Debugger: cmd-server",
             "type": "debugpy",
             "request": "launch",
             "program": "${cwd}/dbcalm-cmd-server.py",

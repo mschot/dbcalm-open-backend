@@ -4,17 +4,21 @@ from fastapi import APIRouter, Depends
 
 from dbcalm.api.model.response.status_response import StatusResponse
 from dbcalm.auth.verify_token import verify_token
+from dbcalm.data.repository.process import ProcessRepository
 
 router = APIRouter()
 
 @router.get("/status/{status_id}")
 async def get_status(
-    status_id: int,
+    status_id: str,
     _: Annotated[dict, Depends(verify_token)],
 ) -> StatusResponse:
+
+    process_repository = ProcessRepository()
+    process = process_repository.by_command_id(status_id)
+
     return {
-        "id": status_id,
-        "status": "completed",
-        "type": "backup",
-        "link": "/backups/{backup_id}",
+        "status": process.status,
+        "type": process.type,
+        "link": f"/status/{status_id}",
     }

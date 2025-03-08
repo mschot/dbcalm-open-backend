@@ -8,6 +8,7 @@ from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.backup import Backup
 from dbcalm.data.repository.backup import BackupRepository
+from dbcalm.util.process_status_response import process_status_response
 from dbcalm_cmd_client.client import Client
 
 
@@ -27,8 +28,6 @@ def get_previous_backups(backup: Backup) -> list[Backup]:
     return all_backups
 
 
-INVALID_REQUEST = 400
-INTERNAL_ERROR = 500
 
 class RestoreRequest(BaseModel):
     identifier: str
@@ -56,18 +55,4 @@ async def restore_backup(
         {"identifier_list": backups, "target": request.target},
     )
 
-    accepted_code = 202
-    if process["code"] == accepted_code:
-        response.status_code = accepted_code
-        return StatusResponse(
-            pid = process["id"],
-            link = f"/status/{process["id"]}",
-            status=process["status"],
-        )
-
-    if process["code"] >= INVALID_REQUEST and process["code"] < INTERNAL_ERROR:
-        response.status_code = process["code"]
-        return StatusResponse(status=str(process["status"]))
-
-    response.status_code = process["code"]
-    return StatusResponse(status=str(process["status"]))
+    return process_status_response(process, response)
