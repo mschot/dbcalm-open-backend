@@ -13,5 +13,5 @@ dbsymlink:
 dev-install:
 	cd dev && ./install.sh
 dev:
-	cd dev && source ../.venv/bin/activate && ./start_both.py
+	cd dev && source ../.venv/bin/activate && ./start_all.py
 

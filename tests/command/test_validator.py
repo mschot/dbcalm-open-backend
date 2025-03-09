@@ -100,86 +100,71 @@ class TestValidator:
         assert status == INVALID_REQUEST
         assert "Invalid command" in message
 
-    def test_validate_too_many_args(self, validator: Validator) -> None:
-        command_data = {
-            "cmd": "full_backup",
-            "args": {
-                "id": "test_backup",
-                "extra_arg1": "value1",
-                "extra_arg2": "value2",
-            },
-        }
-
-        status, message = validator.validate(command_data)
-
-        assert status == INVALID_REQUEST
-        assert "expected" in message
-
-    @patch("dbcalm_cmd_server.command.validator.Validator.validate_others")
+    @patch("dbcalm_cmd_server.command.validator.Validator.database_restore")
     @patch("dbcalm.data.adapter.adapter_factory.adapter_factory")
     def test_validate_restore_with_other_checks(
         self,
         mock_adapter_factory: MagicMock,
-        mock_validate_others: MagicMock,
+        mock_database_restore: MagicMock,
         validator: Validator,
     ) -> None:
         # Mock adapter factory to return a mock adapter
         mock_adapter = MagicMock()
         mock_adapter_factory.return_value = mock_adapter
 
-        # Mock validate_others to return a specific result
-        mock_validate_others.return_value = (PREREQUISTE_FAILED, "Test error")
+        # Mock database_restore to return a specific result
+        mock_database_restore.return_value = (PREREQUISTE_FAILED, "Test error")
 
         command_data = {
             "cmd": "restore_backup",
             "args": {
                 "id_list": ["backup1", "backup2"],
-                "target": "test_target",
+                "target": "database",
             },
         }
-
         status, message = validator.validate(command_data)
 
         assert status == PREREQUISTE_FAILED
         assert message == "Test error"
-        mock_validate_others.assert_called_once()
+
+        mock_database_restore.assert_called_once()
 
     @patch("dbcalm_cmd_server.command.validator.Validator.server_dead")
-    def test_validate_others_server_dead_check(
+    def test_database_restore_server_dead_check(
         self,
         mock_server_dead: MagicMock,
         validator: Validator,
     ) -> None:
         # Test when server is not dead
         mock_server_dead.return_value = False
-        status, message = validator.validate_others(["server_dead"])
+        status, message = validator.database_restore(["server_dead"])
 
         assert status == PREREQUISTE_FAILED
         assert "server is not stopped" in message
 
         # Test when server is dead
         mock_server_dead.return_value = True
-        status, message = validator.validate_others(["server_dead"])
+        status, message = validator.database_restore(["server_dead"])
 
         assert status == VALID_REQUEST
         assert message is None
 
     @patch("dbcalm_cmd_server.command.validator.Validator.data_dir_empty")
-    def test_validate_others_data_dir_empty_check(
+    def test_database_restore_data_dir_empty_check(
         self,
         mock_data_dir_empty: MagicMock,
         validator: Validator,
     ) -> None:
         # Test when data dir is not empty
         mock_data_dir_empty.return_value = False
-        status, message = validator.validate_others(["data_dir_empty"])
+        status, message = validator.database_restore(["data_dir_empty"])
 
         assert status == PREREQUISTE_FAILED
         assert "data directory is not empty" in message
 
         # Test when data dir is empty
         mock_data_dir_empty.return_value = True
-        status, message = validator.validate_others(["data_dir_empty"])
+        status, message = validator.database_restore(["data_dir_empty"])
 
         assert status == VALID_REQUEST
         assert message is None

@@ -37,3 +37,8 @@ class BackupRepository:
 
         required_backups.reverse()
         return required_backups
+
+    def latest_backup(self) -> Backup | None:
+        # get list of backups ordered by end_time desc
+        # and limit 1 and return the first item
+        return self.adapter.get_list(Backup, {}, {"end_time": "desc"}, 1, 1)[0][0]

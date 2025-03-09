@@ -18,7 +18,7 @@ class RestoreRequest(BaseModel):
 
 router = APIRouter()
 @router.post("/restore")
-async def restore_backup(
+async def create_restore(
     request: RestoreRequest,
     _: Annotated[dict, Depends(verify_token)],
     response: Response,

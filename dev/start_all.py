@@ -187,7 +187,7 @@ while True:
             for idx in terminated:
                 print(
                     f"Process {processes[idx].pid} terminated"
-                    f" unexpectedly with code {processes[idx].poll()}"
+                    f" unexpectedly with code {processes[idx].poll()}",
                 )
 
             print("Restarting terminated processes...")

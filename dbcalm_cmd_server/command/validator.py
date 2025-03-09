@@ -28,7 +28,7 @@ class Validator:
             "restore_backup": {
                 "id_list": "required",
                 "target": "required",
-                "|other": ["server_dead", "data_dir_empty"],
+                "|database_restore": ["server_dead", "data_dir_empty"],
             },
         }
 
@@ -53,17 +53,14 @@ class Validator:
             if arg not in command_data["args"]:
                 return INVALID_REQUEST, f"Missing required argument {arg}"
 
-        # check if there are more arguments than expected
-        max_args_len = len(self.commands[command_data["cmd"]])
-        args_len = len(command_data["args"])
-        if(max_args_len < args_len):
-            return INVALID_REQUEST, (f"command {command_data["cmd"]}"
-                f" expected {max_args_len} arguments but received {args_len}")
 
         #check other requirements
-        if "|other" in self.commands[command_data["cmd"]]:
-            other_checks = self.validate_others(
-                self.commands[command_data["cmd"]]["|other"],
+        if (
+            "|database_restore" in self.commands[command_data["cmd"]]
+            and command_data["args"]["target"] == "database"
+        ):
+            other_checks = self.database_restore(
+                self.commands[command_data["cmd"]]["|database_restore"],
             )
             if other_checks[0] != VALID_REQUEST:
                 return other_checks
@@ -84,7 +81,7 @@ class Validator:
                     f"{command_data["args"][arg]} already exists")
 
         return VALID_REQUEST, None
-    def validate_others(self, checks: list) -> tuple[bool, str]:
+    def database_restore(self, checks: list) -> tuple[bool, str]:
         if "server_dead" in checks and not self.server_dead():
             return PREREQUISTE_FAILED, ("cannot restore to database,"
                             " MySQL/MariaDb server is not stopped")

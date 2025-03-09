@@ -9,6 +9,7 @@ from dbcalm.data.adapter.adapter_factory import (
 )
 from dbcalm.data.model.process import Process
 from dbcalm.data.transformer.process_to_backup import process_to_backup
+from dbcalm.data.transformer.process_to_restore import process_to_restore
 from dbcalm.logger.logger_factory import logger_factory
 
 
@@ -21,7 +22,7 @@ class ProcessQueueHandler:
 
     def handle(self) -> None:
         while True:
-            process = self.queue.get(block=True)
+            process = self.queue.get(block=True) # type: Process
             self.queue.task_done()
 
             if process.return_code != 0:
@@ -31,10 +32,8 @@ class ProcessQueueHandler:
                 )
 
                 self.logger.error(process.error)
-
                 self.cleanup(process)
                 continue
-
 
             if process.type == "backup":
                 backup = process_to_backup(process)
@@ -42,7 +41,9 @@ class ProcessQueueHandler:
                 self.logger.debug("Backup %s created", backup.id)
                 break
             if process.type == "restore":
-                self.logger.debug("Restore completed successfully")
+                restore = process_to_restore(process)
+                self.data_adapter.create(restore)
+                self.logger.debug("Restore %s created", restore.id)
             break
 
     def cleanup(self, process: Process) -> None:

@@ -1,7 +1,18 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "name": "Cmd-server & FASTAPI - custom",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "start_all.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/dev",
+            "env": {
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "DBCALM_DEV_MODE": "1"
+            }
+        },
         {
             "name": "FASTAPI - custom",
             "type": "debugpy",
@@ -36,7 +47,8 @@
                 "DBCALM_DEV_MODE": "1"
             },
             "justMyCode": true
-        }
+        },
+
 
     ]
 }

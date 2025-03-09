@@ -1,11 +1,12 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 from dbcalm.api.model.request.backup_request import BackupRequest
 from dbcalm.api.model.response.status_response import StatusResponse
 from dbcalm.auth.verify_token import verify_token
+from dbcalm.data.repository.backup import BackupRepository
 from dbcalm.util.kebab import kebab_case
 from dbcalm.util.process_status_response import process_status_response
 from dbcalm_cmd_client.client import Client
@@ -25,8 +26,16 @@ async def create_backup(
     else:
         id = kebab_case(id)
 
-    # Support both from_backup_id and from_backup_id for backward compatibility
     from_backup_id = request.from_backup_id
+    if request.type == "incremental" and from_backup_id is None:
+
+        latest_backup = BackupRepository().latest_backup()
+        if not latest_backup:
+           raise HTTPException(
+            status_code=404,
+            detail="No backups found to create incremental backup from",
+        )
+        from_backup_id = latest_backup.id
 
     if from_backup_id is None:
         process = client.command("full_backup", {"id": id})

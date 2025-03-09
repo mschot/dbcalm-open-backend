@@ -11,10 +11,10 @@ from dbcalm.routes import (
     authorize,
     create_backup,
     create_client,
+    create_restore,
     delete_client,
     list_backups,
     list_clients,
-    restore,
     status,
     token,
     update_client,
@@ -46,7 +46,7 @@ app.include_router(list_clients.router, tags=["Clients"])
 app.include_router(delete_client.router, tags=["Clients"])
 app.include_router(update_client.router, tags=["Clients"])
 app.include_router(create_client.router, tags=["Clients"])
-app.include_router(restore.router, tags=["Backups"])
+app.include_router(create_restore.router, tags=["Backups"])
 app.include_router(status.router, tags=["Status"])
 
 if __name__ == "__main__":

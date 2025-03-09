@@ -36,7 +36,6 @@ class Mariadb(adapter.Adapter):
             args={"id": id, "from_backup_id": from_backup_id},
         )
 
-
     def restore_backup(self, id_list: list, target: RestoreTarget) -> Process:
         tmp_dir = get_tmp_dir(self.config.value("backup_dir"))
 
@@ -49,5 +48,5 @@ class Mariadb(adapter.Adapter):
         return self.command_runner.execute_consecutive(
             commands=commands,
             command_type="restore",
-            args={"id_list": id_list},
+            args={"id_list": id_list, "target": target, "tmp_dir": tmp_dir},
         )

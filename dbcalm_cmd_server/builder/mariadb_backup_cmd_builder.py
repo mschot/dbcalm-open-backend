@@ -111,9 +111,9 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         ) -> list:
 
         command_list = []
-        full_backup_id = id_list.pop(0)
+        id_list_copy = id_list.copy()
+        full_backup_id = id_list_copy.pop(0)
         original_backup_path = f"{self.config.value('backup_dir')}/{full_backup_id}"
-
         # could do shutil.copytree but that would stop api flow
         #  whereas this will run consecutively using the process
         #  runner (although will not work on windows)
@@ -131,10 +131,9 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
 
         command_list.append(command)
 
-
-        while len(id_list) > 0:
-            id = id_list.pop(0)
-            incremental_left = len(id_list)
+        while len(id_list_copy) > 0:
+            id = id_list_copy.pop(0)
+            incremental_left = len(id_list_copy)
             command = self.build_incremental_restore_cmd(
                 new_backup_path,
                 id,
