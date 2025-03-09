@@ -15,3 +15,11 @@ class UserRepository:
 
     def get(self, username: str) -> User | None:
         return self.adapter.get(User, {"username" : username})
+
+    def delete(self, username: str) -> bool:
+        return self.adapter.delete(User, {"username" : username})
+
+    def update(self, user: User) -> bool:
+        if(user.password):
+            user.password = self.pwd_context.hash(user.password)
+        return self.adapter.update(user)

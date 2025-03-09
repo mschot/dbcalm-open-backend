@@ -26,8 +26,9 @@ do
         systemctl stop $service
     fi
     #create executable and copy to /usr/bin
-    pyinstaller --onefile --clean $service.py
-    cp dist/$service  /usr/bin/
+    pyinstaller --onefile --clean --workpath=./build/pyinstaller --distpath=dist/local $service.py
+    rm -f $service.spec
+    cp dist/local/$service  /usr/bin/
     chown mysql:$project_name /usr/bin/$service
     chmod 750 /usr/bin/$service
 

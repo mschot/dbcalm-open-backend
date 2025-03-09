@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+project_name="dbcalm"
+
+# Stop services if they're running
+if [ -d /run/systemd/system ]; then
+    #check if the services are enabled
+    if [ -f /usr/lib/systemd/system/$project_name-api.service ]; then
+        systemctl stop $project_name-api || true
+        systemctl disable $project_name-api || true
+    fi
+    if [ -f /usr/lib/systemd/system/$project_name-cmd-server.service ]; then
+        systemctl stop $project_name-cmd-server || true
+        systemctl disable $project_name-cmd-server || true
+    fi
+fi
+
+exit 0

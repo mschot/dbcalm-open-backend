@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dbcalm.config.config_factory import config_factory
 from dbcalm.config.validator import Validator
 from dbcalm.errors.validation_error import ValidationError
+from dbcalm.logger.logger_factory import logger_factory
 from dbcalm.routes import (
     authorize,
     create_backup,
@@ -49,13 +50,12 @@ app.include_router(create_client.router, tags=["Clients"])
 app.include_router(create_restore.router, tags=["Backups"])
 app.include_router(status.router, tags=["Status"])
 
-if __name__ == "__main__":
-
+def api_server() -> None:
     uvicorn_args = {
-        "app": app,
-        "host": "0.0.0.0",  # noqa: S104
-        "port": 8000,
-    }
+            "app": app,
+            "host": "0.0.0.0",  # noqa: S104
+            "port": 8000,
+        }
     if config.value("ssl_cert") and config.value("ssl_key"):
         ssl_cert = config.value("ssl_cert")
         ssl_key = config.value("ssl_key")
@@ -71,3 +71,11 @@ if __name__ == "__main__":
         uvicorn_args["ssl_keyfile"] = ssl_key
 
     uvicorn.run(**uvicorn_args)
+
+if __name__ == "__main__":
+    try:
+        api_server()
+    except Exception:
+        logger = logger_factory()
+        logger.exception("Failed to start API server:")
+

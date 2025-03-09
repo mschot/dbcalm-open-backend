@@ -1,0 +1,50 @@
+#!/bin/bash
+set -e
+
+project_name="dbcalm"
+
+# create group and user if not exists
+if ! getent group $project_name >/dev/null 2>&1; then
+    groupadd $project_name
+fi
+
+if ! id -nG mysql | grep -qw "$project_name"; then
+    usermod -a -G $project_name mysql
+fi
+
+if ! id "$project_name" >/dev/null 2>&1; then
+    #no login and no home
+    useradd -r -s /usr/sbin/nologin -M -g $project_name $project_name
+fi
+
+#set permissions
+chown -R mysql:$project_name /var/backups/$project_name/
+chmod -R 770 /var/backups/$project_name/
+
+chown -R mysql:$project_name /var/run/$project_name/
+chmod -R 770 /var/run/$project_name/
+
+chown -R mysql:$project_name /var/log/$project_name/
+chmod -R 770 /var/log/$project_name/
+
+chown -R mysql:$project_name /var/lib/$project_name/
+chmod -R 775 /var/lib/$project_name/
+
+chown mysql:$project_name /usr/bin/$project_name-api
+chmod 750 /usr/bin/$project_name-api
+
+chown mysql:$project_name /usr/bin/$project_name-cmd-server
+chmod 750 /usr/bin/$project_name-cmd-server
+
+# Enable and start services
+systemctl daemon-reload
+systemctl enable $project_name-api
+systemctl enable $project_name-cmd-server
+
+# Only attempt to start services if system is not in chroot (during package install)
+if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]; then
+    systemctl start $project_name-api
+    systemctl start $project_name-cmd-server
+fi
+
+exit 0
