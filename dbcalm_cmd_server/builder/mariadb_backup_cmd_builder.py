@@ -146,6 +146,8 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         if target == RestoreTarget.DATABASE:
             command = [self.executable()]
             command.append("--copy-back")
+            command.append("--target-dir")
+            command.append(new_backup_path)
             command_list.append(command)
 
         return command_list

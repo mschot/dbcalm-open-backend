@@ -10,6 +10,8 @@ hooks:
 dbsymlink:
 	ln -s /var/lib/dbcalm/db.sqlite3 db.sqlite3
 
-dev:
+dev-install:
 	cd dev && ./install.sh
+dev:
+	cd dev && source ../.venv/bin/activate && ./start_both.py
 

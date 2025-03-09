@@ -154,6 +154,7 @@ class Runner:
                                 completed_process.command,
                                 completed_process.return_code,
                         )
+                        self.logger.error("Returned error: %s", completed_process.error)
                         break
 
                     if index == len(commands):

@@ -24,15 +24,15 @@ class BackupRepository:
         return items, total
 
     def required_backups(self, backup: Backup) -> list:
-        required_backups = [backup.identifier]
+        required_backups = [backup.id]
         current = backup
-        while current.from_identifier:
-            prev_backup = BackupRepository().get(current.from_identifier)
+        while current.from_backup_id:
+            prev_backup = BackupRepository().get(current.from_backup_id)
             if prev_backup:
-                required_backups.append(prev_backup.identifier)
+                required_backups.append(prev_backup.id)
                 current = prev_backup
             else:
-                msg = f"Backup with identifier {current.from_identifier} not found"
+                msg = f"Backup with id {current.from_backup_id} not found"
                 raise NotFoundError(msg)
 
         required_backups.reverse()
