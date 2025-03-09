@@ -20,17 +20,20 @@ async def create_backup(
 ) -> StatusResponse :
     client = Client()
 
-    if request.identifier is None:
-        identifier = datetime.now(tz=UTC).strftime("%Y-%m-%d-%H-%M-%S")
+    if request.id is None:
+        id = datetime.now(tz=UTC).strftime("%Y-%m-%d-%H-%M-%S")
     else:
-        identifier = kebab_case(identifier)
+        id = kebab_case(id)
 
-    if request.from_identifier is None:
-        process = client.command("full_backup", {"identifier": identifier})
+    # Support both from_backup_id and from_backup_id for backward compatibility
+    from_backup_id = request.from_backup_id
+
+    if from_backup_id is None:
+        process = client.command("full_backup", {"id": id})
     else:
         process = client.command(
             "incremental_backup",
-            {"identifier": identifier, "from_identifier": request.from_identifier},
+            {"id": id, "from_backup_id": from_backup_id},
         )
 
     return process_status_response(process, response)

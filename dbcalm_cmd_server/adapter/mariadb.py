@@ -1,9 +1,7 @@
-import uuid
-from pathlib import Path
-
 from dbcalm.config.config_factory import config_factory
 from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.process import Process
+from dbcalm.util.get_tmp_dir import get_tmp_dir
 from dbcalm_cmd_server.adapter import adapter
 from dbcalm_cmd_server.builder.backup_cmd_builder import BackupCommandBuilder
 from dbcalm_cmd_server.process.runner import Runner
@@ -19,43 +17,37 @@ class Mariadb(adapter.Adapter):
         self.command_runner = command_runner
         self.config = config_factory()
 
-    def full_backup(self, identifier: str) -> Process:
-        command = self.command_builder.build_full_backup_cmd(identifier)
+    def full_backup(self, id: str) -> Process:
+        command = self.command_builder.build_full_backup_cmd(id)
         return self.command_runner.execute(
             command=command,
             command_type="backup",
-            args={"identifier": identifier},
+            args={"id": id},
         )
 
-    def incremental_backup(self, identifier: str, from_identifier: str) -> Process:
+    def incremental_backup(self, id: str, from_backup_id: str) -> Process:
         command = self.command_builder.build_incremental_backup_cmd(
-            identifier,
-            from_identifier,
+            id,
+            from_backup_id,
         )
         return self.command_runner.execute(
             command=command,
             command_type="backup",
-            args={"identifier": identifier, "from_identifier": from_identifier},
+            args={"id": id, "from_backup_id": from_backup_id},
         )
 
-    def get_tmp_dir(self) -> str:
-        tmp_dir = self.config.value("backup_dir") + "/tmp/" + str(uuid.uuid4())  # noqa: S108
-        path = Path(tmp_dir)
-        path.mkdir(parents=True, exist_ok=True)
-        return tmp_dir
 
-
-    def restore_backup(self, identifier_list: list, target: RestoreTarget) -> Process:
-        tmp_dir = self.get_tmp_dir()
+    def restore_backup(self, id_list: list, target: RestoreTarget) -> Process:
+        tmp_dir = get_tmp_dir(self.config.value("backup_dir"))
 
         commands = self.command_builder.build_restore_cmds(
             tmp_dir,
-            identifier_list,
+            id_list,
             target,
         )
 
         return self.command_runner.execute_consecutive(
             commands=commands,
             command_type="restore",
-            args={"identifier_list": identifier_list},
+            args={"id_list": id_list},
         )

@@ -18,7 +18,12 @@ async def list_clients(
     repository = ClientRepository()
     query_dict = parse_query_dict(query)
     order_dict = parse_query_dict(order)
-    items, total = repository.list(query_dict, order_dict, page=page, per_page=per_page)
+    items, total = repository.get_list(
+        query_dict,
+        order_dict,
+        page=page,
+        per_page=per_page,
+    )
 
     return {
         "items": [item.model_dump(exclude={"secret"}) for item in items],

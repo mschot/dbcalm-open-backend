@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from dbcalm.config.config_factory import config_factory
-from dbcalm.config.validator import Validator, ValidatorError
+from dbcalm.config.validator import Validator
+from dbcalm.errors.validation_error import ValidationError
 from dbcalm.routes import (
     authorize,
     create_backup,
@@ -64,7 +65,7 @@ if __name__ == "__main__":
                 "SSL certificate and/or key file(s) are not"
                 f" readable by {config.PROJECT_NAME}"
             )
-            raise ValidatorError(msg)
+            raise ValidationError(msg)
 
         uvicorn_args["ssl_certfile"] = ssl_cert
         uvicorn_args["ssl_keyfile"] = ssl_key

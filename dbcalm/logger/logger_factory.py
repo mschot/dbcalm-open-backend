@@ -1,7 +1,7 @@
 import logging
 
 from dbcalm.config.config_factory import config_factory
-from dbcalm.config.validator import ValidatorError
+from dbcalm.errors.validation_error import ValidationError
 from dbcalm.logger.file_logger import FileLogger
 
 
@@ -12,5 +12,5 @@ def logger_factory() -> logging.Logger:
         return FileLogger().get_logger()
 
     msg = "Unknown logger type"
-    raise ValidatorError(msg)
+    raise ValidationError(msg)
 

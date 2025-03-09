@@ -9,7 +9,7 @@ class Adapter(ABC):
         self.default_stream_compression = "gzip"
 
     @abstractmethod
-    def list(
+    def get_list(
         self,
         model: BaseModel,
         query: dict,

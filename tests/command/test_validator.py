@@ -19,26 +19,26 @@ class TestValidator:
     def test_required_args(self, validator: Validator) -> None:
         # Test for full_backup command
         required_full_backup = validator.required_args("full_backup")
-        assert "identifier" in required_full_backup
+        assert "id" in required_full_backup
 
         # Test for incremental_backup command
         required_incremental_backup = validator.required_args("incremental_backup")
-        assert "identifier" in required_incremental_backup
-        assert "from_identifier" in required_incremental_backup
+        assert "id" in required_incremental_backup
+        assert "from_backup_id" in required_incremental_backup
 
         # Test for restore_backup command
         required_restore_backup = validator.required_args("restore_backup")
-        assert "identifier_list" in required_restore_backup
+        assert "id_list" in required_restore_backup
         assert "target" in required_restore_backup
 
     def test_unique_args(self, validator: Validator) -> None:
         # Test for full_backup command
         unique_full_backup = validator.unique_args("full_backup")
-        assert "identifier" in unique_full_backup
+        assert "id" in unique_full_backup
 
         # Test for incremental_backup command
         unique_incremental_backup = validator.unique_args("incremental_backup")
-        assert "identifier" in unique_incremental_backup
+        assert "id" in unique_incremental_backup
 
         # Test for restore_backup command
         unique_restore_backup = validator.unique_args("restore_backup")
@@ -53,7 +53,7 @@ class TestValidator:
         with patch.object(validator, "validate", return_value=(VALID_REQUEST, None)):
             command_data = {
                 "cmd": "full_backup",
-                "args": {"identifier": "test_backup"},
+                "args": {"id": "test_backup"},
             }
 
             status, message = validator.validate(command_data)
@@ -66,11 +66,11 @@ class TestValidator:
         validator: Validator,
     ) -> None:
         # Patch the validate method to simulate a conflict
-        error_msg = "Backup with identifier test_backup already exists"
+        error_msg = "Backup with id test_backup already exists"
         with patch.object(validator, "validate", return_value=(CONFLICT, error_msg)):
             command_data = {
                 "cmd": "full_backup",
-                "args": {"identifier": "test_backup"},
+                "args": {"id": "test_backup"},
             }
 
             status, message = validator.validate(command_data)
@@ -81,18 +81,18 @@ class TestValidator:
     def test_validate_full_backup_missing_args(self, validator: Validator) -> None:
         command_data = {
             "cmd": "full_backup",
-            "args": {},  # Missing required identifier
+            "args": {},  # Missing required id
         }
 
         status, message = validator.validate(command_data)
 
         assert status == INVALID_REQUEST
-        assert "Missing required argument identifier" in message
+        assert "Missing required argument id" in message
 
     def test_validate_invalid_command(self, validator: Validator) -> None:
         command_data = {
             "cmd": "invalid_command",
-            "args": {"identifier": "test_backup"},
+            "args": {"id": "test_backup"},
         }
 
         status, message = validator.validate(command_data)
@@ -104,7 +104,7 @@ class TestValidator:
         command_data = {
             "cmd": "full_backup",
             "args": {
-                "identifier": "test_backup",
+                "id": "test_backup",
                 "extra_arg1": "value1",
                 "extra_arg2": "value2",
             },
@@ -133,7 +133,7 @@ class TestValidator:
         command_data = {
             "cmd": "restore_backup",
             "args": {
-                "identifier_list": ["backup1", "backup2"],
+                "id_list": ["backup1", "backup2"],
                 "target": "test_target",
             },
         }
@@ -184,33 +184,50 @@ class TestValidator:
         assert status == VALID_REQUEST
         assert message is None
 
-    @patch("dbcalm_cmd_server.process.runner_factory.runner_factory")
-    def test_server_dead(
-        self,
-        mock_runner_factory: MagicMock,
-        validator: Validator,
-    ) -> None:
-        # Mock runner factory to return a mock runner
+    def test_server_dead(self, validator: Validator) -> None:
+        # Create a real test that mocks at import level
         mock_runner = MagicMock()
-        mock_runner_factory.return_value = mock_runner
-
-        # Mock completed process and queue
-        mock_completed_process = MagicMock()
         mock_queue = MagicMock()
-        mock_queue.get.return_value = mock_completed_process
 
-        # Setup mock runner to return mock queue
+        # First test: Server is alive (return code 0)
+        mock_process_alive = MagicMock()
+        mock_process_alive.return_code = 0
+        mock_queue.get.return_value = mock_process_alive
         mock_runner.execute.return_value = (None, mock_queue)
 
-        # Test when server is alive (return code 0)
-        mock_completed_process.return_code = 0
-        result = validator.server_dead()
-        assert result is False
+        # Use patch at import level - the key fix here!
+        with patch(
+            "dbcalm_cmd_server.command.validator.runner_factory",
+            return_value=mock_runner,
+        ):
+            result = validator.server_dead()
+            assert result is False
 
-        # Test when server is dead (non-zero return code)
-        mock_completed_process.return_code = 1
-        result = validator.server_dead()
-        assert result is True
+            # Verify all the appropriate methods were called
+            mock_runner.execute.assert_called_once()
+            mock_queue.get.assert_called_once()
+
+        # Reset mocks for the second test
+        mock_runner.reset_mock()
+        mock_queue.reset_mock()
+
+        # Second test: Server is dead (return code not 0)
+        mock_process_dead = MagicMock()
+        mock_process_dead.return_code = 1
+        mock_queue.get.return_value = mock_process_dead
+        mock_runner.execute.return_value = (None, mock_queue)
+
+        # Use patch at import level again
+        with patch(
+            "dbcalm_cmd_server.command.validator.runner_factory",
+            return_value=mock_runner,
+        ):
+            result = validator.server_dead()
+            assert result is True
+
+            # Verify all the appropriate methods were called
+            mock_runner.execute.assert_called_once()
+            mock_queue.get.assert_called_once()
 
     @patch("pathlib.Path.is_dir")
     @patch("pathlib.Path.iterdir")

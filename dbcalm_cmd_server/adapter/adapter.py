@@ -11,14 +11,14 @@ class Adapter(ABC):
         self.default_stream_compression = "gzip"
 
     @abstractmethod
-    def full_backup(self, identifier: str) -> Process:
+    def full_backup(self, id: str) -> Process:
         pass
 
     @abstractmethod
-    def incremental_backup(self, identifier: str, from_identifier: str) -> Process:
+    def incremental_backup(self, id: str, from_backup_id: str) -> Process:
         pass
 
     @abstractmethod
-    def restore_backup(self, identifier_list: list, target: RestoreTarget) -> Process:
+    def restore_backup(self, id_list: list, target: RestoreTarget) -> Process:
         pass
 

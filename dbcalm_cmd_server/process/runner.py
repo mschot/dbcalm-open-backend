@@ -65,6 +65,8 @@ class Runner:
         if args is None:
             args = {}
         start_time = datetime.now(tz=UTC)
+
+        self.logger.info("Executing command: %s", " ".join(command))
         process = subprocess.Popen(  # noqa: S603
             command,
             stdout=subprocess.PIPE,

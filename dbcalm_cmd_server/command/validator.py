@@ -6,6 +6,7 @@ from dbcalm.data.adapter.adapter_factory import (
     adapter_factory as data_adapter_factory,
 )
 from dbcalm.data.model.backup import Backup
+from dbcalm_cmd_server.process.runner_factory import runner_factory
 
 VALID_REQUEST = 200
 INVALID_REQUEST = 400
@@ -15,16 +16,17 @@ NOT_FOUND = 404
 
 class Validator:
     def __init__(self) -> None:
+        self.config = config_factory()
         self.commands = {
             "full_backup": {
-                "identifier": "unique|required",
+                "id": "unique|required",
             },
             "incremental_backup": {
-                "identifier": "unique|required",
-                "from_identifier": "required",
+                "id": "unique|required",
+                "from_backup_id": "required",
             },
             "restore_backup": {
-                "identifier_list": "required",
+                "id_list": "required",
                 "target": "required",
                 "|other": ["server_dead", "data_dir_empty"],
             },
@@ -69,16 +71,16 @@ class Validator:
 
         # In the future we could make the unique validation more generic
         # by making the argument in commands include model and field
-        # for instance backup_identifier_unique that way we can find the
+        # for instance backup_id_unique that way we can find the
         # model and field to validate
         unique_arguments = self.unique_args(command_data["cmd"])
         data_adapter = data_adapter_factory()
         for arg in unique_arguments:
-            if arg != "identifier" or not command_data["args"][arg]:
+            if arg != "id" or not command_data["args"][arg]:
                 continue
 
-            if data_adapter.get(Backup, {"identifier": command_data["args"][arg]}):
-                return CONFLICT, ("Backup with identifier"
+            if data_adapter.get(Backup, {"id": command_data["args"][arg]}):
+                return CONFLICT, ("Backup with id"
                     f"{command_data["args"][arg]} already exists")
 
         return VALID_REQUEST, None
@@ -96,12 +98,16 @@ class Validator:
 
 
     def server_dead(self) -> bool:
-        from dbcalm_cmd_server.process.runner_factory import runner_factory
+
+
+        credentials_file = (self.config.value("backup_credentials_file")
+                if self.config.value("backup_credentials_file") is not None
+                else f"/etc/{ self.config.PROJECT_NAME }/credentials.cnf")
 
         command = [
             "mysqladmin",
-            "--defaults-group-suffix=-backup",
-            "--defaults-file=/etc/dbcalm/backup_credentials.cnf",
+            f"--defaults-file={credentials_file}",
+            "--defaults-group-suffix=-dbcalm",
             "ping",
         ]
 
@@ -121,8 +127,7 @@ class Validator:
 
     def data_dir_empty(self) -> bool:
         # Get data directory from config or use default
-        config = config_factory()
-        data_dir = config.value("mysql_data_dir")
+        data_dir = self.config.value("mysql_data_dir")
         if data_dir is None:
             data_dir = "/var/lib/mysql"
 

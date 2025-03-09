@@ -10,22 +10,23 @@ def process_to_backup(process: Process) -> Backup:
         msg = "Process type must be 'backup'"
         raise ValueError(msg)
 
-    if not process.args.get("identifier"):
-        msg = "Process must have an identifier"
+    if not process.args.get("id"):
+        msg = "Process must have an id"
         raise ValueError(msg)
 
-    identifier = process.args.get("identifier")
-    if data_adapter_factory().get(Backup, {"identifier": identifier}):
-        msg = f"Backup with identifier {identifier} already exists and has to be unique"
+    id = process.args.get("id")
+    if data_adapter_factory().get(Backup, {"id": id}):
+        msg = f"Backup with id {id} already exists and has to be unique"
         raise ValueError(msg)
 
-    from_identifier = None
-    if process.args.get("from_identifier"):
-        from_identifier = process.args.get("from_identifier")
+    from_backup_id = None
+    if process.args.get("from_backup_id"):
+        from_backup_id = process.args.get("from_backup_id")
 
     return Backup(
-        identifier=process.args.get("identifier"),
-        from_identifier=from_identifier,
+        id=process.args.get("id"),
+        from_backup_id=from_backup_id,
         start_time=process.start_time,
         end_time=process.end_time,
+        process_id=process.id,
     )

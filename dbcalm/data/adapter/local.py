@@ -35,9 +35,9 @@ class Local(Adapter):
         return session()
 
     def get(self, model: SQLModel, query: dict) -> SQLModel|None:
-        if len(self.list(model, query)[0]) == 0:
+        if len(self.get_list(model, query)[0]) == 0:
             return None
-        return self.list(model, query)[0][0]
+        return self.get_list(model, query)[0][0]
 
     def create(self, model: SQLModel) -> SQLModel:
         self.session.add(model)
@@ -55,7 +55,7 @@ class Local(Adapter):
         self.session.refresh(model)
         return model
 
-    def list(self, model: SQLModel,
+    def get_list(self, model: SQLModel,
         query: dict | None = None,
         order: dict | None = None,
         page:int | None = 1,

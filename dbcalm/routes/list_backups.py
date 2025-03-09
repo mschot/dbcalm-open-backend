@@ -28,7 +28,12 @@ async def list_backups(
     if not has_attributes_for_dict_keys(Backup, order_dict):
         raise HTTPException(status_code=400, detail="Invalid order attribute")
 
-    items, total = repository.list(query_dict, order_dict, page=page, per_page=per_page)
+    items, total = repository.get_list(
+        query_dict,
+        order_dict,
+        page=page,
+        per_page=per_page,
+    )
 
     return {
         "items": [item.model_dump() for item in items],

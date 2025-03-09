@@ -22,7 +22,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
 
     def build(
             self,
-            identifier: str,
+            id: str,
             incremental_base_dir: str | None = None,
         ) -> list:
         command = [self.executable()]
@@ -30,23 +30,16 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         # because mysqladmin only supports group suffixes we use that one so
         # we can use the same credentials file for both mysqladmin and mariadb
         # mysqladmin needs to be used to check  whether its running before restore
-        command.append("--defaults-group=mysqladmin-backup")
-        if self.config.value("backup_credentials_file") is not None:
-            command.append(
-                f"--defaults-file={ self.config.value("backup_credentials_file") }",
-            )
-        else:
-            command.append(
-                (
-                    f"--defaults-file=/etc/{ self.config.PROJECT_NAME }/"
-                    "backup_credentials.cnf"
-                ),
-            )
+        credentials_file = (self.config.value("backup_credentials_file")
+                if self.config.value("backup_credentials_file") is not None
+                else f"/etc/{ self.config.PROJECT_NAME }/credentials.cnf")
 
-       ## Add options for backup
+        command.append(f"--defaults-file={ credentials_file }")
+        command.append("--defaults-group-suffix=-dbcalm")
         command.append("--backup")
+
         command.append(
-            f"""--target-dir={self.config.value("backup_dir")}/{identifier}""",
+            f"""--target-dir={self.config.value("backup_dir")}/{id}""",
             )
 
         ## Add host to the command
@@ -88,7 +81,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         if stream and forward is None:
             command.append(
                 f"> { self.config.value("backup_dir") }/"
-                f"backup-{ identifier }.xbstream{extension}",
+                f"backup-{ id }.xbstream{extension}",
             )
 
         if forward is not None:
@@ -96,29 +89,29 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
 
         return command
 
-    def build_full_backup_cmd(self, identifier: str) -> list:
-        return self.build(identifier)
+    def build_full_backup_cmd(self, id: str) -> list:
+        return self.build(id)
 
     def build_incremental_backup_cmd(
             self,
-            identifier: str,
-            from_identifier: str,
+            id: str,
+            from_backup_id: str,
         ) -> list:
         incremental_base_dir = (
-            f"{ self.config.value("backup_dir") }/{ from_identifier }"
+            f"{ self.config.value("backup_dir") }/{ from_backup_id }"
         )
-        return self.build(identifier, incremental_base_dir)
+        return self.build(id, incremental_base_dir)
 
 
     def build_restore_cmds(
             self,
             tmp_dir : str,
-            identifier_list: list,
+            id_list: list,
             target: RestoreTarget,
         ) -> list:
 
         command_list = []
-        full_backup_id = identifier_list.pop(0)
+        full_backup_id = id_list.pop(0)
         original_backup_path = f"{self.config.value('backup_dir')}/{full_backup_id}"
 
         # could do shutil.copytree but that would stop api flow
@@ -133,18 +126,18 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         command.append(new_backup_path)
         # Don't close redo log if there are more incremental backups to apply
         if self.server_version < APPY_LOG_ONLY_BEFORE_VERSION \
-            and len(identifier_list) > 0:
+            and len(id_list) > 0:
                 command.append("--apply-log-only")
 
         command_list.append(command)
 
 
-        while len(identifier_list) > 0:
-            identifier = identifier_list.pop(0)
-            incremental_left = len(identifier_list)
+        while len(id_list) > 0:
+            id = id_list.pop(0)
+            incremental_left = len(id_list)
             command = self.build_incremental_restore_cmd(
                 new_backup_path,
-                identifier,
+                id,
                 incremental_left,
                 self.server_version,
             )
@@ -161,7 +154,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
     def build_incremental_restore_cmd(
             self,
             full_backup_path: str,
-            identifier: str,
+            id: str,
             incremental_left: int,
             server_version: str,
         ) -> list:
@@ -170,7 +163,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         command.append("--target-dir")
         command.append(full_backup_path)
         command.append("--incremental-dir")
-        command.append(self.config.value("backup_dir") + "/" + identifier)
+        command.append(self.config.value("backup_dir") + "/" + id)
         # Don't close redo log if there are more incremental backups to apply
         if server_version < APPY_LOG_ONLY_BEFORE_VERSION and incremental_left > 0:
             command.append("--apply-log-only")

@@ -30,6 +30,8 @@ class ProcessQueueHandler:
                     process.pid, process.return_code,
                 )
 
+                self.logger.error(process.error)
+
                 self.cleanup(process)
                 continue
 
@@ -37,7 +39,7 @@ class ProcessQueueHandler:
             if process.type == "backup":
                 backup = process_to_backup(process)
                 self.data_adapter.create(backup)
-                self.logger.debug("Backup %s created", backup.identifier)
+                self.logger.debug("Backup %s created", backup.id)
                 break
             if process.type == "restore":
                 self.logger.debug("Restore completed successfully")
@@ -47,14 +49,14 @@ class ProcessQueueHandler:
 
         if (
             process.type == "backup" and hasattr(process, "args")
-            and process.args.get("identifier")
+            and process.args.get("id")
         ):
-            self.remove_backup_folder(process.args.get("identifier"))
+            self.remove_backup_folder(process.args.get("id"))
 
-    def remove_backup_folder(self, identifier: str) -> None:
+    def remove_backup_folder(self, id: str) -> None:
         # do cleanup of backup folder in case it was created but not completed
         backup_path = Path(
-            f"{self.config.value("backup_dir").rstrip("/")}/{identifier}",
+            f"{self.config.value("backup_dir").rstrip("/")}/{id}",
         )
         if backup_path.exists():
             try:

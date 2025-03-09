@@ -27,7 +27,7 @@ include = ["dbcalm_cmd_server*", "dbcalm*"]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["D",  "TD", "BLE", "T201", "FA100", "S101"]
+ignore = ["D",  "TD", "BLE", "T201", "FA100", "S101", "A001", "A002"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

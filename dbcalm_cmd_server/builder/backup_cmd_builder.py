@@ -10,14 +10,14 @@ class BackupCommandBuilder(ABC):
         pass
 
     @abstractmethod
-    def build_incremental_backup_cmd(self: str, from_identifier: str) -> list:
+    def build_incremental_backup_cmd(self: str, from_backup_id: str) -> list:
         pass
 
     @abstractmethod
     def build_restore_cmds(
             self: str,
             tmp_dir : str,
-            identifier_list: list,
+            id_list: list,
             target: RestoreTarget,
         ) -> list:
         pass

@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dbcalm.config.validator import Validator, ValidatorError
+from dbcalm.config.validator import Validator
+from dbcalm.errors.validation_error import ValidationError
 
 
 class TestConfigValidator:
@@ -43,7 +44,7 @@ class TestConfigValidator:
         # Rather than testing the actual validate method which has an issue
         # with self.Config vs self.config, let's patch it to test the logic
         with patch.object(Validator, "validate") as mock_validate:
-            mock_validate.side_effect = ValidatorError(
+            mock_validate.side_effect = ValidationError(
                 "Missing required config parameter: jwt_secret_key",
             )
 
@@ -56,7 +57,7 @@ class TestConfigValidator:
             config_mock.value.side_effect = mock_value
 
             # Test validation with a missing required parameter
-            with pytest.raises(ValidatorError) as excinfo:
+            with pytest.raises(ValidationError) as excinfo:
                 validator.validate()
 
             # Verify error message contains the missing parameter
@@ -87,7 +88,7 @@ class TestConfigValidator:
         mock_exists.return_value = False
 
         # Test validation when backup path doesn't exist
-        with pytest.raises(ValidatorError) as excinfo:
+        with pytest.raises(ValidationError) as excinfo:
             validator.validate_backup_path()
 
         # Verify error message
@@ -108,7 +109,7 @@ class TestConfigValidator:
         mock_access.return_value = False
 
         # Test validation when backup path is not writable
-        with pytest.raises(ValidatorError) as excinfo:
+        with pytest.raises(ValidationError) as excinfo:
             validator.validate_backup_path()
 
         # Verify error message

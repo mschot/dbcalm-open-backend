@@ -3,7 +3,7 @@
     "configurations": [
 
         {
-            "name": "Python Debugger: FASTAPI - custom",
+            "name": "FASTAPI - custom",
             "type": "debugpy",
             "request": "launch",
             "program": "${cwd}/dbcalm-api.py",
@@ -14,7 +14,7 @@
             }
         },
         {
-            "name": "Python Debugger: cmd-server",
+            "name": "Cmd-server",
             "type": "debugpy",
             "request": "launch",
             "program": "${cwd}/dbcalm-cmd-server.py",
@@ -23,6 +23,20 @@
                 "PYTHONDONTWRITEBYTECODE": "1",
                 "DBCALM_DEV_MODE": "1"
             }
+        },
+        {
+            "name": "Python: Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": ".venv/bin/pytest",
+            "args": ["tests"],
+
+            "env": {
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "DBCALM_DEV_MODE": "1"
+            },
+            "justMyCode": true
         }
+
     ]
 }
