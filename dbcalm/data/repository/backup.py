@@ -41,4 +41,10 @@ class BackupRepository:
     def latest_backup(self) -> Backup | None:
         # get list of backups ordered by end_time desc
         # and limit 1 and return the first item
-        return self.adapter.get_list(Backup, {}, {"end_time": "desc"}, 1, 1)[0][0]
+        try:
+            backup = self.adapter.get_list(Backup, {}, {"end_time": "desc"}, 1, 1)[0][0]
+        except (IndexError, TypeError):
+            backup = None
+        
+        return backup
+        

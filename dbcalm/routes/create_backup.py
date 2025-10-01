@@ -37,13 +37,13 @@ async def create_backup(
         )
         from_backup_id = latest_backup.id
 
-    if from_backup_id is None:
-        process = client.command("full_backup", {"id": id})
-    else:
+    if from_backup_id is not None:
         process = client.command(
             "incremental_backup",
             {"id": id, "from_backup_id": from_backup_id},
         )
+    else:        
+        process = client.command("full_backup", {"id": id})
 
     return process_status_response(process, response)
 

@@ -14,7 +14,7 @@ dbsymlink:
 dev-install:
 	cd dev && ./install.sh
 dev:
-	cd dev && source ../.venv/bin/activate && ./start_all.py
+	cd dev && source ../.venv/bin/activate && pip install ../ && ./start_all.py
 
 # Build Debian package
 deb:
@@ -22,4 +22,7 @@ deb:
 
 install-deb:
 	sudo dpkg -i "dist/dbcalm_${VERSION}_amd64.deb"
+
+users:
+	source .venv/bin/activate && ./dbcalm-users.py
 

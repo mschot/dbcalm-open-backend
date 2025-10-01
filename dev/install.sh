@@ -17,6 +17,10 @@ if ! id -nG mysql | grep -qw "$project_name"; then
     usermod -a -G $project_name mysql
 fi
 
+if [ -n "$SUDO_USER" ] && ! id -nG "$SUDO_USER" | grep -qw "$project_name"; then
+    usermod -a -G $project_name "$SUDO_USER"
+fi
+
 if ! id "$project_name" >/dev/null 2>&1; then
     #no login and no home
     useradd -r -s /usr/sbin/nologin -M -g $project_name $project_name
@@ -43,8 +47,8 @@ mkdir -p /var/log/$project_name/
 sudo chown -R mysql:$project_name /var/log/$project_name/
 sudo chmod -R 770 /var/log/$project_name/
 
-#copy config file to /etc/$project_name/
-mkdir -p /etc/$project_name/
+#copy config file to /etc/$project_name/ and create ssl directory
+mkdir -p /etc/$project_name/ssl/
 cp templates/config.yml /etc/$project_name/
 
 #create lib dirs and set permissions
