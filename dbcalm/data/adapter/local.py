@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -35,9 +37,17 @@ class Local(Adapter):
         return session()
 
     def get(self, model: SQLModel, query: dict) -> SQLModel|None:
-        if len(self.get_list(model, query)[0]) == 0:
+        # Convert dict to list of QueryFilter objects (all equality)
+        from dbcalm.util.parse_query_with_operators import QueryFilter
+
+        query_filters = []
+        for key, value in query.items():
+            query_filters.append(QueryFilter(field=key, operator="eq", value=value))
+
+        result = self.get_list(model, query_filters)
+        if len(result[0]) == 0:
             return None
-        return self.get_list(model, query)[0][0]
+        return result[0][0]
 
     def create(self, model: SQLModel) -> SQLModel:
         self.session.add(model)
@@ -55,26 +65,100 @@ class Local(Adapter):
         self.session.refresh(model)
         return model
 
-    def get_list(self, model: SQLModel,
-        query: dict | None = None,
-        order: dict | None = None,
-        page:int | None = 1,
+    def get_list(
+        self,
+        model: SQLModel,
+        query: list | None = None,
+        order: list | None = None,
+        page: int | None = 1,
         per_page: int | None = 100,
-    ) -> list[SQLModel]:
-        if query is None:
-            query = {}
-
+    ) -> tuple[list[SQLModel], int]:
         select = self.session.query(model)
-        if query is not None:
-            select = select.filter_by(**query)
+
+        # Apply filters with operators
+        if query:
+            for filter_obj in query:
+                column = getattr(model, filter_obj.field)
+
+                # Convert value to appropriate type based on column type
+                value = self._convert_value_type(column, filter_obj.value)
+
+                if filter_obj.operator == "eq":
+                    select = select.filter(column == value)
+                elif filter_obj.operator == "ne":
+                    select = select.filter(column != value)
+                elif filter_obj.operator == "gt":
+                    select = select.filter(column > value)
+                elif filter_obj.operator == "gte":
+                    select = select.filter(column >= value)
+                elif filter_obj.operator == "lt":
+                    select = select.filter(column < value)
+                elif filter_obj.operator == "lte":
+                    select = select.filter(column <= value)
+                elif filter_obj.operator == "in":
+                    # For IN operator, convert each value in the list
+                    converted_values = [self._convert_value_type(column, v) for v in value]
+                    select = select.filter(column.in_(converted_values))
+                elif filter_obj.operator == "nin":
+                    # For NOT IN operator, convert each value in the list
+                    converted_values = [self._convert_value_type(column, v) for v in value]
+                    select = select.filter(~column.in_(converted_values))
+
         count = select.count()
-        if order is not None:
-            for attribute, direction in order.items():
-                select = select.order_by(getattr(model, attribute).asc() \
-                    if direction.lower() == "asc" else getattr(model, attribute).desc())
+
+        # Apply ordering (uses .value from QueryFilter which contains direction)
+        if order:
+            for order_obj in order:
+                column = getattr(model, order_obj.field)
+                direction = order_obj.value.lower()
+                select = select.order_by(
+                    column.asc() if direction == "asc" else column.desc()
+                )
 
         items = select.offset((page - 1) * per_page).limit(per_page).all()
         return items, count
+
+    def _convert_value_type(self, column, value: str):
+        """Convert string value to appropriate type based on column type."""
+        # Try to get the column's Python type
+        try:
+            column_type = column.type.python_type
+        except NotImplementedError:
+            # Some types (like JSON) don't implement python_type
+            # Return value as-is and let SQLAlchemy handle it
+            return value
+
+        # Handle datetime conversion
+        if column_type == datetime:
+            try:
+                # Try ISO format first (e.g., "2025-10-01T00:00:00")
+                return datetime.fromisoformat(value)
+            except (ValueError, AttributeError):
+                # If that fails, return as string and let SQLAlchemy handle it
+                return value
+
+        # Handle integer conversion
+        if column_type == int:
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return value
+
+        # Handle float conversion
+        if column_type == float:
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return value
+
+        # Handle boolean conversion
+        if column_type == bool:
+            if isinstance(value, str):
+                return value.lower() in ("true", "1", "yes")
+            return bool(value)
+
+        # Return as string for all other types
+        return value
 
     def delete(self, model: SQLModel, query: dict) -> bool:
         model = self.get(model, query)

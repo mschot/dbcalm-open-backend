@@ -7,6 +7,13 @@
 - Pre-commit hook (runs automatically): Runs linter and tests
 - Build command binary: `pyinstaller dbcalm-cmd-server.py`
 
+### Development Setup Requirements
+The development environment (`make dev`) runs the cmd_server_process as the mysql user for security. Configure passwordless sudo by adding to `/etc/sudoers.d/dbcalm`:
+```
+your_user ALL=(mysql) NOPASSWD: /usr/bin/python3 /full/path/to/dbcalm-cmd-server.py
+```
+Replace `your_user` with your username and `/full/path/to` with the absolute path to the backend directory.
+
 ## Code Style Guidelines
 - Python 3.11+ required
 - Use FastAPI framework conventions

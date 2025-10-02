@@ -12,12 +12,11 @@ class Adapter(ABC):
     def get_list(
         self,
         model: BaseModel,
-        query: dict,
-        # order: key = attribute, value = direction (asc/desc)
-        order: dict | None,
-        page:int | None = 1,
+        query: list | None,
+        order: list | None,
+        page: int | None = 1,
         per_page: int | None = 100,
-    ) -> list[BaseModel]:
+    ) -> tuple[list[BaseModel], int]:
         pass
 
     @abstractmethod

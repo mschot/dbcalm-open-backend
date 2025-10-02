@@ -16,6 +16,7 @@ from dbcalm.routes import (
     delete_client,
     list_backups,
     list_clients,
+    list_processes,
     status,
     token,
     update_client,
@@ -33,7 +34,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,6 +49,7 @@ app.include_router(delete_client.router, tags=["Clients"])
 app.include_router(update_client.router, tags=["Clients"])
 app.include_router(create_client.router, tags=["Clients"])
 app.include_router(create_restore.router, tags=["Backups"])
+app.include_router(list_processes.router, tags=["Processes"])
 app.include_router(status.router, tags=["Status"])
 
 def api_server() -> None:

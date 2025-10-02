@@ -14,3 +14,13 @@ class ProcessRepository:
 
     def by_command_id(self, command_id: str) -> list[Process]:
         return self.adapter.get(Process, {"command_id" : command_id})
+
+    def get_list(
+        self,
+        query: dict | None,
+        order: dict | None,
+        page: int | None = 1,
+        per_page: int | None = 10,
+    ) -> tuple[list[Process], int]:
+        items, total = self.adapter.get_list(Process, query, order, page, per_page)
+        return items, total

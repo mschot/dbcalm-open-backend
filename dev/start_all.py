@@ -99,18 +99,46 @@ def file_watcher(
             restart_event.set()
 
 
+def create_runtime_directory() -> None:
+    """Create /var/run/dbcalm with dbcalm:dbcalm ownership and mode 2774."""
+    runtime_dir = Path("/var/run/dbcalm")
+
+    # Create directory if it doesn't exist
+    subprocess.run(  # noqa: S603
+        ["sudo", "mkdir", "-p", str(runtime_dir)],  # noqa: S607
+        check=True,
+    )
+
+    # Set ownership to dbcalm:dbcalm
+    subprocess.run(  # noqa: S603
+        ["sudo", "chown", "dbcalm:dbcalm", str(runtime_dir)],  # noqa: S607
+        check=True,
+    )
+
+    # Set permissions to 2774 (setgid + rwxrwxr--)
+    subprocess.run(  # noqa: S603
+        ["sudo", "chmod", "2774", str(runtime_dir)],  # noqa: S607
+        check=True,
+    )
+
+    print(f"Created runtime directory {runtime_dir} with dbcalm:dbcalm ownership and mode 2774")
+
+
 def start_processes() -> list[subprocess.Popen]:
     """Start the API and CMD server processes."""
-    # Start API process
+    # Create runtime directory
+    create_runtime_directory()
+
+    # Start API process as dbcalm user
     api_process = subprocess.Popen(  # noqa: S603
-        ["python", "dbcalm-api.py"],  # noqa: S607
+        ["sudo", "-u", "dbcalm", "./.venv/bin/python3", "dbcalm-api.py"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started API process with PID {api_process.pid}")
 
-    # Start CMD server process
+    # Start CMD server process as mysql user
     cmd_server_process = subprocess.Popen(  # noqa: S603
-        ["python", "dbcalm-cmd-server.py"],  # noqa: S607
+        ["sudo", "-u", "mysql", "./.venv/bin/python3", "dbcalm-cmd-server.py"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started CMD Server process with PID {cmd_server_process.pid}")

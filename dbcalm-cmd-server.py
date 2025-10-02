@@ -87,6 +87,9 @@ def start_server() -> dict:
     # Create a UDS socket
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
+    socket_path = Path(Config.CMD_SOCKET_PATH)
+    socket_path.parent.mkdir(parents=True, exist_ok=True)
+
     sock.bind(Config.CMD_SOCKET_PATH)
     # apply parent folder permission (set in systemd unit file)
     # to socket so client can write to it as user will be different
