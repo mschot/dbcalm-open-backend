@@ -46,8 +46,24 @@ class Runner:
             returncode: int,
         ) -> Process:
         status = "success" if returncode == 0 else "failed"
-        process.output = stdout
-        process.error = stderr
+
+        # For successful processes, combine stdout and stderr into output
+        # For failed processes, keep them separate for better debugging
+        if returncode == 0:
+            # Combine both streams for successful processes
+            combined_output = ""
+            if stdout:
+                combined_output += stdout
+            if stderr:
+                if combined_output:
+                    combined_output += "\n"
+                combined_output += stderr
+            process.output = combined_output if combined_output else None
+            process.error = None
+        else:
+            process.output = stdout if stdout else None
+            process.error = stderr if stderr else None
+
         process.return_code = returncode
         process.end_time = end_time
         process.status = status
@@ -165,8 +181,10 @@ class Runner:
             except Exception:
                 self.logger.exception("Error in run_commands")
             finally:
-                for process in finished_processes:
-                    master_queue.put(process)
+                # Only put the last process in the queue to avoid duplicate entries
+                # The last process represents the final state of the consecutive operation
+                if finished_processes:
+                    master_queue.put(finished_processes[-1])
 
     def execute_consecutive(
             self,

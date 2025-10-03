@@ -1,4 +1,5 @@
 
+import subprocess
 from pathlib import Path
 
 from dbcalm.config.config_factory import config_factory
@@ -6,7 +7,6 @@ from dbcalm.data.adapter.adapter_factory import (
     adapter_factory as data_adapter_factory,
 )
 from dbcalm.data.model.backup import Backup
-from dbcalm_cmd_server.process.runner_factory import runner_factory
 
 VALID_REQUEST = 200
 INVALID_REQUEST = 400
@@ -80,8 +80,8 @@ class Validator:
                 return CONFLICT, ("Backup with id"
                     f"{command_data["args"][arg]} already exists")
 
-        return VALID_REQUEST, None
-    def database_restore(self, checks: list) -> tuple[bool, str]:
+        return VALID_REQUEST, ""
+    def database_restore(self, checks: list) -> tuple[int, str]:
         if "server_dead" in checks and not self.server_dead():
             return PREREQUISTE_FAILED, ("cannot restore to database,"
                             " MySQL/MariaDb server is not stopped")
@@ -91,7 +91,7 @@ class Validator:
                             " mysql/mariadb data directory is not empty"
                             "(usually /var/lib/mysql)")
 
-        return VALID_REQUEST, None
+        return VALID_REQUEST, ""
 
 
     def server_dead(self) -> bool:
@@ -106,19 +106,16 @@ class Validator:
             "ping",
         ]
 
-        runner = runner_factory()
-        _, queue = runner.execute(
-            command=command,
-            command_type="mysql_ping_check",
-            args={"check_type": "server_dead"},
+        result = subprocess.run(  # noqa: S603
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
         )
-
-        # Wait for the command to complete
-        completed_process = queue.get()
 
         # If mysqladmin ping succeeds (return code 0), the server is alive
         # If it fails (non-zero return code), the server is dead
-        return completed_process.return_code != 0
+        return result.returncode != 0
 
     def data_dir_empty(self) -> bool:
         # Get data directory from config or use default

@@ -15,6 +15,7 @@ class Restore(SQLModel, table=True):
     target: RestoreTarget
     target_path: str
     backup_id: str
+    backup_timestamp: datetime | None = None
     process_id: int
 
 
