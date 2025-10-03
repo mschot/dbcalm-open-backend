@@ -37,10 +37,12 @@ class Mariadb(adapter.Adapter):
         )
 
     def restore_backup(self, id_list: list, target: RestoreTarget) -> Process:
-        tmp_dir = get_tmp_dir(self.config.value("backup_dir"))
+        # Use 'restores' folder for folder restores, 'tmp' for database restores
+        subdirectory = "restores" if target == RestoreTarget.FOLDER else "tmp"
+        restore_dir = get_tmp_dir(self.config.value("backup_dir"), subdirectory)
 
         commands = self.command_builder.build_restore_cmds(
-            tmp_dir,
+            restore_dir,
             id_list,
             target,
         )
@@ -48,5 +50,5 @@ class Mariadb(adapter.Adapter):
         return self.command_runner.execute_consecutive(
             commands=commands,
             command_type="restore",
-            args={"id_list": id_list, "target": target, "tmp_dir": tmp_dir},
+            args={"id_list": id_list, "target": target, "tmp_dir": restore_dir},
         )

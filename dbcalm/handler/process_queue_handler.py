@@ -7,6 +7,7 @@ from dbcalm.config.config_factory import config_factory
 from dbcalm.data.adapter.adapter_factory import (
     adapter_factory as data_adapter_factory,
 )
+from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.process import Process
 from dbcalm.data.transformer.process_to_backup import process_to_backup
 from dbcalm.data.transformer.process_to_restore import process_to_restore
@@ -39,12 +40,14 @@ class ProcessQueueHandler:
                 backup = process_to_backup(process)
                 self.data_adapter.create(backup)
                 self.logger.debug("Backup %s created", backup.id)
-                break
-            if process.type == "restore":
+            elif process.type == "restore":
                 restore = process_to_restore(process)
                 self.data_adapter.create(restore)
                 self.logger.debug("Restore %s created", restore.id)
-            break
+
+                # Clean up tmp folder for database restores
+                if restore.target == RestoreTarget.DATABASE:
+                    self.remove_tmp_restore_folder(restore.target_path)
 
     def cleanup(self, process: Process) -> None:
 
@@ -70,4 +73,20 @@ class ProcessQueueHandler:
                 self.logger.exception(
                     "Failed to cleanup backup folder %s",
                     backup_path,
+                )
+
+    def remove_tmp_restore_folder(self, tmp_path: str) -> None:
+        # Clean up tmp folder after successful database restore
+        restore_path = Path(tmp_path)
+        if restore_path.exists():
+            try:
+                shutil.rmtree(restore_path)
+                self.logger.debug(
+                    "Cleaned up tmp restore folder: %s",
+                    restore_path,
+                )
+            except Exception:
+                self.logger.exception(
+                    "Failed to cleanup tmp restore folder %s",
+                    restore_path,
                 )

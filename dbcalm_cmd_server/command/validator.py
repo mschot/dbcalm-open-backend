@@ -95,8 +95,6 @@ class Validator:
 
 
     def server_dead(self) -> bool:
-
-
         credentials_file = (self.config.value("backup_credentials_file")
                 if self.config.value("backup_credentials_file") is not None
                 else f"/etc/{ self.config.PROJECT_NAME }/credentials.cnf")
