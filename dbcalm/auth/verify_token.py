@@ -10,7 +10,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_token(token: str = Depends(oauth2_scheme)) -> dict:
     config = config_factory()
-    jwt_algorithm  = config.value("jwt_algorithm")
+    jwt_algorithm  = config.value("jwt_algorithm", default="HS256")
     jwt_secret_key = config.value("jwt_secret_key")
 
     try:

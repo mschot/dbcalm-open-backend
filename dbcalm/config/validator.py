@@ -1,6 +1,5 @@
 
 import os
-import socket
 from pathlib import Path
 
 from dbcalm.config.config import Config
@@ -17,19 +16,33 @@ class Validator:
         "db_type",
         "backup_dir",
         "jwt_secret_key",
-        "jwt_algorithm",
+        "cors_origins",
     ]
 
     def validate(self) -> None:
         for key in self.should_exist:
             if self.config.value(key) == "" or self.config.value(key) is None:
                msg = f"""Missing required config parameter:
-                    {key} in {self.Config.CONFIG_PATH}"""
+                    {key} in {self.config.CONFIG_PATH}"""
                raise ValidationError(msg)
 
-        # Check if db_host is reachable and let it throw an error if it is not
-        db_host = self.config.value("db_host")
-        socket.gethostbyname(db_host)
+        # Validate cors_origins is a list
+        cors_origins = self.config.value("cors_origins")
+        if not isinstance(cors_origins, list):
+            msg = f"cors_origins must be a list in {self.config.CONFIG_PATH}"
+            raise ValidationError(msg)
+
+        # Validate api_port is a number if set
+        api_port = self.config.value("api_port")
+        if api_port is not None and not isinstance(api_port, int):
+            msg = f"api_port must be a number in {self.config.CONFIG_PATH}"
+            raise ValidationError(msg)
+
+        # Validate api_host is a string if set
+        api_host = self.config.value("api_host")
+        if api_host is not None and not isinstance(api_host, str):
+            msg = f"api_host must be a string in {self.config.CONFIG_PATH}"
+            raise ValidationError(msg)
 
     def validate_backup_path(self) -> None:
         # Check if backup path exists

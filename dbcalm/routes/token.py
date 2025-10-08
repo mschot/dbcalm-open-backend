@@ -24,7 +24,7 @@ async def issue_token(
     adapter = data_adapter_factory()
     config = config_factory()
     jwt_secret_key = config.value("jwt_secret_key")
-    jwt_algorithm = config.value("jwt_algorithm")
+    jwt_algorithm = config.value("jwt_algorithm", default="HS256")
 
     if request_data.grant_type == "client_credentials":
         client = adapter.get(Client, {"id":request_data.client_id})

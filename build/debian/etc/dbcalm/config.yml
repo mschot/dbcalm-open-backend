@@ -1,7 +1,10 @@
 db_type: mariadb
-db_host: localhost
 backup_dir: /var/backups/dbcalm
 ssl_cert: /etc/dbcalm/ssl/fullchain-cert.pem
 ssl_key: /etc/dbcalm/ssl/private-key.pem
 jwt_secret_key: a623a029274d233d85a146b321f2907345a40f4e3eb32247d0df93b1282b79659e28b19707e9d2ad5b1b415404df912646a72eab8e0123166116210ead2d14392e7aee081c9cea7472c8dad6b5e374f1ed1167341b0bdadfe37bb0e6e2ac819b08a77726610be107e025bd0f19992b6fbe4208520646a833f11152943d85971a54cbdaebf3f31e128ec44884ef2659fd919b3dcf08f38989f467be5cecc03dd0cf004837bcee0bb105a4003bef6d231f0c91b31ddd2bdd0f2c5a9c59474f505ea7e3d864f8d560702de265bd0486fd0f4dac9e88bca28a1120094f41c9c55be521537b888e83988357f8ff6f3adc2aeaacd4822fd521cdc1baf93a6237a8eb33
-jwt_algorithm: HS256
+#api_host: 0.0.0.0
+#api_port: 8335
+cors_origins:
+  - http://localhost:5173
+

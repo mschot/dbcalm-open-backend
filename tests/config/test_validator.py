@@ -1,5 +1,4 @@
 import os
-import socket
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,13 +29,8 @@ class TestConfigValidator:
         # Setup the config to return valid values for all keys
         config_mock.value.return_value = "test_value"
 
-        # Test successful validation
-        with patch("socket.gethostbyname") as mock_gethostbyname:
-            mock_gethostbyname.return_value = "127.0.0.1"
-            validator.validate()  # Should not raise an exception
-
-            # Verify that socket.gethostbyname was called once
-            mock_gethostbyname.assert_called_once()
+        # Test successful validation (no db_host check anymore)
+        validator.validate()  # Should not raise an exception
 
     def test_validate_missing_config_parameter(
         self, validator: Validator, config_mock: MagicMock,
@@ -62,22 +56,6 @@ class TestConfigValidator:
 
             # Verify error message contains the missing parameter
             assert "jwt_secret_key" in str(excinfo.value)
-
-    def test_validate_unreachable_db_host(
-        self, validator: Validator, config_mock: MagicMock,
-    ) -> None:
-        # Set up the mock to return a valid config
-        config_mock.value.return_value = "test_value"
-
-        # Test validation when db_host is unreachable
-        with patch("socket.gethostbyname") as mock_gethostbyname:
-            mock_gethostbyname.side_effect = socket.gaierror("Test error")
-
-            with pytest.raises(socket.gaierror):
-                validator.validate()
-
-            # Verify that socket.gethostbyname was called once
-            mock_gethostbyname.assert_called_once()
 
     @patch("pathlib.Path.exists")
     def test_validate_backup_path_not_exists(

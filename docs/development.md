@@ -1,24 +1,11 @@
-# Development
+# Getting Started
 
-if you're looking to improve this project, please check out the [development guide](/docs/development.md) 
-
-# Getting started
-
-## CORS
-
-
-
-
-
-
-## For development
-### Set up groups and folders
+## Set up groups and folders
 ```
 sudo make dev-install
 ```
 
-
-### SSL Certificate
+## SSL Certificate
 To ensure security when entering your credentials you will need a certificate. One of the easiest ways to get one for local developemnt is to use mkcert, or for public urls use let's encrypt. 
 
 Then store them in 
@@ -34,7 +21,7 @@ Then set the permissions:
 sudo chown dbcalm:dbcalm /etc/dbcalm/ssl/*
 ```
 
-### Run the API - and required command server
+## Run the API - and required command server
 As there are 2 parts that need watching, a cmd server and the api to run these both with a change watcher run:
 
 ```
@@ -57,6 +44,6 @@ your-username ALL=(dbcalm) NOPASSWD: /your/path/to/.venv/bin/python3 dbcalm-api.
 ```
 you might have to log out or restart for this to take effect
 
-### Add Users
+## Add Users
 Once everything (including frontend) is up and running you will need a user to log in.
 To add new users run ./dbcalm-users.py from the root folder.

@@ -81,6 +81,7 @@ class Validator:
                     f"{command_data["args"][arg]} already exists")
 
         return VALID_REQUEST, ""
+    
     def database_restore(self, checks: list) -> tuple[int, str]:
         if "server_dead" in checks and not self.server_dead():
             return PREREQUISTE_FAILED, ("cannot restore to database,"

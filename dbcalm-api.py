@@ -28,14 +28,9 @@ Validator(config).validate()
 
 app = FastAPI()
 
-# TODO: move to config  # noqa: FIX002
-origins = [
-    "http://localhost:5173",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=config.value("cors_origins"),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,8 +52,8 @@ app.include_router(status.router, tags=["Status"])
 def api_server() -> None:
     uvicorn_args = {
             "app": app,
-            "host": "0.0.0.0",  # noqa: S104
-            "port": 8000,
+            "host": config.value("api_host", "0.0.0.0"),
+            "port": config.value("api_port", 8335),
         }
     if config.value("ssl_cert") and config.value("ssl_key"):
         ssl_cert = config.value("ssl_cert")

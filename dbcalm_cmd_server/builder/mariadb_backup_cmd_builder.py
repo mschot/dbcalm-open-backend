@@ -42,12 +42,8 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             f"""--target-dir={self.config.value("backup_dir")}/{id}""",
             )
 
-        ## Add host to the command
-        if self.config.value("db_host") is None:
-            host = "localhost"
-        else:
-            host = self.config.value("db_host")
-        command.append(f"--host={host}")
+        ## Add host to the command (always localhost - backup requires local filesystem)
+        command.append(f"--host={self.config.DB_HOST}")
 
         ## Add option for incremental backups
         if incremental_base_dir is not None:
