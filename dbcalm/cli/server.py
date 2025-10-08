@@ -13,14 +13,18 @@ from dbcalm.routes import (
     create_backup,
     create_client,
     create_restore,
+    create_schedule,
     delete_client,
+    delete_schedule,
     list_backups,
     list_clients,
     list_processes,
     list_restores,
+    list_schedules,
     status,
     token,
     update_client,
+    update_schedule,
 )
 
 config = config_factory()
@@ -47,6 +51,10 @@ app.include_router(create_client.router, tags=["Clients"])
 app.include_router(create_restore.router, tags=["Backups"])
 app.include_router(list_restores.router, tags=["Restores"])
 app.include_router(list_processes.router, tags=["Processes"])
+app.include_router(list_schedules.router, tags=["Schedules"])
+app.include_router(create_schedule.router, tags=["Schedules"])
+app.include_router(update_schedule.router, tags=["Schedules"])
+app.include_router(delete_schedule.router, tags=["Schedules"])
 app.include_router(status.router, tags=["Status"])
 
 def run() -> None:

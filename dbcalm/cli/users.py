@@ -8,8 +8,15 @@ from dbcalm.data.repository.user import UserRepository
 
 def create_user(username: str, password: str) -> None:
     """Create a new user with hashed password"""
-    user = User(username=username, password=password)
     user_repo = UserRepository()
+
+    # Check if user already exists
+    existing_user = user_repo.get(username)
+    if existing_user:
+        print(f"Error: User '{username}' already exists")
+        sys.exit(1)
+
+    user = User(username=username, password=password)
     created_user = user_repo.create(user)
     print(f"User '{created_user.username}' created successfully")
     print("Password has been hashed")

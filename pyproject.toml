@@ -14,6 +14,7 @@ dependencies = [
     "PyJWT",
     "bcrypt==4.0.1",
     "passlib[bcrypt]",
+    "requests",
 ]
 
 [project.optional-dependencies]
