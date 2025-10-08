@@ -20,10 +20,12 @@ class Validator:
         self.commands = {
             "full_backup": {
                 "id": "unique|required",
+                "|backup": ["server_alive"],
             },
             "incremental_backup": {
                 "id": "unique|required",
                 "from_backup_id": "required",
+                "|backup": ["server_alive"],
             },
             "restore_backup": {
                 "id_list": "required",
@@ -55,6 +57,13 @@ class Validator:
 
 
         #check other requirements
+        if "|backup" in self.commands[command_data["cmd"]]:
+            other_checks = self.backup(
+                self.commands[command_data["cmd"]]["|backup"],
+            )
+            if other_checks[0] != VALID_REQUEST:
+                return other_checks
+
         if (
             "|database_restore" in self.commands[command_data["cmd"]]
             and command_data["args"]["target"] == "database"
@@ -81,7 +90,14 @@ class Validator:
                     f"{command_data["args"][arg]} already exists")
 
         return VALID_REQUEST, ""
-    
+
+    def backup(self, checks: list) -> tuple[int, str]:
+        if "server_alive" in checks and not self.server_alive():
+            return PREREQUISTE_FAILED, ("cannot create backup,"
+                            " MySQL/MariaDB server is not running")
+
+        return VALID_REQUEST, ""
+
     def database_restore(self, checks: list) -> tuple[int, str]:
         if "server_dead" in checks and not self.server_dead():
             return PREREQUISTE_FAILED, ("cannot restore to database,"
@@ -117,6 +133,29 @@ class Validator:
         # If mysqladmin ping succeeds (return code 0), the server is alive
         # If it fails (non-zero return code), the server is dead
         return result.returncode != 0
+
+    def server_alive(self) -> bool:
+        credentials_file = (self.config.value("backup_credentials_file")
+                if self.config.value("backup_credentials_file") is not None
+                else f"/etc/{ self.config.PROJECT_NAME }/credentials.cnf")
+
+        command = [
+            "mysqladmin",
+            f"--defaults-file={credentials_file}",
+            "--defaults-group-suffix=-dbcalm",
+            "ping",
+        ]
+
+        result = subprocess.run(  # noqa: S603
+            command,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        # If mysqladmin ping succeeds (return code 0), the server is alive
+        # If it fails (non-zero return code), the server is dead
+        return result.returncode == 0
 
     def data_dir_empty(self) -> bool:
         # Get data directory from config or use default
