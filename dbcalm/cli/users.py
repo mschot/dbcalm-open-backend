@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import argparse
 import getpass
 import sys
@@ -150,54 +148,15 @@ def interactive_mode() -> None:  # noqa: C901
             print("Invalid option. Please try again.")
 
 
-def main() -> None:  # noqa: C901, PLR0912, PLR0915
-    """Main function to handle CLI arguments"""
-    parser = argparse.ArgumentParser(description="DBCalm User Management CLI")
-    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
-
-    # Add user command
-    add_parser = subparsers.add_parser("add", help="Add a new user")
-    add_parser.add_argument("username", help="Username for the new user")
-    add_parser.add_argument(
-        "--admin",
-        "--password", help="Password for the new user (if not provided, will prompt)"
-    )
-
-    # Delete user command
-    delete_parser = subparsers.add_parser("delete", help="Delete an existing user")
-    delete_parser.add_argument(
-        "username",
-        nargs="?",
-        help="Username to delete (if not provided, will show a list)",
-    )
-
-    # Update password command
-    update_parser = subparsers.add_parser(
-        "update-password",
-        help="Update password for an existing user",
-    )
-    update_parser.add_argument(
-        "username",
-        nargs="?",
-        help="Username to update password for (if not provided, will show a list)",
-    )
-    update_parser.add_argument(
-        "--password",
-        help="New password (if not provided, will prompt)",
-    )
-
-    # List users command
-    subparsers.add_parser("list", help="List all users")
-
-    args = parser.parse_args()
-
-    # If no command provided, run interactive mode
-    if not args.command:
+def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912, PLR0915
+    """Handle user management commands"""
+    # If no subcommand provided, run interactive mode
+    if not hasattr(args, "users_command") or not args.users_command:
         interactive_mode()
         return
 
     # Handle commands
-    if args.command == "add":
+    if args.users_command == "add":
         password = args.password
         if not password:
             password = getpass.getpass("Enter password: ")
@@ -207,7 +166,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 sys.exit(1)
         create_user(args.username, password)
 
-    elif args.command == "delete":
+    elif args.users_command == "delete":
         if not args.username:
             users = get_all_users()
             username = display_user_selection(users)
@@ -221,7 +180,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         if confirm.lower() == "y":
             delete_user(username)
 
-    elif args.command == "update-password":
+    elif args.users_command == "update-password":
         if not args.username:
             users = get_all_users()
             username = display_user_selection(users)
@@ -240,7 +199,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 sys.exit(1)
         update_password(username, password)
 
-    elif args.command == "list":
+    elif args.users_command == "list":
         users = get_all_users()
         if not users:
             print("No users found!")
@@ -251,5 +210,41 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             print(f"- {user.username}")
 
 
-if __name__ == "__main__":
-    main()
+def configure_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Configure the users subcommand parser"""
+    users_parser = subparsers.add_parser("users", help="Manage users")
+    users_subparsers = users_parser.add_subparsers(dest="users_command", help="User command")
+
+    # Add user command
+    add_parser = users_subparsers.add_parser("add", help="Add a new user")
+    add_parser.add_argument("username", help="Username for the new user")
+    add_parser.add_argument(
+        "--password",
+        help="Password for the new user (if not provided, will prompt)"
+    )
+
+    # Delete user command
+    delete_parser = users_subparsers.add_parser("delete", help="Delete an existing user")
+    delete_parser.add_argument(
+        "username",
+        nargs="?",
+        help="Username to delete (if not provided, will show a list)",
+    )
+
+    # Update password command
+    update_parser = users_subparsers.add_parser(
+        "update-password",
+        help="Update password for an existing user",
+    )
+    update_parser.add_argument(
+        "username",
+        nargs="?",
+        help="Username to update password for (if not provided, will show a list)",
+    )
+    update_parser.add_argument(
+        "--password",
+        help="New password (if not provided, will prompt)",
+    )
+
+    # List users command
+    users_subparsers.add_parser("list", help="List all users")

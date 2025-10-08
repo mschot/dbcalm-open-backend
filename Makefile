@@ -24,5 +24,8 @@ install-deb:
 	sudo dpkg -i "dist/dbcalm_${VERSION}_amd64.deb"
 
 users:
-	source .venv/bin/activate && ./dbcalm-users.py
+	source .venv/bin/activate && ./dbcalm.py users
+
+clients:
+	source .venv/bin/activate && ./dbcalm.py clients
 

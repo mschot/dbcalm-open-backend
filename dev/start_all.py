@@ -131,7 +131,7 @@ def start_processes() -> list[subprocess.Popen]:
 
     # Start API process as dbcalm user
     api_process = subprocess.Popen(  # noqa: S603
-        ["sudo", "-u", "dbcalm", "./.venv/bin/python3", "dbcalm-api.py"],  # noqa: S607
+        ["sudo", "-u", "dbcalm", "./.venv/bin/python3", "dbcalm.py", "server"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started API process with PID {api_process.pid}")

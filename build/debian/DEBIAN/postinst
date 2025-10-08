@@ -30,8 +30,8 @@ chmod -R 770 /var/log/$project_name/
 chown -R mysql:$project_name /var/lib/$project_name/
 chmod -R 770 /var/lib/$project_name/
 
-chown $project_name:$project_name /usr/bin/$project_name-api
-chmod 750 /usr/bin/$project_name-api
+chown $project_name:$project_name /usr/bin/$project_name
+chmod 750 /usr/bin/$project_name
 
 chown mysql:$project_name /usr/bin/$project_name-cmd-server
 chmod 750 /usr/bin/$project_name-cmd-server

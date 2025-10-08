@@ -52,11 +52,11 @@ your-username ALL=(root) NOPASSWD: /usr/bin/mkdir -p /var/run/dbcalm
 your-username ALL=(root) NOPASSWD: /usr/bin/chown dbcalm\:dbcalm /var/run/dbcalm
 your-username ALL=(root) NOPASSWD: /usr/bin/chmod 2774 /var/run/dbcalm
 
-# Allow running dbcalm-api.py as dbcalm user
-your-username ALL=(dbcalm) NOPASSWD: /your/path/to/.venv/bin/python3 dbcalm-api.py
+# Allow running dbcalm.py as dbcalm user
+your-username ALL=(dbcalm) NOPASSWD: /your/path/to/.venv/bin/python3 dbcalm.py
 ```
 you might have to log out or restart for this to take effect
 
 ### Add Users
 Once everything (including frontend) is up and running you will need a user to log in.
-To add new users run ./dbcalm-users.py from the root folder.
+To add new users run `./dbcalm.py users` or `make users` from the root folder.

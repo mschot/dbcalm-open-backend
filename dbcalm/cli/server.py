@@ -49,7 +49,8 @@ app.include_router(list_restores.router, tags=["Restores"])
 app.include_router(list_processes.router, tags=["Processes"])
 app.include_router(status.router, tags=["Status"])
 
-def api_server() -> None:
+def run() -> None:
+    """Start the API server"""
     uvicorn_args = {
             "app": app,
             "host": config.value("api_host", "0.0.0.0"),
@@ -69,12 +70,8 @@ def api_server() -> None:
         uvicorn_args["ssl_certfile"] = ssl_cert
         uvicorn_args["ssl_keyfile"] = ssl_key
 
-    uvicorn.run(**uvicorn_args)
-
-if __name__ == "__main__":
     try:
-        api_server()
+        uvicorn.run(**uvicorn_args)
     except Exception:
         logger = logger_factory()
         logger.exception("Failed to start API server:")
-

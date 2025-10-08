@@ -1,11 +1,13 @@
 # Dbcalm Project Guide
 
 ## Build & Run Commands
-- Run server: `python main.py` or `cd dev && make dev`
+- Run API server: `python dbcalm.py server` or `cd dev && make dev`
+- Manage users: `python dbcalm.py users [add|delete|update-password|list]`
+- Manage clients: `python dbcalm.py clients [add|delete|update|list]`
 - Lint: `ruff check .` or `ruff check . --fix`
 - Tests: `.venv/bin/python -m pytest tests/`
 - Pre-commit hook (runs automatically): Runs linter and tests
-- Build command binary: `pyinstaller dbcalm-cmd-server.py`
+- Build binaries: `pyinstaller dbcalm.py` and `pyinstaller dbcalm-cmd-server.py`
 
 ### Development Setup Requirements
 The development environment (`make dev`) runs the cmd_server_process as the mysql user for security. Configure passwordless sudo by adding to `/etc/sudoers.d/dbcalm`:
@@ -33,6 +35,8 @@ Replace `your_user` with your username and `/full/path/to` with the absolute pat
 
 ## Project Organization
 - `/dbcalm`: Core server code
+- `/dbcalm/cli`: CLI commands (server, users, clients)
 - `/dbcalm_client`: Client library for interacting with the command Service tool via unix domain socket
+- `/dbcalm.py`: Main CLI entry point (API server, user/client management)
 - `/dbcalm-cmd-server.py`: Service tool entry point executing backups and restores
 - `/dbcalm_cmd_server`: Command Service for interacting with mariabackup and mysqladmin
