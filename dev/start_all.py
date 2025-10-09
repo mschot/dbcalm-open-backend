@@ -125,7 +125,7 @@ def create_runtime_directory() -> None:
 
 
 def start_processes() -> list[subprocess.Popen]:
-    """Start the API and CMD server processes."""
+    """Start the API, MariaDB CMD, and generic CMD server processes."""
     # Create runtime directory
     create_runtime_directory()
 
@@ -136,14 +136,21 @@ def start_processes() -> list[subprocess.Popen]:
     )
     print(f"Started API process with PID {api_process.pid}")
 
-    # Start MariaDB CMD server process as mysql user
+    # Start MariaDB CMD server process as mysql user (for backup/restore operations)
     mariadb_cmd_process = subprocess.Popen(  # noqa: S603
         ["sudo", "-u", "mysql", "./.venv/bin/python3", "dbcalm-mariadb-cmd.py"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started MariaDB CMD Server process with PID {mariadb_cmd_process.pid}")
 
-    return [api_process, mariadb_cmd_process]
+    # Start generic CMD server process as root (for system operations)
+    cmd_process = subprocess.Popen(  # noqa: S603
+        ["sudo", "-u", "root", "./.venv/bin/python3", "dbcalm-cmd.py"],  # noqa: S607
+        preexec_fn=os.setsid,  # noqa: PLW1509
+    )
+    print(f"Started CMD Server process with PID {cmd_process.pid}")
+
+    return [api_process, mariadb_cmd_process, cmd_process]
 
 
 def signal_handler(sig, frame) -> None:  # noqa: ANN001, ARG001

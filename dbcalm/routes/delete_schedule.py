@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.schedule import ScheduleRepository
-from dbcalm.service.cron_manager import CronManager
+from dbcalm_cmd_client.client import Client
 
 router = APIRouter()
 
@@ -20,11 +20,20 @@ async def delete_schedule(
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
-    # Remove cron file first
-    cron_manager = CronManager()
-    cron_manager.remove_cron_file(schedule_id)
-
-    # Then delete from database
+    # Delete from database first
     schedule_repo.delete(schedule_id)
+
+    # Update cron file with remaining schedules via cmd service
+    all_schedules = schedule_repo.get_list(query=None, order=None, page=None, per_page=None)[0]
+    schedule_dicts = [s.model_dump(mode='json') for s in all_schedules]
+
+    client = Client()
+    response = client.command("update_cron_schedules", {"schedules": schedule_dicts})
+
+    if response["code"] != 202:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update cron schedules: {response.get('status', 'Unknown error')}",
+        )
 
     return {"message": "Schedule deleted successfully"}

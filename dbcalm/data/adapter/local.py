@@ -115,7 +115,12 @@ class Local(Adapter):
                     column.asc() if direction == "asc" else column.desc()
                 )
 
-        items = select.offset((page - 1) * per_page).limit(per_page).all()
+        # Apply pagination if page and per_page are provided, otherwise return all
+        if page is not None and per_page is not None:
+            items = select.offset((page - 1) * per_page).limit(per_page).all()
+        else:
+            items = select.all()
+
         return items, count
 
     def _convert_value_type(self, column, value: str):

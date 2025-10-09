@@ -12,8 +12,8 @@ class Adapter(ABC):
     def get_list(
         self,
         model: BaseModel,
-        query: list | None,
-        order: list | None,
+        query: list | None = None,
+        order: list | None = None,
         page: int | None = 1,
         per_page: int | None = 100,
     ) -> tuple[list[BaseModel], int]:

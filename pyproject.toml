@@ -24,7 +24,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["dbcalm_cmd_server*", "dbcalm*"]
+include = ["dbcalm_cmd*", "dbcalm_mariadb_cmd*", "dbcalm*"]
 
 [tool.ruff.lint]
 select = ["ALL"]

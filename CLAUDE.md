@@ -7,12 +7,17 @@
 - Lint: `ruff check .` or `ruff check . --fix`
 - Tests: `.venv/bin/python -m pytest tests/`
 - Pre-commit hook (runs automatically): Runs linter and tests
-- Build binaries: `pyinstaller dbcalm.py` and `pyinstaller dbcalm-mariadb-cmd.py`
+- Build binaries: `pyinstaller dbcalm.py`, `pyinstaller dbcalm-mariadb-cmd.py`, and `pyinstaller dbcalm-cmd.py`
 
 ### Development Setup Requirements
-The development environment (`make dev`) runs the mariadb_cmd_process as the mysql user for security. Configure passwordless sudo by adding to `/etc/sudoers.d/dbcalm`:
+The development environment (`make dev`) runs two command services with different privileges:
+- `mariadb_cmd_process`: Runs as mysql user for backup/restore operations
+- `cmd_process`: Runs as root for system operations (service management, ownership fixes)
+
+Configure passwordless sudo by adding to `/etc/sudoers.d/dbcalm`:
 ```
 your_user ALL=(mysql) NOPASSWD: /usr/bin/python3 /full/path/to/dbcalm-mariadb-cmd.py
+your_user ALL=(root) NOPASSWD: /usr/bin/python3 /full/path/to/dbcalm-cmd.py
 ```
 Replace `your_user` with your username and `/full/path/to` with the absolute path to the backend directory.
 
@@ -36,7 +41,29 @@ Replace `your_user` with your username and `/full/path/to` with the absolute pat
 ## Project Organization
 - `/dbcalm`: Core server code
 - `/dbcalm/cli`: CLI commands (server, users, clients)
-- `/dbcalm_mariadb_cmd_client`: Client library for interacting with the MariaDB command service via unix domain socket
 - `/dbcalm.py`: Main CLI entry point (API server, user/client management)
-- `/dbcalm-mariadb-cmd.py`: MariaDB command service entry point executing backups and restores
-- `/dbcalm_mariadb_cmd`: MariaDB command service for interacting with mariabackup and mysqladmin
+
+### Command Services
+The project uses two separate command services for privilege separation:
+
+#### Generic Command Service (root privileges)
+- `/dbcalm-cmd.py`: Entry point for system operations requiring root
+- `/dbcalm_cmd`: Generic command service package
+  - `/process`: Shared process runner (used by both services)
+  - `/adapter`: System command adapters (systemctl, chown)
+  - `/command`: Whitelist-based validator
+- `/dbcalm_cmd_client`: Client library for interacting with generic cmd service via unix domain socket
+- **Socket**: `/var/run/dbcalm/cmd.sock`
+- **Purpose**: Execute whitelisted system operations (restart services, fix ownership)
+- **Security**: Whitelist-based validation, no arbitrary command execution
+
+#### MariaDB Command Service (mysql user privileges)
+- `/dbcalm-mariadb-cmd.py`: Entry point for MariaDB backup/restore operations
+- `/dbcalm_mariadb_cmd`: MariaDB-specific command service package
+  - `/adapter`: MariaDB backup/restore adapters
+  - `/builder`: mariabackup command builders
+  - `/command`: Backup/restore validator
+- `/dbcalm_mariadb_cmd_client`: Client library for interacting with MariaDB cmd service
+- **Socket**: `/var/run/dbcalm/mariadb-cmd.sock`
+- **Purpose**: Execute mariabackup and mysqladmin commands
+- **Security**: Runs as mysql user, validates backup operations
