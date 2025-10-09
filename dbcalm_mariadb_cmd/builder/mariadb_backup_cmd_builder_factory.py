@@ -5,7 +5,7 @@ import subprocess
 from packaging.version import Version
 
 from dbcalm.config.config import Config
-from dbcalm_cmd_server.builder.mariadb_backup_cmd_builder import MariadbBackupCmdBuilder
+from dbcalm_mariadb_cmd.builder.mariadb_backup_cmd_builder import MariadbBackupCmdBuilder
 
 
 def server_version() -> Version:

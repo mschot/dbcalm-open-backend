@@ -7,12 +7,12 @@
 - Lint: `ruff check .` or `ruff check . --fix`
 - Tests: `.venv/bin/python -m pytest tests/`
 - Pre-commit hook (runs automatically): Runs linter and tests
-- Build binaries: `pyinstaller dbcalm.py` and `pyinstaller dbcalm-cmd-server.py`
+- Build binaries: `pyinstaller dbcalm.py` and `pyinstaller dbcalm-mariadb-cmd.py`
 
 ### Development Setup Requirements
-The development environment (`make dev`) runs the cmd_server_process as the mysql user for security. Configure passwordless sudo by adding to `/etc/sudoers.d/dbcalm`:
+The development environment (`make dev`) runs the mariadb_cmd_process as the mysql user for security. Configure passwordless sudo by adding to `/etc/sudoers.d/dbcalm`:
 ```
-your_user ALL=(mysql) NOPASSWD: /usr/bin/python3 /full/path/to/dbcalm-cmd-server.py
+your_user ALL=(mysql) NOPASSWD: /usr/bin/python3 /full/path/to/dbcalm-mariadb-cmd.py
 ```
 Replace `your_user` with your username and `/full/path/to` with the absolute path to the backend directory.
 
@@ -36,7 +36,7 @@ Replace `your_user` with your username and `/full/path/to` with the absolute pat
 ## Project Organization
 - `/dbcalm`: Core server code
 - `/dbcalm/cli`: CLI commands (server, users, clients)
-- `/dbcalm_client`: Client library for interacting with the command Service tool via unix domain socket
+- `/dbcalm_mariadb_cmd_client`: Client library for interacting with the MariaDB command service via unix domain socket
 - `/dbcalm.py`: Main CLI entry point (API server, user/client management)
-- `/dbcalm-cmd-server.py`: Service tool entry point executing backups and restores
-- `/dbcalm_cmd_server`: Command Service for interacting with mariabackup and mysqladmin
+- `/dbcalm-mariadb-cmd.py`: MariaDB command service entry point executing backups and restores
+- `/dbcalm_mariadb_cmd`: MariaDB command service for interacting with mariabackup and mysqladmin

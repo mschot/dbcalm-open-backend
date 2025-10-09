@@ -2,9 +2,9 @@ from dbcalm.config.config_factory import config_factory
 from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.model.process import Process
 from dbcalm.util.get_tmp_dir import get_tmp_dir
-from dbcalm_cmd_server.adapter import adapter
-from dbcalm_cmd_server.builder.backup_cmd_builder import BackupCommandBuilder
-from dbcalm_cmd_server.process.runner import Runner
+from dbcalm_mariadb_cmd.adapter import adapter
+from dbcalm_mariadb_cmd.builder.backup_cmd_builder import BackupCommandBuilder
+from dbcalm_mariadb_cmd.process.runner import Runner
 
 
 class Mariadb(adapter.Adapter):

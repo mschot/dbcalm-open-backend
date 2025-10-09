@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from dbcalm_cmd_server.command.validator import (
+from dbcalm_mariadb_cmd.command.validator import (
     CONFLICT,
     INVALID_REQUEST,
     PREREQUISTE_FAILED,
@@ -100,7 +100,7 @@ class TestValidator:
         assert status == INVALID_REQUEST
         assert "Invalid command" in message
 
-    @patch("dbcalm_cmd_server.command.validator.Validator.database_restore")
+    @patch("dbcalm_mariadb_cmd.command.validator.Validator.database_restore")
     @patch("dbcalm.data.adapter.adapter_factory.adapter_factory")
     def test_validate_restore_with_other_checks(
         self,
@@ -129,7 +129,7 @@ class TestValidator:
 
         mock_database_restore.assert_called_once()
 
-    @patch("dbcalm_cmd_server.command.validator.Validator.server_dead")
+    @patch("dbcalm_mariadb_cmd.command.validator.Validator.server_dead")
     def test_database_restore_server_dead_check(
         self,
         mock_server_dead: MagicMock,
@@ -149,7 +149,7 @@ class TestValidator:
         assert status == VALID_REQUEST
         assert message is None
 
-    @patch("dbcalm_cmd_server.command.validator.Validator.data_dir_empty")
+    @patch("dbcalm_mariadb_cmd.command.validator.Validator.data_dir_empty")
     def test_database_restore_data_dir_empty_check(
         self,
         mock_data_dir_empty: MagicMock,
@@ -182,7 +182,7 @@ class TestValidator:
 
         # Use patch at import level - the key fix here!
         with patch(
-            "dbcalm_cmd_server.command.validator.runner_factory",
+            "dbcalm_mariadb_cmd.command.validator.runner_factory",
             return_value=mock_runner,
         ):
             result = validator.server_dead()
@@ -204,7 +204,7 @@ class TestValidator:
 
         # Use patch at import level again
         with patch(
-            "dbcalm_cmd_server.command.validator.runner_factory",
+            "dbcalm_mariadb_cmd.command.validator.runner_factory",
             return_value=mock_runner,
         ):
             result = validator.server_dead()

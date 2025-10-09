@@ -1,6 +1,6 @@
 from dbcalm.config.config_factory import config_factory
-from dbcalm_cmd_server.adapter.adapter import Adapter
-from dbcalm_cmd_server.adapter.mariadb_factory import mariadb_factory
+from dbcalm_mariadb_cmd.adapter.adapter import Adapter
+from dbcalm_mariadb_cmd.adapter.mariadb_factory import mariadb_factory
 
 
 def adapter_factory() -> Adapter:

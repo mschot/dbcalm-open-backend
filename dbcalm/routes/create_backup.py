@@ -9,7 +9,7 @@ from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.backup import BackupRepository
 from dbcalm.util.kebab import kebab_case
 from dbcalm.util.process_status_response import process_status_response
-from dbcalm_cmd_client.client import Client
+from dbcalm_mariadb_cmd_client.client import Client
 
 router = APIRouter()
 

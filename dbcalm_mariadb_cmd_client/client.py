@@ -24,7 +24,7 @@ class Client:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         # Connect the socket to the port where the server is listening
-        server_address = Config.CMD_SOCKET_PATH
+        server_address = Config.MARIADB_CMD_SOCKET_PATH
         try:
             sock.connect(server_address)
         except OSError:

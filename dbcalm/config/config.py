@@ -6,6 +6,7 @@ from typing import Any
 class Config (ABC):
     PROJECT_NAME = "dbcalm"
     CONFIG_PATH = "/etc/"+ PROJECT_NAME + "/config.yml"
+    MARIADB_CMD_SOCKET_PATH = "/var/run/"+ PROJECT_NAME + "/mariadb-cmd.sock"
     CMD_SOCKET_PATH = "/var/run/"+ PROJECT_NAME + "/cmd.sock"
     DB_PATH = "/var/lib/"+ PROJECT_NAME + "/db.sqlite3"
     DB_HOST = "localhost"  # Always localhost - backup requires local filesystem access

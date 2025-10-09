@@ -1,12 +1,12 @@
 [Unit]
-Description=Dbcalm
+Description=Dbcalm MariaDB Command Service
 After=network.target
 
 [Service]
 User=mysql
 Group=dbcalm
 WorkingDirectory=/usr/bin/
-ExecStart=/usr/bin/dbcalm-cmd-server
+ExecStart=/usr/bin/dbcalm-mariadb-cmd
 Restart=always
 Environment="PATH=/usr/bin:/bin"
 RuntimeDirectory=dbcalm

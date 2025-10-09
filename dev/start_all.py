@@ -136,14 +136,14 @@ def start_processes() -> list[subprocess.Popen]:
     )
     print(f"Started API process with PID {api_process.pid}")
 
-    # Start CMD server process as mysql user
-    cmd_server_process = subprocess.Popen(  # noqa: S603
-        ["sudo", "-u", "mysql", "./.venv/bin/python3", "dbcalm-cmd-server.py"],  # noqa: S607
+    # Start MariaDB CMD server process as mysql user
+    mariadb_cmd_process = subprocess.Popen(  # noqa: S603
+        ["sudo", "-u", "mysql", "./.venv/bin/python3", "dbcalm-mariadb-cmd.py"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
-    print(f"Started CMD Server process with PID {cmd_server_process.pid}")
+    print(f"Started MariaDB CMD Server process with PID {mariadb_cmd_process.pid}")
 
-    return [api_process, cmd_server_process]
+    return [api_process, mariadb_cmd_process]
 
 
 def signal_handler(sig, frame) -> None:  # noqa: ANN001, ARG001

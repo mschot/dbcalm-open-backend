@@ -9,7 +9,7 @@ from dbcalm.data.data_types.enum_types import RestoreTarget
 from dbcalm.data.repository.backup import BackupRepository
 from dbcalm.errors.not_found_error import NotFoundError
 from dbcalm.util.process_status_response import process_status_response
-from dbcalm_cmd_client.client import Client
+from dbcalm_mariadb_cmd_client.client import Client
 
 
 class RestoreRequest(BaseModel):
