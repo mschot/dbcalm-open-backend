@@ -18,7 +18,7 @@ dev:
 
 # Build Debian package
 deb:
-	./build-deb.sh
+	source .venv/bin/activate && ./build-deb.sh
 
 install-deb:
 	sudo dpkg -i "dist/dbcalm_${VERSION}_amd64.deb"

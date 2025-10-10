@@ -1,5 +1,5 @@
 [Unit]
-Description=Dbcalm API Server
+Description=Dbcalm
 After=network.target
 
 [Service]

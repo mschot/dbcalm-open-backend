@@ -10,9 +10,13 @@ if [ -d /run/systemd/system ]; then
         systemctl stop $project_name-api || true
         systemctl disable $project_name-api || true
     fi
-    if [ -f /usr/lib/systemd/system/$project_name-cmd-server.service ]; then
-        systemctl stop $project_name-cmd-server || true
-        systemctl disable $project_name-cmd-server || true
+    if [ -f /usr/lib/systemd/system/$project_name-cmd.service ]; then
+        systemctl stop $project_name-cmd || true
+        systemctl disable $project_name-cmd || true
+    fi
+    if [ -f /usr/lib/systemd/system/$project_name-mariadb-cmd.service ]; then
+        systemctl stop $project_name-mariadb-cmd || true
+        systemctl disable $project_name-mariadb-cmd || true
     fi
 fi
 

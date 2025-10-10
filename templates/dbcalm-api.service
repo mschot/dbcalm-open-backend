@@ -6,7 +6,7 @@ After=network.target
 User=dbcalm
 Group=dbcalm
 WorkingDirectory=/usr/bin/
-ExecStart=/usr/bin/dbcalm-api
+ExecStart=/usr/bin/dbcalm server
 Restart=always
 Environment="PATH=/usr/bin:/bin"
 RuntimeDirectory=dbcalm

@@ -30,21 +30,26 @@ chmod -R 770 /var/log/$project_name/
 chown -R mysql:$project_name /var/lib/$project_name/
 chmod -R 775 /var/lib/$project_name/
 
-chown mysql:$project_name /usr/bin/$project_name-api
-chmod 750 /usr/bin/$project_name-api
+chown mysql:$project_name /usr/bin/$project_name
+chmod 750 /usr/bin/$project_name
 
-chown mysql:$project_name /usr/bin/$project_name-cmd-server
-chmod 750 /usr/bin/$project_name-cmd-server
+chown root:$project_name /usr/bin/$project_name-cmd
+chmod 750 /usr/bin/$project_name-cmd
+
+chown mysql:$project_name /usr/bin/$project_name-mariadb-cmd
+chmod 750 /usr/bin/$project_name-mariadb-cmd
 
 # Enable and start services
 systemctl daemon-reload
 systemctl enable $project_name-api
-systemctl enable $project_name-cmd-server
+systemctl enable $project_name-cmd
+systemctl enable $project_name-mariadb-cmd
 
 # Only attempt to start services if system is not in chroot (during package install)
 if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]; then
     systemctl start $project_name-api
-    systemctl start $project_name-cmd-server
+    systemctl start $project_name-cmd
+    systemctl start $project_name-mariadb-cmd
 fi
 
 exit 0
