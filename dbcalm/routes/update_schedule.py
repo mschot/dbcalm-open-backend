@@ -22,13 +22,14 @@ async def update_schedule(
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
-    schedule.title = request.title
     schedule.backup_type = request.backup_type
     schedule.frequency = request.frequency
     schedule.day_of_week = request.day_of_week
     schedule.day_of_month = request.day_of_month
     schedule.hour = request.hour
     schedule.minute = request.minute
+    schedule.interval_value = request.interval_value
+    schedule.interval_unit = request.interval_unit
     schedule.enabled = request.enabled
 
     schedule_repo.update(schedule)

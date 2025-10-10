@@ -10,7 +10,7 @@ class Validator:
             },
         }
 
-        self.valid_frequencies = ["daily", "weekly", "monthly"]
+        self.valid_frequencies = ["daily", "weekly", "monthly", "hourly", "interval"]
         self.valid_backup_types = ["full", "incremental"]
 
     def required_args(self, command: str) -> list:
@@ -22,7 +22,7 @@ class Validator:
     def validate_schedule(self, schedule: dict) -> tuple[int, str]:
         """Validate a single schedule object."""
         # Check required fields
-        required_fields = ["id", "title", "backup_type", "frequency", "hour", "minute", "enabled"]
+        required_fields = ["id", "backup_type", "frequency", "enabled"]
         for field in required_fields:
             if field not in schedule:
                 return INVALID_REQUEST, f"Schedule missing required field: {field}"
@@ -35,21 +35,27 @@ class Validator:
         if schedule["frequency"] not in self.valid_frequencies:
             return INVALID_REQUEST, f"Invalid frequency: {schedule['frequency']}"
 
-        # Validate hour (0-23)
-        try:
-            hour = int(schedule["hour"])
-            if not 0 <= hour <= 23:
-                return INVALID_REQUEST, f"Invalid hour: {hour}. Must be 0-23"
-        except (ValueError, TypeError):
-            return INVALID_REQUEST, f"Invalid hour: {schedule['hour']}"
+        # Validate hour (0-23) - required for daily, weekly, monthly
+        if schedule["frequency"] in ["daily", "weekly", "monthly"]:
+            if "hour" not in schedule or schedule["hour"] is None:
+                return INVALID_REQUEST, "hour is required for daily, weekly, and monthly schedules"
+            try:
+                hour = int(schedule["hour"])
+                if not 0 <= hour <= 23:
+                    return INVALID_REQUEST, f"Invalid hour: {hour}. Must be 0-23"
+            except (ValueError, TypeError):
+                return INVALID_REQUEST, f"Invalid hour: {schedule['hour']}"
 
-        # Validate minute (0-59)
-        try:
-            minute = int(schedule["minute"])
-            if not 0 <= minute <= 59:
-                return INVALID_REQUEST, f"Invalid minute: {minute}. Must be 0-59"
-        except (ValueError, TypeError):
-            return INVALID_REQUEST, f"Invalid minute: {schedule['minute']}"
+        # Validate minute (0-59) - required for daily, weekly, monthly, and hourly
+        if schedule["frequency"] in ["daily", "weekly", "monthly", "hourly"]:
+            if "minute" not in schedule or schedule["minute"] is None:
+                return INVALID_REQUEST, "minute is required for daily, weekly, monthly, and hourly schedules"
+            try:
+                minute = int(schedule["minute"])
+                if not 0 <= minute <= 59:
+                    return INVALID_REQUEST, f"Invalid minute: {minute}. Must be 0-59"
+            except (ValueError, TypeError):
+                return INVALID_REQUEST, f"Invalid minute: {schedule['minute']}"
 
         # Validate day_of_week for weekly schedules
         if schedule["frequency"] == "weekly":
@@ -66,10 +72,27 @@ class Validator:
             if "day_of_month" in schedule and schedule["day_of_month"] is not None:
                 try:
                     day = int(schedule["day_of_month"])
-                    if not 1 <= day <= 31:
-                        return INVALID_REQUEST, f"Invalid day_of_month: {day}. Must be 1-31"
+                    if not 1 <= day <= 28:
+                        return INVALID_REQUEST, f"Invalid day_of_month: {day}. Must be 1-28"
                 except (ValueError, TypeError):
                     return INVALID_REQUEST, f"Invalid day_of_month: {schedule['day_of_month']}"
+
+        # Validate interval fields for interval schedules
+        if schedule["frequency"] == "interval":
+            if "interval_value" not in schedule or schedule["interval_value"] is None:
+                return INVALID_REQUEST, "interval_value is required for interval schedules"
+            if "interval_unit" not in schedule or schedule["interval_unit"] is None:
+                return INVALID_REQUEST, "interval_unit is required for interval schedules"
+
+            try:
+                interval_value = int(schedule["interval_value"])
+                if interval_value < 1:
+                    return INVALID_REQUEST, f"Invalid interval_value: {interval_value}. Must be >= 1"
+            except (ValueError, TypeError):
+                return INVALID_REQUEST, f"Invalid interval_value: {schedule['interval_value']}"
+
+            if schedule["interval_unit"] not in ["minutes", "hours"]:
+                return INVALID_REQUEST, f"Invalid interval_unit: {schedule['interval_unit']}. Must be 'minutes' or 'hours'"
 
         return VALID_REQUEST, ""
 

@@ -17,13 +17,14 @@ async def create_schedule(
     _: Annotated[dict, Depends(verify_token)],
 ) -> dict:
     schedule = Schedule(
-        title=request.title,
         backup_type=request.backup_type,
         frequency=request.frequency,
         day_of_week=request.day_of_week,
         day_of_month=request.day_of_month,
         hour=request.hour,
         minute=request.minute,
+        interval_value=request.interval_value,
+        interval_unit=request.interval_unit,
         enabled=request.enabled,
     )
 

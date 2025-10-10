@@ -10,13 +10,14 @@ def now() -> datetime:
 
 class Schedule(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    title: str = Field(nullable=False)
     backup_type: str = Field(nullable=False)  # "full" or "incremental"
-    frequency: str = Field(nullable=False)  # "daily", "weekly", "monthly"
+    frequency: str = Field(nullable=False)  # "daily", "weekly", "monthly", "hourly", "interval"
     day_of_week: int | None = None  # 0-6 (0=Sunday), only for weekly
     day_of_month: int | None = None  # 1-28, only for monthly
-    hour: int = Field(nullable=False)  # 0-23
-    minute: int = Field(nullable=False)  # 0-59
+    hour: int | None = None  # 0-23, only for non-interval schedules
+    minute: int | None = None  # 0-59, only for non-interval schedules
+    interval_value: int | None = None  # interval value (e.g., 15, 30, 2)
+    interval_unit: str | None = None  # "minutes" or "hours"
     enabled: bool = Field(default=True, nullable=False)
     created_at: datetime = Field(default_factory=now, nullable=False)
     updated_at: datetime = Field(default_factory=now, nullable=False)

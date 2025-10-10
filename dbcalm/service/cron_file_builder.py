@@ -12,11 +12,27 @@ class CronFileBuilder:
         """Generate cron expression from schedule.
 
         Cron format: minute hour day_of_month month day_of_week
+        For intervals: */X for minutes, or */X in hour field with * in minute field for hours
+        For hourly: minute * * * * (run at specified minute every hour)
         """
+        if schedule.frequency == "interval":
+            if schedule.interval_unit == "minutes":
+                # Run every X minutes: */X * * * *
+                return f"*/{schedule.interval_value} * * * *"
+            elif schedule.interval_unit == "hours":
+                # Run every X hours: 0 */X * * *
+                return f"0 */{schedule.interval_value} * * *"
+            else:
+                msg = f"Unknown interval unit: {schedule.interval_unit}"
+                raise ValueError(msg)
+
         minute = str(schedule.minute)
         hour = str(schedule.hour)
 
-        if schedule.frequency == "daily":
+        if schedule.frequency == "hourly":
+            # Run once every hour at the specified minute: minute * * * *
+            return f"{minute} * * * *"
+        elif schedule.frequency == "daily":
             return f"{minute} {hour} * * *"
         elif schedule.frequency == "weekly":
             day_of_week = str(schedule.day_of_week) if schedule.day_of_week is not None else "*"
@@ -61,7 +77,7 @@ class CronFileBuilder:
             cron_expression = self.generate_cron_expression(schedule)
             cron_command = self.generate_cron_command(schedule)
 
-            lines.append(f"# {schedule.title} (ID: {schedule.id})")
+            lines.append(f"# Schedule ID: {schedule.id}")
             lines.append(f"{cron_expression} root {cron_command}")
             lines.append("")
 

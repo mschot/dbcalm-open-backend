@@ -2,13 +2,14 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class ScheduleRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=255)
     backup_type: str
     frequency: str
     day_of_week: int | None = None
     day_of_month: int | None = None
-    hour: int
-    minute: int
+    hour: int | None = None
+    minute: int | None = None
+    interval_value: int | None = None
+    interval_unit: str | None = None
     enabled: bool = True
 
     @field_validator("backup_type")
@@ -22,8 +23,8 @@ class ScheduleRequest(BaseModel):
     @field_validator("frequency")
     @classmethod
     def validate_frequency(cls, v: str) -> str:
-        if v not in ["daily", "weekly", "monthly"]:
-            msg = "frequency must be 'daily', 'weekly', or 'monthly'"
+        if v not in ["daily", "weekly", "monthly", "hourly", "interval"]:
+            msg = "frequency must be 'daily', 'weekly', 'monthly', 'hourly', or 'interval'"
             raise ValueError(msg)
         return v
 
@@ -45,16 +46,32 @@ class ScheduleRequest(BaseModel):
 
     @field_validator("hour")
     @classmethod
-    def validate_hour(cls, v: int) -> int:
-        if not 0 <= v <= 23:
+    def validate_hour(cls, v: int | None) -> int | None:
+        if v is not None and not 0 <= v <= 23:
             msg = "hour must be between 0 and 23"
             raise ValueError(msg)
         return v
 
     @field_validator("minute")
     @classmethod
-    def validate_minute(cls, v: int) -> int:
-        if not 0 <= v <= 59:
+    def validate_minute(cls, v: int | None) -> int | None:
+        if v is not None and not 0 <= v <= 59:
             msg = "minute must be between 0 and 59"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("interval_value")
+    @classmethod
+    def validate_interval_value(cls, v: int | None) -> int | None:
+        if v is not None and v <= 0:
+            msg = "interval_value must be greater than 0"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("interval_unit")
+    @classmethod
+    def validate_interval_unit(cls, v: str | None) -> str | None:
+        if v is not None and v not in ["minutes", "hours"]:
+            msg = "interval_unit must be 'minutes' or 'hours'"
             raise ValueError(msg)
         return v
