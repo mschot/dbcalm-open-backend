@@ -27,8 +27,20 @@ chmod -R 770 /var/run/$project_name/
 chown -R mysql:$project_name /var/log/$project_name/
 chmod -R 770 /var/log/$project_name/
 
+# Create log file with proper permissions for dbcalm user
+touch /var/log/$project_name/$project_name.log
+chown $project_name:$project_name /var/log/$project_name/$project_name.log
+chmod 664 /var/log/$project_name/$project_name.log
+
 chown -R mysql:$project_name /var/lib/$project_name/
-chmod -R 775 /var/lib/$project_name/
+# Set setgid bit (2775) so new files inherit dbcalm group ownership
+chmod -R 2775 /var/lib/$project_name/
+
+# Pre-create empty database file with correct permissions
+# This ensures mysql and dbcalm users can both write to it
+touch /var/lib/$project_name/db.sqlite3
+chown mysql:$project_name /var/lib/$project_name/db.sqlite3
+chmod 664 /var/lib/$project_name/db.sqlite3
 
 chown mysql:$project_name /usr/bin/$project_name
 chmod 750 /usr/bin/$project_name
@@ -38,6 +50,27 @@ chmod 750 /usr/bin/$project_name-cmd
 
 chown mysql:$project_name /usr/bin/$project_name-mariadb-cmd
 chmod 750 /usr/bin/$project_name-mariadb-cmd
+
+# Create SSL directory and generate self-signed certificate if not exists
+ssl_dir="/etc/$project_name/ssl"
+ssl_cert="$ssl_dir/fullchain-cert.pem"
+ssl_key="$ssl_dir/private-key.pem"
+
+mkdir -p "$ssl_dir"
+chown $project_name:$project_name "$ssl_dir"
+chmod 750 "$ssl_dir"
+
+if [ ! -f "$ssl_cert" ] || [ ! -f "$ssl_key" ]; then
+    echo "Generating self-signed SSL certificate for $project_name.localhost..."
+    openssl req -x509 -newkey rsa:4096 -nodes \
+        -keyout "$ssl_key" \
+        -out "$ssl_cert" \
+        -days 365 -subj "/CN=$project_name.localhost" 2>/dev/null
+
+    chown $project_name:$project_name "$ssl_cert" "$ssl_key"
+    chmod 640 "$ssl_cert" "$ssl_key"
+    echo "Self-signed SSL certificate generated successfully."
+fi
 
 # Enable and start services
 systemctl daemon-reload

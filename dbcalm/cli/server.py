@@ -1,8 +1,9 @@
 import os
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from dbcalm.config.config_factory import config_factory
 from dbcalm.config.validator import Validator
@@ -29,7 +30,6 @@ from dbcalm.routes import (
 )
 
 config = config_factory()
-Validator(config).validate()
 
 app = FastAPI()
 
@@ -59,12 +59,63 @@ app.include_router(update_schedule.router, tags=["Schedules"])
 app.include_router(delete_schedule.router, tags=["Schedules"])
 app.include_router(status.router, tags=["Status"])
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch all unhandled exceptions and log them"""
+    logger = logger_factory()
+    logger.exception(f"Unhandled exception on {request.method} {request.url.path}:")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Internal server error"},
+    )
+
 def run() -> None:
     """Start the API server"""
+    # Initialize logger early so all errors get logged
+    logger = logger_factory()
+
+    # Validate configuration and log any errors
+    try:
+        Validator(config).validate()
+    except ValidationError as e:
+        logger.exception("Configuration validation failed:")
+        raise
+
+    # Configure uvicorn logging to use the same log file
+    log_file = config.value("log_file") or f"/var/log/{config.PROJECT_NAME}/{config.PROJECT_NAME}.log"
+    log_level = config.value("log_level", "info").lower()
+
+    uvicorn_log_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s - %(levelname)s - %(message)s",
+            },
+        },
+        "handlers": {
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": log_file,
+                "formatter": "default",
+            },
+        },
+        "root": {
+            "level": log_level.upper(),
+            "handlers": ["file"],
+        },
+        "loggers": {
+            "uvicorn": {"level": log_level.upper(), "handlers": ["file"], "propagate": False},
+            "uvicorn.error": {"level": log_level.upper(), "handlers": ["file"], "propagate": False},
+            "uvicorn.access": {"level": log_level.upper(), "handlers": ["file"], "propagate": False},
+        },
+    }
+
     uvicorn_args = {
             "app": app,
             "host": config.value("api_host", "0.0.0.0"),
             "port": config.value("api_port", 8335),
+            "log_config": uvicorn_log_config,
         }
     if config.value("ssl_cert") and config.value("ssl_key"):
         ssl_cert = config.value("ssl_cert")
@@ -75,6 +126,7 @@ def run() -> None:
                 "SSL certificate and/or key file(s) are not"
                 f" readable by {config.PROJECT_NAME}"
             )
+            logger.error(msg)
             raise ValidationError(msg)
 
         uvicorn_args["ssl_certfile"] = ssl_cert
@@ -83,5 +135,4 @@ def run() -> None:
     try:
         uvicorn.run(**uvicorn_args)
     except Exception:
-        logger = logger_factory()
         logger.exception("Failed to start API server:")

@@ -24,10 +24,10 @@ def main() -> None:
     subparsers.add_parser("server", help="Start the API server")
 
     # Users command
-    users.configure_parser(subparsers)
+    users_parser = users.configure_parser(subparsers)
 
     # Clients command
-    clients.configure_parser(subparsers)
+    clients_parser = clients.configure_parser(subparsers)
 
     # Backup command
     backup.configure_parser(subparsers)
@@ -43,9 +43,9 @@ def main() -> None:
     if args.command == "server":
         server.run()
     elif args.command == "users":
-        users.run(args)
+        users.run(args, users_parser)
     elif args.command == "clients":
-        clients.run(args)
+        clients.run(args, clients_parser)
     elif args.command == "backup":
         backup.run(args)
     else:

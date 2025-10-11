@@ -6,9 +6,26 @@ if you're looking to improve this project, please check out the [development gui
 
 ## CORS
 
+## Add mysql user 
 
+Make sure to update the password to something unique
 
+```
+CREATE USER 'backupuser'@'localhost' IDENTIFIED BY 's0m3p455w0rd';
 
+GRANT RELOAD, PROCESS, REPLICATION CLIENT ON *.* TO 'backupuser'@'localhost';
+
+FLUSH PRIVILEGES;
+```
+
+## Update credentials file
+Update /etc/dbcalm/credentials.cnf
+
+```
+[client-dbcalm]
+user=backupuser
+password=s0m3p455w0rd
+```
 
 
 ## For development

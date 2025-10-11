@@ -29,3 +29,6 @@ users:
 clients:
 	source .venv/bin/activate && ./dbcalm.py clients
 
+reinstall:
+	sudo apt remove dbcalm -y && sudo rm -rf /var/log/dbcalm/ && sudo rm -rf /var/lib/dbcalm/ && sudo rm -rf /etc/dbcalm/ && make deb && sudo dpkg -i dist/dbcalm_0.0.1_amd64.deb
+

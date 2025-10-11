@@ -49,138 +49,24 @@ def get_all_clients() -> list[Client]:
     return clients
 
 
-def display_client_selection(clients: list[Client]) -> str:
-    """Display a list of clients for selection and return the selected client ID"""
-    if not clients:
-        print("No clients found!")
-        return ""
-
-    print("\nAvailable clients:")
-    for i, client in enumerate(clients, 1):
-        print(f"{i}. {client.label} (ID: {client.id})")
-
-    print("0. Back")
-
-    while True:
-        try:
-            selection = input("\nSelect client (number) or type client ID: ")
-
-            # Check if input is back option
-            if selection == "0":
-                return ""
-
-            # Check if input is a number and within range
-            if selection.isdigit() and 1 <= int(selection) <= len(clients):
-                return clients[int(selection) - 1].id
-
-            # Check if input matches an existing client ID
-            for client in clients:
-                if selection == client.id:
-                    return selection
-
-            print("Invalid selection. Please try again.")
-        except (ValueError, IndexError):
-            print("Invalid selection. Please try again.")
-
-
-def interactive_mode() -> None:  # noqa: C901
-    """Run the CLI in interactive mode with menu options"""
-    while True:
-        print("\nDBCalm Client Management")
-        print("========================")
-        print("1. Add client")
-        print("2. Delete client")
-        print("3. Update client label")
-        print("4. List clients")
-        print("0. Exit")
-
-        choice = input("\nSelect an option: ")
-
-        if choice == "1":
-            label = input("Enter client label: ")
-            create_client(label)
-
-        elif choice == "2":
-            clients = get_all_clients()
-            client_id = display_client_selection(clients)
-
-            if not client_id:
-                continue
-
-            confirm = input(
-                f"Are you sure you want to delete client '{client_id}'? (y/n): "
-            )
-
-            if confirm.lower() == "y":
-                delete_client(client_id)
-
-        elif choice == "3":
-            clients = get_all_clients()
-            client_id = display_client_selection(clients)
-
-            if not client_id:
-                continue
-
-            label = input("Enter new label: ")
-            update_label(client_id, label)
-
-        elif choice == "4":
-            clients = get_all_clients()
-            if not clients:
-                print("No clients found!")
-                continue
-
-            print("\nClients:")
-            for client in clients:
-                print(f"- {client.label} (ID: {client.id})")
-
-        elif choice == "0":
-            print("Exiting...")
-            break
-
-        else:
-            print("Invalid option. Please try again.")
-
-
-def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912
+def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
     """Handle client management commands"""
-    # If no subcommand provided, run interactive mode
+    # If no subcommand provided, show help
     if not hasattr(args, "clients_command") or not args.clients_command:
-        interactive_mode()
-        return
+        parser.print_help()
+        sys.exit(0)
 
     # Handle commands
     if args.clients_command == "add":
         create_client(args.label)
 
     elif args.clients_command == "delete":
-        if not args.client_id:
-            clients = get_all_clients()
-            client_id = display_client_selection(clients)
-            if not client_id:
-                print("Operation cancelled.")
-                sys.exit(0)
-        else:
-            client_id = args.client_id
-
-        confirm = input(f"Are you sure you want to delete client '{client_id}'? (y/n): ")
+        confirm = input(f"Are you sure you want to delete client '{args.client_id}'? (y/n): ")
         if confirm.lower() == "y":
-            delete_client(client_id)
+            delete_client(args.client_id)
 
     elif args.clients_command == "update":
-        if not args.client_id:
-            clients = get_all_clients()
-            client_id = display_client_selection(clients)
-            if not client_id:
-                print("Operation cancelled.")
-                sys.exit(0)
-        else:
-            client_id = args.client_id
-
-        label = args.label
-        if not label:
-            label = input("Enter new label: ")
-        update_label(client_id, label)
+        update_label(args.client_id, args.label)
 
     elif args.clients_command == "list":
         clients = get_all_clients()
@@ -193,7 +79,7 @@ def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912
             print(f"- {client.label} (ID: {client.id})")
 
 
-def configure_parser(subparsers: argparse._SubParsersAction) -> None:
+def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
     """Configure the clients subcommand parser"""
     clients_parser = subparsers.add_parser("clients", help="Manage API clients")
     clients_subparsers = clients_parser.add_subparsers(dest="clients_command", help="Client command")
@@ -204,26 +90,17 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # Delete client command
     delete_parser = clients_subparsers.add_parser("delete", help="Delete an existing client")
-    delete_parser.add_argument(
-        "client_id",
-        nargs="?",
-        help="Client ID to delete (if not provided, will show a list)",
-    )
+    delete_parser.add_argument("client_id", help="Client ID to delete")
 
     # Update client command
     update_parser = clients_subparsers.add_parser(
         "update",
         help="Update label for an existing client",
     )
-    update_parser.add_argument(
-        "client_id",
-        nargs="?",
-        help="Client ID to update (if not provided, will show a list)",
-    )
-    update_parser.add_argument(
-        "--label",
-        help="New label (if not provided, will prompt)",
-    )
+    update_parser.add_argument("client_id", help="Client ID to update")
+    update_parser.add_argument("label", help="New label for the client")
 
     # List clients command
     clients_subparsers.add_parser("list", help="List all clients")
+
+    return clients_parser

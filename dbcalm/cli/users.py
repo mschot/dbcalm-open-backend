@@ -18,8 +18,7 @@ def create_user(username: str, password: str) -> None:
 
     user = User(username=username, password=password)
     created_user = user_repo.create(user)
-    print(f"User '{created_user.username}' created successfully")
-    print("Password has been hashed")
+    print(f"User '{created_user.username}' created successfully")    
 
 
 def delete_user(username: str) -> None:
@@ -46,8 +45,7 @@ def update_password(username: str, password: str) -> None:
             return
         user.password = password
         user_repo.update(user)
-        print(f"Password updated successfully for user '{username}'")
-        print("Password has been hashed")
+        print(f"Password updated successfully for user '{username}'")        
     except Exception as e:
         print(f"Error updating password: {e!s}")
 
@@ -60,107 +58,12 @@ def get_all_users() -> list[User]:
     return users
 
 
-def display_user_selection(users: list[User]) -> str:
-    """Display a list of users for selection and return the selected username"""
-    if not users:
-        print("No users found!")
-        return ""
-
-    print("\nAvailable users:")
-    for i, user in enumerate(users, 1):
-        print(f"{i}. {user.username}")
-
-    print("0. Back")
-
-    while True:
-        try:
-            selection = input("\nSelect user (number) or type username: ")
-
-            # Check if input is back option
-            if selection == "0":
-                return ""
-
-            # Check if input is a number and within range
-            if selection.isdigit() and 1 <= int(selection) <= len(users):
-                return users[int(selection) - 1].username
-
-            # Check if input matches an existing username
-            for user in users:
-                if selection == user.username:
-                    return selection
-
-            print("Invalid selection. Please try again.")
-        except (ValueError, IndexError):
-            print("Invalid selection. Please try again.")
-
-
-def interactive_mode() -> None:  # noqa: C901
-    """Run the CLI in interactive mode with menu options"""
-    while True:
-        print("\nDBCalm User Management")
-        print("======================")
-        print("1. Add user")
-        print("2. Delete user")
-        print("3. Update user password")
-        print("0. Exit")
-
-        choice = input("\nSelect an option: ")
-
-        if choice == "1":
-            username = input("Enter username: ")
-            password = getpass.getpass("Enter password: ")
-            confirm = getpass.getpass("Confirm password: ")
-
-            if password != confirm:
-                print("Passwords do not match!")
-                continue
-
-            create_user(username, password)
-
-        elif choice == "2":
-            users = get_all_users()
-            username = display_user_selection(users)
-
-            if not username:
-                continue
-
-            confirm = input(
-                f"Are you sure you want to delete user '{username}'? (y/n): "
-            )
-
-            if confirm.lower() == "y":
-                delete_user(username)
-
-        elif choice == "3":
-            users = get_all_users()
-            username = display_user_selection(users)
-
-            if not username:
-                continue
-
-            password = getpass.getpass("Enter new password: ")
-            confirm = getpass.getpass("Confirm new password: ")
-
-            if password != confirm:
-                print("Passwords do not match!")
-                continue
-
-            update_password(username, password)
-
-        elif choice == "0":
-            print("Exiting...")
-            break
-
-        else:
-            print("Invalid option. Please try again.")
-
-
-def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912, PLR0915
+def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
     """Handle user management commands"""
-    # If no subcommand provided, run interactive mode
+    # If no subcommand provided, show help
     if not hasattr(args, "users_command") or not args.users_command:
-        interactive_mode()
-        return
+        parser.print_help()
+        sys.exit(0)
 
     # Handle commands
     if args.users_command == "add":
@@ -174,29 +77,11 @@ def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912, PLR0915
         create_user(args.username, password)
 
     elif args.users_command == "delete":
-        if not args.username:
-            users = get_all_users()
-            username = display_user_selection(users)
-            if not username:
-                print("Operation cancelled.")
-                sys.exit(0)
-        else:
-            username = args.username
-
-        confirm = input(f"Are you sure you want to delete user '{username}'? (y/n): ")
+        confirm = input(f"Are you sure you want to delete user '{args.username}'? (y/n): ")
         if confirm.lower() == "y":
-            delete_user(username)
+            delete_user(args.username)
 
     elif args.users_command == "update-password":
-        if not args.username:
-            users = get_all_users()
-            username = display_user_selection(users)
-            if not username:
-                print("Operation cancelled.")
-                sys.exit(0)
-        else:
-            username = args.username
-
         password = args.password
         if not password:
             password = getpass.getpass("Enter new password: ")
@@ -204,7 +89,7 @@ def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912, PLR0915
             if password != confirm:
                 print("Passwords do not match!")
                 sys.exit(1)
-        update_password(username, password)
+        update_password(args.username, password)
 
     elif args.users_command == "list":
         users = get_all_users()
@@ -217,7 +102,7 @@ def run(args: argparse.Namespace) -> None:  # noqa: C901, PLR0912, PLR0915
             print(f"- {user.username}")
 
 
-def configure_parser(subparsers: argparse._SubParsersAction) -> None:
+def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
     """Configure the users subcommand parser"""
     users_parser = subparsers.add_parser("users", help="Manage users")
     users_subparsers = users_parser.add_subparsers(dest="users_command", help="User command")
@@ -232,22 +117,14 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # Delete user command
     delete_parser = users_subparsers.add_parser("delete", help="Delete an existing user")
-    delete_parser.add_argument(
-        "username",
-        nargs="?",
-        help="Username to delete (if not provided, will show a list)",
-    )
+    delete_parser.add_argument("username", help="Username to delete")
 
     # Update password command
     update_parser = users_subparsers.add_parser(
         "update-password",
         help="Update password for an existing user",
     )
-    update_parser.add_argument(
-        "username",
-        nargs="?",
-        help="Username to update password for (if not provided, will show a list)",
-    )
+    update_parser.add_argument("username", help="Username to update password for")
     update_parser.add_argument(
         "--password",
         help="New password (if not provided, will prompt)",
@@ -255,3 +132,5 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # List users command
     users_subparsers.add_parser("list", help="List all users")
+
+    return users_parser

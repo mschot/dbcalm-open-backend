@@ -51,6 +51,7 @@ cp templates/${PACKAGE_NAME}-cmd.service "build/debian/usr/lib/systemd/system/"
 cp templates/${PACKAGE_NAME}-mariadb-cmd.service "build/debian/usr/lib/systemd/system/"
 
 cp -p templates/config.yml "build/debian/etc/$PACKAGE_NAME/"
+cp -p templates/credentials.cnf "build/debian/etc/$PACKAGE_NAME/"
 
 # Update version in control file
 sed -i "s/^Version:.*/Version: ${VERSION}/" build/debian/DEBIAN/control

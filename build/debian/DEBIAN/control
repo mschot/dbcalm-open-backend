@@ -3,7 +3,7 @@ Version: 0.0.1
 Section: database
 Priority: optional
 Architecture: amd64
-Depends: python3 (>= 3.11), mariadb-server | mysql-server
+Depends: mariadb-server | mysql-server, openssl
 Maintainer: DBCalm Maintainers <maintainers@dbcalm.org>
 Description: Database backup and restore manager
  DBCalm is a tool for managing database backups and restores
