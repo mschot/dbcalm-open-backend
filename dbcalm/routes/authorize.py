@@ -22,7 +22,7 @@ async def authorize(
 
     user = UserRepository().get(user_login.username)
     if not user or not pwd_context.verify(user_login.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Username and/or password did not match")
 
     code = f"authcode_{int(time.time())}"
     # need to store authcode with 10min expiry

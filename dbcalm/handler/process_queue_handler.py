@@ -1,5 +1,6 @@
 
 import shutil
+import threading
 from pathlib import Path
 from queue import Queue
 
@@ -45,9 +46,13 @@ class ProcessQueueHandler:
                 self.data_adapter.create(restore)
                 self.logger.debug("Restore %s created", restore.id)
 
-                # Clean up tmp folder for database restores
+                # Clean up tmp folder for database restores in background
                 if restore.target == RestoreTarget.DATABASE:
-                    self.remove_tmp_restore_folder(restore.target_path)
+                    threading.Thread(
+                        target=self.remove_tmp_restore_folder,
+                        args=(restore.target_path,),
+                        daemon=True,
+                    ).start()
 
     def cleanup(self, process: Process) -> None:
 

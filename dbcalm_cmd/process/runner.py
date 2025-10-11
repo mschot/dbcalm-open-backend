@@ -105,8 +105,8 @@ class Runner:
             queue = Queue()
 
         def capture_output() -> None:
-            end_time = datetime.now(tz=UTC)
             stdout, stderr = process.communicate()
+            end_time = datetime.now(tz=UTC)
             self.update_process(
                 process_model,
                 end_time,
