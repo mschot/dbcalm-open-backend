@@ -72,6 +72,20 @@ if [ ! -f "$ssl_cert" ] || [ ! -f "$ssl_key" ]; then
     echo "Self-signed SSL certificate generated successfully."
 fi
 
+# Handle config.yml - generate JWT secret if placeholder exists
+config_file="/etc/$project_name/config.yml"
+if [ -f "$config_file" ]; then
+    if grep -q "jwt_secret_key: replace_with_key" "$config_file"; then
+        echo "Generating JWT secret key..."
+        jwt_secret=$(openssl rand -hex 32)
+        sed -i "s/jwt_secret_key: replace_with_key/jwt_secret_key: $jwt_secret/" "$config_file"
+        echo "JWT secret key generated successfully."
+    fi
+
+    chown $project_name:$project_name "$config_file"
+    chmod 640 "$config_file"
+fi
+
 # Enable and start services
 systemctl daemon-reload
 systemctl enable $project_name-api
