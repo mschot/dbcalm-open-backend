@@ -1,4 +1,4 @@
-import time  # noqa: A005
+import time
 
 import jwt
 from fastapi import APIRouter, HTTPException

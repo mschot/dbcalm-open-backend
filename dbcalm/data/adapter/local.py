@@ -112,7 +112,7 @@ class Local(Adapter):
                 column = getattr(model, order_obj.field)
                 direction = order_obj.value.lower()
                 select = select.order_by(
-                    column.asc() if direction == "asc" else column.desc()
+                    column.asc() if direction == "asc" else column.desc(),
                 )
 
         # Apply pagination if page and per_page are provided, otherwise return all

@@ -18,7 +18,7 @@ def create_user(username: str, password: str) -> None:
 
     user = User(username=username, password=password)
     created_user = user_repo.create(user)
-    print(f"User '{created_user.username}' created successfully")    
+    print(f"User '{created_user.username}' created successfully")
 
 
 def delete_user(username: str) -> None:
@@ -45,7 +45,7 @@ def update_password(username: str, password: str) -> None:
             return
         user.password = password
         user_repo.update(user)
-        print(f"Password updated successfully for user '{username}'")        
+        print(f"Password updated successfully for user '{username}'")
     except Exception as e:
         print(f"Error updating password: {e!s}")
 
@@ -112,7 +112,7 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.Argumen
     add_parser.add_argument("username", help="Username for the new user")
     add_parser.add_argument(
         "--password",
-        help="Password for the new user (if not provided, will prompt)"
+        help="Password for the new user (if not provided, will prompt)",
     )
 
     # Delete user command

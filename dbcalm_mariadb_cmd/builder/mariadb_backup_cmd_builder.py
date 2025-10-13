@@ -76,7 +76,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         forward = self.config.value("forward")
         if stream and forward is None:
             command.append(
-                f"> { self.config.value("backup_dir") }/"
+                f"> { self.config.value('backup_dir') }/"
                 f"backup-{ id }.xbstream{extension}",
             )
 
@@ -94,7 +94,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             from_backup_id: str,
         ) -> list:
         incremental_base_dir = (
-            f"{ self.config.value("backup_dir") }/{ from_backup_id }"
+            f"{ self.config.value('backup_dir') }/{ from_backup_id }"
         )
         return self.build(id, incremental_base_dir)
 

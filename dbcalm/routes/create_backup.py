@@ -42,7 +42,7 @@ async def create_backup(
             "incremental_backup",
             {"id": id, "from_backup_id": from_backup_id},
         )
-    else:        
+    else:
         process = client.command("full_backup", {"id": id})
 
     return process_status_response(process, response)

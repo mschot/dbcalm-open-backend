@@ -130,21 +130,21 @@ def start_processes() -> list[subprocess.Popen]:
     create_runtime_directory()
 
     # Start API process as dbcalm user
-    api_process = subprocess.Popen(  # noqa: S603
+    api_process = subprocess.Popen(
         ["sudo", "-u", "dbcalm", "./.venv/bin/python3", "dbcalm.py", "server"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started API process with PID {api_process.pid}")
 
     # Start MariaDB CMD server process as mysql user (for backup/restore operations)
-    mariadb_cmd_process = subprocess.Popen(  # noqa: S603
+    mariadb_cmd_process = subprocess.Popen(
         ["sudo", "-u", "mysql", "./.venv/bin/python3", "dbcalm-mariadb-cmd.py"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started MariaDB CMD Server process with PID {mariadb_cmd_process.pid}")
 
     # Start generic CMD server process as root (for system operations)
-    cmd_process = subprocess.Popen(  # noqa: S603
+    cmd_process = subprocess.Popen(
         ["sudo", "-u", "root", "./.venv/bin/python3", "dbcalm-cmd.py"],  # noqa: S607
         preexec_fn=os.setsid,  # noqa: PLW1509
     )

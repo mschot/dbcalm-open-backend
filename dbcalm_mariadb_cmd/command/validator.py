@@ -86,8 +86,9 @@ class Validator:
                 continue
 
             if data_adapter.get(Backup, {"id": command_data["args"][arg]}):
-                return CONFLICT, ("Backup with id"
-                    f"{command_data["args"][arg]} already exists")
+                return CONFLICT, (
+                    f"Backup with id {command_data['args'][arg]} already exists"
+                )
 
         return VALID_REQUEST, ""
 

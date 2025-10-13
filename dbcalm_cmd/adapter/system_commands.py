@@ -1,5 +1,4 @@
 import uuid
-from pathlib import Path
 from queue import Queue
 
 from dbcalm.data.model.process import Process

@@ -19,12 +19,11 @@ class CronFileBuilder:
             if schedule.interval_unit == "minutes":
                 # Run every X minutes: */X * * * *
                 return f"*/{schedule.interval_value} * * * *"
-            elif schedule.interval_unit == "hours":
+            if schedule.interval_unit == "hours":
                 # Run every X hours: 0 */X * * *
                 return f"0 */{schedule.interval_value} * * *"
-            else:
-                msg = f"Unknown interval unit: {schedule.interval_unit}"
-                raise ValueError(msg)
+            msg = f"Unknown interval unit: {schedule.interval_unit}"
+            raise ValueError(msg)
 
         minute = str(schedule.minute)
         hour = str(schedule.hour)
@@ -32,24 +31,23 @@ class CronFileBuilder:
         if schedule.frequency == "hourly":
             # Run once every hour at the specified minute: minute * * * *
             return f"{minute} * * * *"
-        elif schedule.frequency == "daily":
+        if schedule.frequency == "daily":
             return f"{minute} {hour} * * *"
-        elif schedule.frequency == "weekly":
+        if schedule.frequency == "weekly":
             day_of_week = str(schedule.day_of_week) if schedule.day_of_week is not None else "*"
             return f"{minute} {hour} * * {day_of_week}"
-        elif schedule.frequency == "monthly":
+        if schedule.frequency == "monthly":
             day_of_month = str(schedule.day_of_month) if schedule.day_of_month is not None else "*"
             return f"{minute} {hour} {day_of_month} * *"
-        else:
-            msg = f"Unknown frequency: {schedule.frequency}"
-            raise ValueError(msg)
+        msg = f"Unknown frequency: {schedule.frequency}"
+        raise ValueError(msg)
 
     def generate_cron_command(self, schedule: Schedule) -> str:
         """Generate the dbcalm backup command that will be executed by cron."""
         # Build command to call dbcalm backup CLI
         cmd = (
-            f'/usr/bin/dbcalm backup {schedule.backup_type} '
-            f'>> /var/log/{self.config.PROJECT_NAME}/cron-{schedule.id}.log 2>&1'
+            f"/usr/bin/dbcalm backup {schedule.backup_type} "
+            f">> /var/log/{self.config.PROJECT_NAME}/cron-{schedule.id}.log 2>&1"
         )
 
         return cmd

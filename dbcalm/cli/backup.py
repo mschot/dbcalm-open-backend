@@ -1,11 +1,10 @@
 import argparse
 import sys
-import urllib3
 
 import requests
+import urllib3
 
 from dbcalm.config.config_factory import config_factory
-from dbcalm.data.model.client import Client
 from dbcalm.data.repository.client import ClientRepository
 
 # Disable SSL warnings for self-signed certificates

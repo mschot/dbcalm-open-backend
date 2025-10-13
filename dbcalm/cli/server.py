@@ -77,7 +77,7 @@ def run() -> None:
     # Validate configuration and log any errors
     try:
         Validator(config).validate()
-    except ValidationError as e:
+    except ValidationError:
         logger.exception("Configuration validation failed:")
         raise
 

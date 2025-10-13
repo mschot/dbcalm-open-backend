@@ -5,12 +5,14 @@ import subprocess
 from packaging.version import Version
 
 from dbcalm.config.config import Config
-from dbcalm_mariadb_cmd.builder.mariadb_backup_cmd_builder import MariadbBackupCmdBuilder
+from dbcalm_mariadb_cmd.builder.mariadb_backup_cmd_builder import (
+    MariadbBackupCmdBuilder,
+)
 
 
 def server_version() -> Version:
     version = None
-    response = subprocess.run(  # noqa: S603
+    response = subprocess.run(
         ["/usr/bin/mariadb-admin", "--version"],
         shell=False,
         capture_output=True,

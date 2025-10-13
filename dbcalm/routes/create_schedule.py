@@ -33,7 +33,7 @@ async def create_schedule(
 
     # Update cron file with all schedules via cmd service
     all_schedules = schedule_repo.get_list(query=None, order=None, page=None, per_page=None)[0]
-    schedule_dicts = [s.model_dump(mode='json') for s in all_schedules]
+    schedule_dicts = [s.model_dump(mode="json") for s in all_schedules]
 
     client = Client()
     response = client.command("update_cron_schedules", {"schedules": schedule_dicts})
