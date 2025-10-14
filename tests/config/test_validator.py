@@ -23,23 +23,23 @@ class TestConfigValidator:
     def validator(self, config_mock: MagicMock) -> Validator:
         return Validator(config_mock)
 
-    
+
 
     def test_validate_success(
         self, validator: Validator, config_mock: MagicMock,
     ) -> None:
-        
-        def config_side_effect(key):
+
+        def config_side_effect(key: str) -> str | list[str] | int:
             if key == "cors_origins":
                 return ["http://example.com"]
             if key == "api_port":
                 return 123
             return "test_value"
-        
+
         # Setup the config to return valid values for all keys
         config_mock.value.side_effect = config_side_effect
 
-        # Test successful validation 
+        # Test successful validation
         validator.validate()  # Should not raise an exception
 
     def test_validate_missing_config_parameter(

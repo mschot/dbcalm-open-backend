@@ -181,8 +181,8 @@ class Runner:
             except Exception:
                 self.logger.exception("Error in run_commands")
             finally:
-                # Only put the last process in the queue to avoid duplicate entries
-                # The last process represents the final state of the consecutive operation
+                # Only put the last process in the queue to avoid duplicates
+                # Last process represents final state of consecutive operation
                 if finished_processes:
                     master_queue.put(finished_processes[-1])
 

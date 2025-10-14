@@ -64,9 +64,8 @@ class ProcessQueueHandler:
 
     def remove_backup_folder(self, id: str) -> None:
         # do cleanup of backup folder in case it was created but not completed
-        backup_path = Path(
-            f"{self.config.value("backup_dir").rstrip("/")}/{id}",
-        )
+        backup_dir = self.config.value("backup_dir").rstrip("/")
+        backup_path = Path(f"{backup_dir}/{id}")
         if backup_path.exists():
             try:
                 shutil.rmtree(backup_path)

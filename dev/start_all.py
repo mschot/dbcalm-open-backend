@@ -121,7 +121,10 @@ def create_runtime_directory() -> None:
         check=True,
     )
 
-    print(f"Created runtime directory {runtime_dir} with dbcalm:dbcalm ownership and mode 2774")
+    print(
+        f"Created runtime directory {runtime_dir} "
+        "with dbcalm:dbcalm ownership and mode 2774",
+    )
 
 
 def start_processes() -> list[subprocess.Popen]:

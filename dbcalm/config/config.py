@@ -19,5 +19,5 @@ class Config (ABC):
     DEV_TIMEOUT = 60     # seconds for development
 
     @abstractmethod
-    def value(self, key: str, default: Any = None) -> Any:
+    def value(self, key: str, default: Any = None) -> Any:  # noqa: ANN401
         pass

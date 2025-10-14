@@ -58,6 +58,51 @@ def get_all_users() -> list[User]:
     return users
 
 
+def handle_add_command(args: argparse.Namespace) -> None:
+    """Handle the add user command."""
+    password = args.password
+    if not password:
+        password = getpass.getpass("Enter password: ")
+        confirm = getpass.getpass("Confirm password: ")
+        if password != confirm:
+            print("Passwords do not match!")
+            sys.exit(1)
+    create_user(args.username, password)
+
+
+def handle_delete_command(args: argparse.Namespace) -> None:
+    """Handle the delete user command."""
+    confirm = input(
+        f"Are you sure you want to delete user '{args.username}'? (y/n): ",
+    )
+    if confirm.lower() == "y":
+        delete_user(args.username)
+
+
+def handle_update_password_command(args: argparse.Namespace) -> None:
+    """Handle the update password command."""
+    password = args.password
+    if not password:
+        password = getpass.getpass("Enter new password: ")
+        confirm = getpass.getpass("Confirm new password: ")
+        if password != confirm:
+            print("Passwords do not match!")
+            sys.exit(1)
+    update_password(args.username, password)
+
+
+def handle_list_command() -> None:
+    """Handle the list users command."""
+    users = get_all_users()
+    if not users:
+        print("No users found!")
+        sys.exit(0)
+
+    print("\nUsers:")
+    for user in users:
+        print(f"- {user.username}")
+
+
 def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
     """Handle user management commands"""
     # If no subcommand provided, show help
@@ -67,45 +112,24 @@ def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
 
     # Handle commands
     if args.users_command == "add":
-        password = args.password
-        if not password:
-            password = getpass.getpass("Enter password: ")
-            confirm = getpass.getpass("Confirm password: ")
-            if password != confirm:
-                print("Passwords do not match!")
-                sys.exit(1)
-        create_user(args.username, password)
-
+        handle_add_command(args)
     elif args.users_command == "delete":
-        confirm = input(f"Are you sure you want to delete user '{args.username}'? (y/n): ")
-        if confirm.lower() == "y":
-            delete_user(args.username)
-
+        handle_delete_command(args)
     elif args.users_command == "update-password":
-        password = args.password
-        if not password:
-            password = getpass.getpass("Enter new password: ")
-            confirm = getpass.getpass("Confirm new password: ")
-            if password != confirm:
-                print("Passwords do not match!")
-                sys.exit(1)
-        update_password(args.username, password)
-
+        handle_update_password_command(args)
     elif args.users_command == "list":
-        users = get_all_users()
-        if not users:
-            print("No users found!")
-            sys.exit(0)
-
-        print("\nUsers:")
-        for user in users:
-            print(f"- {user.username}")
+        handle_list_command()
 
 
-def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
+def configure_parser(
+    subparsers: argparse._SubParsersAction,
+) -> argparse.ArgumentParser:
     """Configure the users subcommand parser"""
     users_parser = subparsers.add_parser("users", help="Manage users")
-    users_subparsers = users_parser.add_subparsers(dest="users_command", help="User command")
+    users_subparsers = users_parser.add_subparsers(
+        dest="users_command",
+        help="User command",
+    )
 
     # Add user command
     add_parser = users_subparsers.add_parser("add", help="Add a new user")
@@ -116,7 +140,10 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.Argumen
     )
 
     # Delete user command
-    delete_parser = users_subparsers.add_parser("delete", help="Delete an existing user")
+    delete_parser = users_subparsers.add_parser(
+        "delete",
+        help="Delete an existing user",
+    )
     delete_parser.add_argument("username", help="Username to delete")
 
     # Update password command
@@ -124,7 +151,10 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.Argumen
         "update-password",
         help="Update password for an existing user",
     )
-    update_parser.add_argument("username", help="Username to update password for")
+    update_parser.add_argument(
+        "username",
+        help="Username to update password for",
+    )
     update_parser.add_argument(
         "--password",
         help="New password (if not provided, will prompt)",

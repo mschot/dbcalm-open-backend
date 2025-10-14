@@ -38,7 +38,7 @@ class SystemCommands(adapter.Adapter):
         cron_content = self.cron_file_builder.build_cron_file_content(schedule_objects)
 
         # Create temp file path
-        temp_file = f"/tmp/dbcalm-cron-{uuid.uuid4()}.tmp"
+        temp_file = f"/tmp/dbcalm-cron-{uuid.uuid4()}.tmp"  # noqa: S108
         target_file = "/etc/cron.d/dbcalm"
 
         # Write content to temp file, set permissions, then move atomically

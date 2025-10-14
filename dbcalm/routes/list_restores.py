@@ -23,12 +23,18 @@ async def list_restores(
     # Validate field names for query filters
     for f in query_filters:
         if not hasattr(Restore, f.field):
-            raise HTTPException(status_code=400, detail=f"Invalid query field: {f.field}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid query field: {f.field}",
+            )
 
     # Validate field names for order filters
     for f in order_filters:
         if not hasattr(Restore, f.field):
-            raise HTTPException(status_code=400, detail=f"Invalid order field: {f.field}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid order field: {f.field}",
+            )
 
     items, total = repository.get_list(
         query_filters,

@@ -1,9 +1,10 @@
 import os
 
 import uvicorn
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette import status
 
 from dbcalm.config.config_factory import config_factory
 from dbcalm.config.validator import Validator
@@ -23,10 +24,12 @@ from dbcalm.routes import (
     list_processes,
     list_restores,
     list_schedules,
-    status,
     token,
     update_client,
     update_schedule,
+)
+from dbcalm.routes import (
+    status as status_route,
 )
 
 config = config_factory()
@@ -57,13 +60,17 @@ app.include_router(get_schedule.router, tags=["Schedules"])
 app.include_router(create_schedule.router, tags=["Schedules"])
 app.include_router(update_schedule.router, tags=["Schedules"])
 app.include_router(delete_schedule.router, tags=["Schedules"])
-app.include_router(status.router, tags=["Status"])
+app.include_router(status_route.router, tags=["Status"])
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def global_exception_handler(request: Request, _exc: Exception) -> JSONResponse:
     """Catch all unhandled exceptions and log them"""
     logger = logger_factory()
-    logger.exception(f"Unhandled exception on {request.method} {request.url.path}:")
+    logger.exception(
+        "Unhandled exception on %s %s:",
+        request.method,
+        request.url.path,
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error"},
@@ -82,7 +89,9 @@ def run() -> None:
         raise
 
     # Configure uvicorn logging to use the same log file
-    log_file = config.value("log_file") or f"/var/log/{config.PROJECT_NAME}/{config.PROJECT_NAME}.log"
+    log_file = config.value("log_file") or (
+        f"/var/log/{config.PROJECT_NAME}/{config.PROJECT_NAME}.log"
+    )
     log_level = config.value("log_level", "info").lower()
 
     uvicorn_log_config = {
@@ -105,15 +114,27 @@ def run() -> None:
             "handlers": ["file"],
         },
         "loggers": {
-            "uvicorn": {"level": log_level.upper(), "handlers": ["file"], "propagate": False},
-            "uvicorn.error": {"level": log_level.upper(), "handlers": ["file"], "propagate": False},
-            "uvicorn.access": {"level": log_level.upper(), "handlers": ["file"], "propagate": False},
+            "uvicorn": {
+                "level": log_level.upper(),
+                "handlers": ["file"],
+                "propagate": False,
+            },
+            "uvicorn.error": {
+                "level": log_level.upper(),
+                "handlers": ["file"],
+                "propagate": False,
+            },
+            "uvicorn.access": {
+                "level": log_level.upper(),
+                "handlers": ["file"],
+                "propagate": False,
+            },
         },
     }
 
     uvicorn_args = {
             "app": app,
-            "host": config.value("api_host", "0.0.0.0"),
+            "host": config.value("api_host", "0.0.0.0"),  # noqa: S104
             "port": config.value("api_port", 8335),
             "log_config": uvicorn_log_config,
         }

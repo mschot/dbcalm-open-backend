@@ -11,7 +11,8 @@ def now() -> datetime:
 class Schedule(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     backup_type: str = Field(nullable=False)  # "full" or "incremental"
-    frequency: str = Field(nullable=False)  # "daily", "weekly", "monthly", "hourly", "interval"
+    # "daily", "weekly", "monthly", "hourly", "interval"
+    frequency: str = Field(nullable=False)
     day_of_week: int | None = None  # 0-6 (0=Sunday), only for weekly
     day_of_month: int | None = None  # 1-28, only for monthly
     hour: int | None = None  # 0-23, only for non-interval schedules

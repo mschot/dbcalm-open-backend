@@ -12,7 +12,8 @@ class CronFileBuilder:
         """Generate cron expression from schedule.
 
         Cron format: minute hour day_of_month month day_of_week
-        For intervals: */X for minutes, or */X in hour field with * in minute field for hours
+        For intervals: */X for minutes, or */X in hour field
+        with * in minute field for hours
         For hourly: minute * * * * (run at specified minute every hour)
         """
         if schedule.frequency == "interval":
@@ -34,10 +35,16 @@ class CronFileBuilder:
         if schedule.frequency == "daily":
             return f"{minute} {hour} * * *"
         if schedule.frequency == "weekly":
-            day_of_week = str(schedule.day_of_week) if schedule.day_of_week is not None else "*"
+            day_of_week = (
+                str(schedule.day_of_week) if schedule.day_of_week is not None else "*"
+            )
             return f"{minute} {hour} * * {day_of_week}"
         if schedule.frequency == "monthly":
-            day_of_month = str(schedule.day_of_month) if schedule.day_of_month is not None else "*"
+            day_of_month = (
+                str(schedule.day_of_month)
+                if schedule.day_of_month is not None
+                else "*"
+            )
             return f"{minute} {hour} {day_of_month} * *"
         msg = f"Unknown frequency: {schedule.frequency}"
         raise ValueError(msg)
@@ -45,12 +52,10 @@ class CronFileBuilder:
     def generate_cron_command(self, schedule: Schedule) -> str:
         """Generate the dbcalm backup command that will be executed by cron."""
         # Build command to call dbcalm backup CLI
-        cmd = (
+        return (
             f"/usr/bin/dbcalm backup {schedule.backup_type} "
             f">> /var/log/{self.config.PROJECT_NAME}/cron-{schedule.id}.log 2>&1"
         )
-
-        return cmd
 
     def build_cron_file_content(self, schedules: list[Schedule]) -> str:
         """Build complete cron file content from list of schedules.

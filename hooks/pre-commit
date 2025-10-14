@@ -1,8 +1,10 @@
 #!/bin/sh
 
+VENV_PATH=".venv"
+
 # Run linter
 echo "Running ruff linter..."
-ruff check . --fix
+$VENV_PATH/bin/ruff check . --fix
 
 #if ruff fails, exit
 if [ $? -ne 0 ]; then
@@ -13,9 +15,6 @@ fi
 # Check if there are tests to run
 if [ -d "tests" ]; then
     echo "Running tests..."
-    # Use the virtual environment python to run pytest
-    VENV_PATH=".venv"
-
     if [ -d "$VENV_PATH" ]; then
         $VENV_PATH/bin/python -m pytest tests/ || {
             echo "Tests failed. Aborting commit."

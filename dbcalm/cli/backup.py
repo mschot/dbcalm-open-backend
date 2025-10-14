@@ -6,6 +6,7 @@ import urllib3
 
 from dbcalm.config.config_factory import config_factory
 from dbcalm.data.repository.client import ClientRepository
+from dbcalm.logger.logger_factory import logger_factory
 
 # Disable SSL warnings for self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -13,12 +14,18 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 TEMP_CLIENT_LABEL = "temp-system-cron"
 
 
+class BackupError(Exception):
+    """Exception raised for backup-related errors."""
+
+
 def get_api_url() -> str:
     """Get the API URL from config."""
     config = config_factory()
     host = config.value("api_host", "127.0.0.1")
     port = config.value("api_port", 8335)
-    protocol = "https" if config.value("ssl_cert") and config.value("ssl_key") else "http"
+    protocol = (
+        "https" if config.value("ssl_cert") and config.value("ssl_key") else "http"
+    )
     return f"{protocol}://{host}:{port}"
 
 
@@ -59,7 +66,8 @@ def cleanup_temp_client(client_id: str) -> None:
         client_repo.delete(client_id)
     except Exception:
         # Best effort cleanup - don't fail if client doesn't exist
-        pass
+        logger = logger_factory()
+        logger.warning("Failed to cleanup temporary client %s", client_id)
 
 
 def get_bearer_token(client_id: str, client_secret: str) -> str:
@@ -85,13 +93,18 @@ def get_bearer_token(client_id: str, client_secret: str) -> str:
     }
 
     try:
-        response = requests.post(token_url, json=data, timeout=10, verify=False)
+        response = requests.post(
+            token_url,
+            json=data,
+            timeout=10,
+            verify=False,  # noqa: S501
+        )
         response.raise_for_status()
         token_data = response.json()
         return token_data["access_token"]
     except requests.exceptions.RequestException as e:
         msg = f"Failed to authenticate: {e!s}"
-        raise Exception(msg) from e
+        raise BackupError(msg) from e
 
 
 def trigger_backup(token: str, backup_type: str) -> dict:
@@ -118,7 +131,13 @@ def trigger_backup(token: str, backup_type: str) -> dict:
     data = {"type": backup_type}
 
     try:
-        response = requests.post(backup_url, json=data, headers=headers, timeout=30, verify=False)
+        response = requests.post(
+            backup_url,
+            json=data,
+            headers=headers,
+            timeout=30,
+            verify=False,  # noqa: S501
+        )
         response.raise_for_status()
         return response.json()
     except requests.exceptions.HTTPError as e:
@@ -129,10 +148,10 @@ def trigger_backup(token: str, backup_type: str) -> dict:
         except Exception:
             error_msg = str(e)
         msg = f"Backup request failed: {error_msg}"
-        raise Exception(msg) from e
+        raise BackupError(msg) from e
     except requests.exceptions.RequestException as e:
         msg = f"Backup request failed: {e!s}"
-        raise Exception(msg) from e
+        raise BackupError(msg) from e
 
 
 def create_backup(backup_type: str) -> None:

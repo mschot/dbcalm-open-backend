@@ -61,7 +61,9 @@ def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
         create_client(args.label)
 
     elif args.clients_command == "delete":
-        confirm = input(f"Are you sure you want to delete client '{args.client_id}'? (y/n): ")
+        confirm = input(
+            f"Are you sure you want to delete client '{args.client_id}'? (y/n): ",
+        )
         if confirm.lower() == "y":
             delete_client(args.client_id)
 
@@ -79,17 +81,25 @@ def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
             print(f"- {client.label} (ID: {client.id})")
 
 
-def configure_parser(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
+def configure_parser(
+    subparsers: argparse._SubParsersAction,
+) -> argparse.ArgumentParser:
     """Configure the clients subcommand parser"""
     clients_parser = subparsers.add_parser("clients", help="Manage API clients")
-    clients_subparsers = clients_parser.add_subparsers(dest="clients_command", help="Client command")
+    clients_subparsers = clients_parser.add_subparsers(
+        dest="clients_command",
+        help="Client command",
+    )
 
     # Add client command
     add_parser = clients_subparsers.add_parser("add", help="Add a new client")
     add_parser.add_argument("label", help="Label for the new client")
 
     # Delete client command
-    delete_parser = clients_subparsers.add_parser("delete", help="Delete an existing client")
+    delete_parser = clients_subparsers.add_parser(
+        "delete",
+        help="Delete an existing client",
+    )
     delete_parser.add_argument("client_id", help="Client ID to delete")
 
     # Update client command

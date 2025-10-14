@@ -46,35 +46,44 @@ class Validator:
                 value in self.commands[command].items() if "unique" in value
             ]
 
-    def validate(self, command_data: dict) -> tuple[int, str]:
-        if command_data["cmd"] not in self.commands:
-            return INVALID_REQUEST, "Invalid command"
-
-        # check if all required arguments are present
+    def _validate_required_args(self, command_data: dict) -> tuple[int, str]:
+        """Check if all required arguments are present."""
         for arg in self.required_args(command_data["cmd"]):
             if arg not in command_data["args"]:
                 return INVALID_REQUEST, f"Missing required argument {arg}"
+        return VALID_REQUEST, ""
 
+    def _validate_backup_checks(self, command_data: dict) -> tuple[int, str]:
+        """Validate backup-specific requirements."""
+        if "|backup" not in self.commands[command_data["cmd"]]:
+            return VALID_REQUEST, ""
 
-        #check other requirements
-        if "|backup" in self.commands[command_data["cmd"]]:
-            other_checks = self.backup(
-                self.commands[command_data["cmd"]]["|backup"],
-            )
-            if other_checks[0] != VALID_REQUEST:
-                return other_checks
+        other_checks = self.backup(
+            self.commands[command_data["cmd"]]["|backup"],
+        )
+        if other_checks[0] != VALID_REQUEST:
+            return other_checks
 
+        return VALID_REQUEST, ""
+
+    def _validate_database_restore_checks(self, command_data: dict) -> tuple[int, str]:
+        """Validate database restore requirements."""
         if (
-            "|database_restore" in self.commands[command_data["cmd"]]
-            and command_data["args"]["target"] == "database"
+            "|database_restore" not in self.commands[command_data["cmd"]]
+            or command_data["args"]["target"] != "database"
         ):
-            other_checks = self.database_restore(
-                self.commands[command_data["cmd"]]["|database_restore"],
-            )
-            if other_checks[0] != VALID_REQUEST:
-                return other_checks
+            return VALID_REQUEST, ""
 
+        other_checks = self.database_restore(
+            self.commands[command_data["cmd"]]["|database_restore"],
+        )
+        if other_checks[0] != VALID_REQUEST:
+            return other_checks
 
+        return VALID_REQUEST, ""
+
+    def _validate_unique_constraints(self, command_data: dict) -> tuple[int, str]:
+        """Validate unique constraints for arguments."""
         # In the future we could make the unique validation more generic
         # by making the argument in commands include model and field
         # for instance backup_id_unique that way we can find the
@@ -92,22 +101,75 @@ class Validator:
 
         return VALID_REQUEST, ""
 
+    def validate(self, command_data: dict) -> tuple[int, str]:
+        if command_data["cmd"] not in self.commands:
+            return INVALID_REQUEST, "Invalid command"
+
+        validators = [
+            self._validate_required_args,
+            self._validate_backup_checks,
+            self._validate_database_restore_checks,
+            self._validate_unique_constraints,
+        ]
+
+        for validator in validators:
+            status, message = validator(command_data)
+            if status != VALID_REQUEST:
+                return status, message
+
+        return VALID_REQUEST, ""
+
+    def credentials_file_valid(self) -> bool:
+        """Check if credentials file exists and has [client-dbcalm] section."""
+        credentials_file = (
+            self.config.value("backup_credentials_file")
+            if self.config.value("backup_credentials_file") is not None
+            else f"/etc/{self.config.PROJECT_NAME}/credentials.cnf"
+        )
+
+        credentials_path = Path(credentials_file)
+
+        # Check if file exists
+        if not credentials_path.is_file():
+            return False
+
+        try:
+            # Read file and check for [client-dbcalm] section
+            content = credentials_path.read_text()
+        except (PermissionError, OSError):
+            return False
+        else:
+            return "[client-dbcalm]" in content
+
     def backup(self, checks: list) -> tuple[int, str]:
+        if not self.credentials_file_valid():
+            return PREREQUISTE_FAILED, (
+                "credentials file not found or missing [client-dbcalm] section"
+            )
+
         if "server_alive" in checks and not self.server_alive():
-            return PREREQUISTE_FAILED, ("cannot create backup,"
-                            " MySQL/MariaDB server is not running")
+            return PREREQUISTE_FAILED, (
+                "cannot create backup, MySQL/MariaDB server is not running"
+            )
 
         return VALID_REQUEST, ""
 
     def database_restore(self, checks: list) -> tuple[int, str]:
+        if not self.credentials_file_valid():
+            return PREREQUISTE_FAILED, (
+                "credentials file not found or missing [client-dbcalm] section"
+            )
+
         if "server_dead" in checks and not self.server_dead():
-            return PREREQUISTE_FAILED, ("cannot restore to database,"
-                            " MySQL/MariaDb server is not stopped")
+            return PREREQUISTE_FAILED, (
+                "cannot restore to database, MySQL/MariaDb server is not stopped"
+            )
 
         if "data_dir_empty" in checks and not self.data_dir_empty():
-            return PREREQUISTE_FAILED, ("cannot restore to database,"
-                            " mysql/mariadb data directory is not empty"
-                            "(usually /var/lib/mysql)")
+            return PREREQUISTE_FAILED, (
+                "cannot restore to database, mysql/mariadb data directory is not empty "
+                "(usually /var/lib/mysql)"
+            )
 
         return VALID_REQUEST, ""
 

@@ -129,12 +129,17 @@ class TestValidator:
 
         mock_database_restore.assert_called_once()
 
+    @patch("dbcalm_mariadb_cmd.command.validator.Validator.credentials_file_valid")
     @patch("dbcalm_mariadb_cmd.command.validator.Validator.server_dead")
     def test_database_restore_server_dead_check(
         self,
         mock_server_dead: MagicMock,
+        mock_credentials_file_valid: MagicMock,
         validator: Validator,
     ) -> None:
+        # Mock credentials as valid
+        mock_credentials_file_valid.return_value = True
+
         # Test when server is not dead
         mock_server_dead.return_value = False
         status, message = validator.database_restore(["server_dead"])
@@ -147,14 +152,19 @@ class TestValidator:
         status, message = validator.database_restore(["server_dead"])
 
         assert status == VALID_REQUEST
-        assert message is ""
+        assert message == ""
 
+    @patch("dbcalm_mariadb_cmd.command.validator.Validator.credentials_file_valid")
     @patch("dbcalm_mariadb_cmd.command.validator.Validator.data_dir_empty")
     def test_database_restore_data_dir_empty_check(
         self,
         mock_data_dir_empty: MagicMock,
+        mock_credentials_file_valid: MagicMock,
         validator: Validator,
     ) -> None:
+        # Mock credentials as valid
+        mock_credentials_file_valid.return_value = True
+
         # Test when data dir is not empty
         mock_data_dir_empty.return_value = False
         status, message = validator.database_restore(["data_dir_empty"])
@@ -167,51 +177,54 @@ class TestValidator:
         status, message = validator.database_restore(["data_dir_empty"])
 
         assert status == VALID_REQUEST
-        assert message is ""
+        assert message == ""
 
-    # def test_server_dead(self, validator: Validator) -> None:
-    #     # Create a real test that mocks at import level
-    #     mock_runner = MagicMock()
-    #     mock_queue = MagicMock()
+    @patch("dbcalm_mariadb_cmd.command.validator.subprocess.run")
+    def test_server_dead(
+        self,
+        mock_subprocess_run: MagicMock,
+        validator: Validator,
+    ) -> None:
+        # First test: Server is alive (return code 0)
+        mock_result_alive = MagicMock()
+        mock_result_alive.returncode = 0
+        mock_subprocess_run.return_value = mock_result_alive
 
-    #     # First test: Server is alive (return code 0)
-    #     mock_process_alive = MagicMock()
-    #     mock_process_alive.return_code = 0
-    #     mock_queue.get.return_value = mock_process_alive
-    #     mock_runner.execute.return_value = (None, mock_queue)
-        
-    #     with patch(
-    #         "dbcalm_cmd.process.runner_factory.runner_factory",
-    #         return_value=mock_runner,
-    #     ):
-    #         result = validator.server_dead()
-    #         assert result is False
+        result = validator.server_dead()
+        assert result is False
 
-    #         # Verify all the appropriate methods were called
-    #         mock_runner.execute.assert_called_once()
-    #         mock_queue.get.assert_called_once()
+        # Verify subprocess.run was called with correct command
+        expected_command = [
+            "mysqladmin",
+            "--defaults-file=/etc/dbcalm/credentials.cnf",
+            "--defaults-group-suffix=-dbcalm",
+            "ping",
+        ]
+        mock_subprocess_run.assert_called_once_with(
+            expected_command,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
 
-    #     # Reset mocks for the second test
-    #     mock_runner.reset_mock()
-    #     mock_queue.reset_mock()
+        # Reset mock for second test
+        mock_subprocess_run.reset_mock()
 
-    #     # Second test: Server is dead (return code not 0)
-    #     mock_process_dead = MagicMock()
-    #     mock_process_dead.return_code = 1
-    #     mock_queue.get.return_value = mock_process_dead
-    #     mock_runner.execute.return_value = (None, mock_queue)
+        # Second test: Server is dead (return code not 0)
+        mock_result_dead = MagicMock()
+        mock_result_dead.returncode = 1
+        mock_subprocess_run.return_value = mock_result_dead
 
-    #     # Use patch at import level again
-    #     with patch(
-    #         "dbcalm_cmd.process.runner_factory.runner_factory",
-    #         return_value=mock_runner,
-    #     ):
-    #         result = validator.server_dead()
-    #         assert result is True
+        result = validator.server_dead()
+        assert result is True
 
-    #         # Verify all the appropriate methods were called
-    #         mock_runner.execute.assert_called_once()
-    #         mock_queue.get.assert_called_once()
+        # Verify subprocess.run was called again
+        mock_subprocess_run.assert_called_once_with(
+            expected_command,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
 
     @patch("pathlib.Path.is_dir")
     @patch("pathlib.Path.iterdir")

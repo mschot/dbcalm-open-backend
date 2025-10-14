@@ -1,5 +1,11 @@
 from pydantic import BaseModel, field_validator
 
+# Constants for validation
+MAX_DAY_OF_WEEK = 6
+MAX_DAY_OF_MONTH = 28
+MAX_HOUR = 23
+MAX_MINUTE = 59
+
 
 class ScheduleRequest(BaseModel):
     backup_type: str
@@ -24,39 +30,42 @@ class ScheduleRequest(BaseModel):
     @classmethod
     def validate_frequency(cls, v: str) -> str:
         if v not in ["daily", "weekly", "monthly", "hourly", "interval"]:
-            msg = "frequency must be 'daily', 'weekly', 'monthly', 'hourly', or 'interval'"
+            msg = (
+                "frequency must be 'daily', 'weekly', 'monthly', "
+                "'hourly', or 'interval'"
+            )
             raise ValueError(msg)
         return v
 
     @field_validator("day_of_week")
     @classmethod
     def validate_day_of_week(cls, v: int | None) -> int | None:
-        if v is not None and not 0 <= v <= 6:
-            msg = "day_of_week must be between 0 and 6"
+        if v is not None and not 0 <= v <= MAX_DAY_OF_WEEK:
+            msg = f"day_of_week must be between 0 and {MAX_DAY_OF_WEEK}"
             raise ValueError(msg)
         return v
 
     @field_validator("day_of_month")
     @classmethod
     def validate_day_of_month(cls, v: int | None) -> int | None:
-        if v is not None and not 1 <= v <= 28:
-            msg = "day_of_month must be between 1 and 28"
+        if v is not None and not 1 <= v <= MAX_DAY_OF_MONTH:
+            msg = f"day_of_month must be between 1 and {MAX_DAY_OF_MONTH}"
             raise ValueError(msg)
         return v
 
     @field_validator("hour")
     @classmethod
     def validate_hour(cls, v: int | None) -> int | None:
-        if v is not None and not 0 <= v <= 23:
-            msg = "hour must be between 0 and 23"
+        if v is not None and not 0 <= v <= MAX_HOUR:
+            msg = f"hour must be between 0 and {MAX_HOUR}"
             raise ValueError(msg)
         return v
 
     @field_validator("minute")
     @classmethod
     def validate_minute(cls, v: int | None) -> int | None:
-        if v is not None and not 0 <= v <= 59:
-            msg = "minute must be between 0 and 59"
+        if v is not None and not 0 <= v <= MAX_MINUTE:
+            msg = f"minute must be between 0 and {MAX_MINUTE}"
             raise ValueError(msg)
         return v
 

@@ -8,6 +8,9 @@ from dbcalm.data.model.schedule import Schedule
 from dbcalm.data.repository.schedule import ScheduleRepository
 from dbcalm_cmd_client.client import Client
 
+# HTTP status code for accepted async operations
+HTTP_ACCEPTED = 202
+
 router = APIRouter()
 
 
@@ -32,16 +35,27 @@ async def create_schedule(
     created_schedule = schedule_repo.create(schedule)
 
     # Update cron file with all schedules via cmd service
-    all_schedules = schedule_repo.get_list(query=None, order=None, page=None, per_page=None)[0]
+    all_schedules = schedule_repo.get_list(
+        query=None,
+        order=None,
+        page=None,
+        per_page=None,
+    )[0]
     schedule_dicts = [s.model_dump(mode="json") for s in all_schedules]
 
     client = Client()
-    response = client.command("update_cron_schedules", {"schedules": schedule_dicts})
+    response = client.command(
+        "update_cron_schedules",
+        {"schedules": schedule_dicts},
+    )
 
-    if response["code"] != 202:
+    if response["code"] != HTTP_ACCEPTED:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to update cron schedules: {response.get('status', 'Unknown error')}",
+            detail=(
+                f"Failed to update cron schedules: "
+                f"{response.get('status', 'Unknown error')}"
+            ),
         )
 
     return created_schedule.model_dump()

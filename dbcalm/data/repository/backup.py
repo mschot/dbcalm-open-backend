@@ -41,7 +41,7 @@ class BackupRepository:
     def latest_backup(self) -> Backup | None:
         # get list of backups ordered by end_time desc
         # and limit 1 and return the first item
-        from dbcalm.util.parse_query_with_operators import QueryFilter
+        from dbcalm.util.parse_query_with_operators import QueryFilter  # noqa: PLC0415
 
         # Convert dict to QueryFilter list for ordering
         order_filters = [QueryFilter(field="end_time", operator="eq", value="desc")]

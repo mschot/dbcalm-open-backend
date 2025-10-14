@@ -4,7 +4,18 @@ VERSION := $(shell grep 'version' pyproject.toml | sed -n 's/version="\([^"]*\)"
 .PHONY: hooks dev deb
 # Adds git hooks to the project
 hooks:
-	ln -s -f ../hooks .git/hooks
+	@if [ -d hooks ]; then \
+		for hook in hooks/*; do \
+			if [ -f "$$hook" ]; then \
+				hook_name=$$(basename $$hook); \
+				ln -sf ../../$$hook .git/hooks/$$hook_name; \
+				chmod +x .git/hooks/$$hook_name; \
+				echo "Installed hook: $$hook_name"; \
+			fi \
+		done; \
+	else \
+		echo "No hooks directory found"; \
+	fi
 
 # Adds a symlink to the database file so we can
 # easily open it in vscode sqlite extension

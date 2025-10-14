@@ -51,6 +51,22 @@ sudo chmod -R 770 /var/log/$project_name/
 mkdir -p /etc/$project_name/ssl/
 cp templates/config.yml /etc/$project_name/
 
+#create credentials file with default credentials
+credentials_file="/etc/$project_name/credentials.cnf"
+if [ ! -f "$credentials_file" ]; then
+    cat > "$credentials_file" <<'EOF'
+[client-dbcalm]
+user=backupuser
+password=s0m3p455w0rd
+EOF
+    chown mysql:$project_name "$credentials_file"
+    chmod 640 "$credentials_file"
+    echo "Created credentials file at $credentials_file with default credentials"
+    echo "IMPORTANT: Update the credentials in $credentials_file for production use"
+else
+    echo "Credentials file already exists at $credentials_file, skipping creation"
+fi
+
 #create lib dirs and set permissions
 mkdir -p "/var/lib/$project_name"
 chgrp "$project_name" "/var/lib/$project_name"
