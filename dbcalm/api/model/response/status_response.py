@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class StatusResponse(BaseModel):
     status: str
-    link: str |None = None
+    link: str | None = None
     pid: str | None = None
+    resource_id: str | None = None
 

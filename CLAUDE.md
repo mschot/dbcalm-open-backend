@@ -54,7 +54,7 @@ The project uses two separate command services for privilege separation:
   - `/command`: Whitelist-based validator
 - `/dbcalm_cmd_client`: Client library for interacting with generic cmd service via unix domain socket
 - **Socket**: `/var/run/dbcalm/cmd.sock`
-- **Purpose**: Execute whitelisted system operations (restart services, fix ownership)
+- **Purpose**: Execute whitelisted system operations 
 - **Security**: Whitelist-based validation, no arbitrary command execution
 
 #### MariaDB Command Service (mysql user privileges)

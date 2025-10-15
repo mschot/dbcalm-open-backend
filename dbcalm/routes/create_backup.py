@@ -24,7 +24,7 @@ async def create_backup(
     if request.id is None:
         id = datetime.now(tz=UTC).strftime("%Y-%m-%d-%H-%M-%S")
     else:
-        id = kebab_case(id)
+        id = kebab_case(request.id)
 
     from_backup_id = request.from_backup_id
     if request.type == "incremental" and from_backup_id is None:

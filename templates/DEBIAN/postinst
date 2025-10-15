@@ -86,17 +86,41 @@ if [ -f "$config_file" ]; then
     chmod 640 "$config_file"
 fi
 
-# Enable and start services
-systemctl daemon-reload
-systemctl enable $project_name-api
-systemctl enable $project_name-cmd
-systemctl enable $project_name-mariadb-cmd
+# Create MariaDB credentials file for backups if it doesn't exist
+credentials_file="/etc/$project_name/credentials.cnf"
+if [ ! -f "$credentials_file" ]; then
+    echo "Creating MariaDB credentials file for backups..."
+    cat > "$credentials_file" <<'EOF'
+# MariaDB credentials for DBCalm backups
+# This file is used by mariabackup and mysqladmin
+# The -dbcalm suffix allows using the same file for both tools
 
-# Only attempt to start services if system is not in chroot (during package install)
-if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]; then
-    systemctl start $project_name-api
-    systemctl start $project_name-cmd
-    systemctl start $project_name-mariadb-cmd
+[client-dbcalm]
+user=backupuser
+password=changeme
+host=localhost
+EOF
+
+    chown mysql:$project_name "$credentials_file"
+    chmod 640 "$credentials_file"
+    echo "MariaDB credentials file created at $credentials_file"
+    echo "IMPORTANT: Update the password in $credentials_file before running backups!"
+fi
+
+# Enable and start services (only if systemd is actually running)
+# Check if systemd is running as PID 1
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+    systemctl enable $project_name-api
+    systemctl enable $project_name-cmd
+    systemctl enable $project_name-mariadb-cmd
+
+    # Only attempt to start services if system is not in chroot (during package install)
+    if [ -z "$DPKG_ROOT" ]; then
+        systemctl start $project_name-api
+        systemctl start $project_name-cmd
+        systemctl start $project_name-mariadb-cmd
+    fi
 fi
 
 exit 0

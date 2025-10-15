@@ -72,17 +72,55 @@ if [ ! -f "$ssl_cert" ] || [ ! -f "$ssl_key" ]; then
     echo "Self-signed SSL certificate generated successfully."
 fi
 
-# Enable and start services
-systemctl daemon-reload
-systemctl enable $project_name-api
-systemctl enable $project_name-cmd
-systemctl enable $project_name-mariadb-cmd
+# Handle config.yml - generate JWT secret if placeholder exists
+config_file="/etc/$project_name/config.yml"
+if [ -f "$config_file" ]; then
+    if grep -q "jwt_secret_key: replace_with_key" "$config_file"; then
+        echo "Generating JWT secret key..."
+        jwt_secret=$(openssl rand -hex 32)
+        sed -i "s/jwt_secret_key: replace_with_key/jwt_secret_key: $jwt_secret/" "$config_file"
+        echo "JWT secret key generated successfully."
+    fi
 
-# Only attempt to start services if system is not in chroot (during package install)
-if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]; then
-    systemctl start $project_name-api
-    systemctl start $project_name-cmd
-    systemctl start $project_name-mariadb-cmd
+    chown $project_name:$project_name "$config_file"
+    chmod 640 "$config_file"
+fi
+
+# Create MariaDB credentials file for backups if it doesn't exist
+credentials_file="/etc/$project_name/credentials.cnf"
+if [ ! -f "$credentials_file" ]; then
+    echo "Creating MariaDB credentials file for backups..."
+    cat > "$credentials_file" <<'EOF'
+# MariaDB credentials for DBCalm backups
+# This file is used by mariabackup and mysqladmin
+# The -dbcalm suffix allows using the same file for both tools
+
+[client-dbcalm]
+user=backupuser
+password=changeme
+host=localhost
+EOF
+
+    chown mysql:$project_name "$credentials_file"
+    chmod 640 "$credentials_file"
+    echo "MariaDB credentials file created at $credentials_file"
+    echo "IMPORTANT: Update the password in $credentials_file before running backups!"
+fi
+
+# Enable and start services (only if systemd is actually running)
+# Check if systemd is running as PID 1
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+    systemctl enable $project_name-api
+    systemctl enable $project_name-cmd
+    systemctl enable $project_name-mariadb-cmd
+
+    # Only attempt to start services if system is not in chroot (during package install)
+    if [ -z "$DPKG_ROOT" ]; then
+        systemctl start $project_name-api
+        systemctl start $project_name-cmd
+        systemctl start $project_name-mariadb-cmd
+    fi
 fi
 
 exit 0

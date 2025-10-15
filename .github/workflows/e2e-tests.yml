@@ -1,0 +1,115 @@
+name: End-to-End Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build setuptools wheel
+
+    - name: Create virtual environment and install package
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install -e ".[dev]"
+
+    - name: Build Debian package
+      run: |
+        source .venv/bin/activate
+        make deb
+
+    - name: Prepare E2E test artifacts
+      run: |
+        mkdir -p tests/e2e/artifacts
+        cp dist/*.deb tests/e2e/artifacts/
+        ls -lh tests/e2e/artifacts/
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build test container
+      working-directory: tests/e2e
+      run: docker compose build --no-cache
+
+    - name: Run E2E tests
+      working-directory: tests/e2e
+      run: |
+        docker compose up --abort-on-container-exit --exit-code-from test-runner
+      continue-on-error: false
+
+    - name: Collect logs
+      if: always()
+      run: |
+        mkdir -p test-artifacts
+        cp -r tests/e2e/logs test-artifacts/ || true
+        cp -r tests/e2e/test-results test-artifacts/ || true
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-test-results
+        path: test-artifacts/
+        retention-days: 7
+
+    - name: Upload test logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-test-logs-failure
+        path: test-artifacts/logs/
+        retention-days: 14
+
+    - name: Cleanup Docker resources
+      if: always()
+      working-directory: tests/e2e
+      run: |
+        docker compose down -v || true
+        docker system prune -f || true
+
+    - name: Report test summary
+      if: always()
+      run: |
+        if [ -f tests/e2e/test-results/junit.xml ]; then
+          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('tests/e2e/test-results/junit.xml')
+          root = tree.getroot()
+          testsuite = root.find('.//testsuite')
+          if testsuite is not None:
+              tests = testsuite.get('tests', '0')
+              failures = testsuite.get('failures', '0')
+              errors = testsuite.get('errors', '0')
+              skipped = testsuite.get('skipped', '0')
+              time = testsuite.get('time', '0')
+              print(f'- **Total Tests:** {tests}')
+              print(f'- **Passed:** {int(tests) - int(failures) - int(errors) - int(skipped)}')
+              print(f'- **Failed:** {failures}')
+              print(f'- **Errors:** {errors}')
+              print(f'- **Skipped:** {skipped}')
+              print(f'- **Duration:** {float(time):.2f}s')
+          " >> $GITHUB_STEP_SUMMARY || echo "Could not parse test results" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No test results found" >> $GITHUB_STEP_SUMMARY
+        fi
