@@ -128,28 +128,38 @@ def verify_data_integrity(connection: pymysql.Connection, dataset: str) -> bool:
 
 
 def clear_mysql_data_directory() -> None:
-    """Clear MySQL data directory preserving system files."""
+    """Clear MySQL data directory preserving only runtime socket/pid files."""
     data_dir = Path("/var/lib/mysql")
     if not data_dir.exists():
         return
 
-    # Files to preserve
-    preserve = {
-        "ib_buffer_pool",
-        "ibdata1",
-        "ib_logfile0",
-        "ib_logfile1",
-    }
-    preserve_extensions = {".sock", ".pid", ".err", ".cnf", ".flag"}
+    # Only preserve runtime files (socket and pid)
+    preserve_extensions = {".sock", ".pid"}
 
+    # Remove all files and directories except runtime files
     for item in data_dir.iterdir():
-        if item.name in preserve or item.suffix in preserve_extensions:
+        if item.suffix in preserve_extensions:
             continue
 
-        if item.is_dir():
-            shutil.rmtree(item)
-        else:
-            item.unlink()
+        try:
+            if item.is_dir():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
+        except Exception as e:
+            print(f"Warning: Failed to remove {item}: {e}")
+
+    # Verify directory is empty (except runtime files)
+    remaining = [
+        f.name for f in data_dir.iterdir()
+        if f.suffix not in preserve_extensions
+    ]
+    if remaining:
+        error_msg = (
+            f"Data directory /var/lib/mysql is not empty after clearing. "
+            f"Remaining files: {remaining}"
+        )
+        raise RuntimeError(error_msg)
 
 
 def wait_for_backup_completion(
@@ -237,11 +247,16 @@ def wait_for_restore_completion(
         process_status = response.json()
 
         status = process_status.get("status")
+        print(f"DEBUG: Restore status check - Full response: {process_status}")
+        print(f"DEBUG: Status value: {status}")
+
         if status == "success":
             # Restore completed successfully
+            print(f"DEBUG: Restore succeeded! Final status: {process_status}")
             return process_status
         if status == "failed":
             error_msg = f"Restore process failed: {process_status.get('error')}"
+            print(f"DEBUG: Restore failed! Status: {process_status}")
             raise RuntimeError(error_msg)
 
         time.sleep(BACKUP_POLL_INTERVAL)
@@ -293,9 +308,22 @@ class MariaDBService:
     @staticmethod
     def start() -> None:
         """Start MariaDB service."""
-        # MariaDB is already running in the container, this is a no-op
-        # but we keep it for compatibility
+        # Start MariaDB in background
+        subprocess.Popen(
+            ["mysqld_safe", "--log-error=/tests/logs/mariadb-restart.log"],  # noqa: S607
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         time.sleep(MARIADB_START_WAIT)
+
+        # Wait for MariaDB to be ready (up to 30 seconds)
+        for _ in range(30):
+            if MariaDBService.is_running():
+                return
+            time.sleep(1)
+
+        msg = "Failed to start MariaDB within 30 seconds"
+        raise RuntimeError(msg)
 
     @staticmethod
     def stop() -> None:

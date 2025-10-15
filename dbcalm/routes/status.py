@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from dbcalm.api.model.response.status_response import StatusResponse
 from dbcalm.auth.verify_token import verify_token
@@ -16,6 +16,9 @@ async def get_status(
 
     process_repository = ProcessRepository()
     process = process_repository.by_command_id(status_id)
+
+    if process is None:
+        raise HTTPException(status_code=404, detail="Process not found")
 
     # Extract backup/restore ID from process args if available
     resource_id = None

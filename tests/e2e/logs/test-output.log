@@ -6,16 +6,18 @@ configfile: pyproject.toml
 collecting ... collected 10 items
 
 test_backup_restore.py::TestFullBackupRestore::test_full_backup_creation PASSED [ 10%]
-test_backup_restore.py::TestFullBackupRestore::test_full_restore FAILED  [ 20%]
+test_backup_restore.py::TestFullBackupRestore::test_full_restore PASSED  [ 20%]
 test_backup_restore.py::TestFullBackupRestore::test_full_restore ERROR   [ 20%]
-test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_backup_creation ERROR [ 30%]
+test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_backup_creation PASSED [ 30%]
+test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_restore PASSED [ 40%]
 test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_restore ERROR [ 40%]
-test_backup_restore.py::TestCredentialsValidation::test_backup_requires_credentials_file ERROR [ 50%]
-test_backup_restore.py::TestCredentialsValidation::test_backup_requires_client_dbcalm_section ERROR [ 60%]
-test_backup_restore.py::TestRestorePreconditions::test_restore_requires_server_stopped ERROR [ 70%]
+test_backup_restore.py::TestCredentialsValidation::test_backup_requires_credentials_file PASSED [ 50%]
+test_backup_restore.py::TestCredentialsValidation::test_backup_requires_client_dbcalm_section PASSED [ 60%]
+test_backup_restore.py::TestRestorePreconditions::test_restore_requires_server_stopped PASSED [ 70%]
+test_backup_restore.py::TestRestorePreconditions::test_restore_requires_empty_data_directory PASSED [ 80%]
 test_backup_restore.py::TestRestorePreconditions::test_restore_requires_empty_data_directory ERROR [ 80%]
-test_backup_restore.py::TestBackupListing::test_list_backups ERROR       [ 90%]
-test_backup_restore.py::TestBackupListing::test_get_backup_details ERROR [100%]
+test_backup_restore.py::TestBackupListing::test_list_backups FAILED      [ 90%]
+test_backup_restore.py::TestBackupListing::test_get_backup_details FAILED [100%]
 
 ==================================== ERRORS ====================================
 _________ ERROR at teardown of TestFullBackupRestore.test_full_restore _________
@@ -89,170 +91,176 @@ _________ ERROR at teardown of TestFullBackupRestore.test_full_restore _________
     |     raise err.InterfaceError(0, "")
     | pymysql.err.InterfaceError: (0, '')
     +------------------------------------
-_ ERROR at setup of TestIncrementalBackupRestore.test_incremental_backup_creation _
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-___ ERROR at setup of TestIncrementalBackupRestore.test_incremental_restore ____
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-_ ERROR at setup of TestCredentialsValidation.test_backup_requires_credentials_file _
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-_ ERROR at setup of TestCredentialsValidation.test_backup_requires_client_dbcalm_section _
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-_ ERROR at setup of TestRestorePreconditions.test_restore_requires_server_stopped _
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-_ ERROR at setup of TestRestorePreconditions.test_restore_requires_empty_data_directory _
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-____________ ERROR at setup of TestBackupListing.test_list_backups _____________
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
-_________ ERROR at setup of TestBackupListing.test_get_backup_details __________
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:661: in connect
-    sock = socket.create_connection(
-/usr/lib/python3.11/socket.py:863: in create_connection
-    raise exceptions[0]
-/usr/lib/python3.11/socket.py:848: in create_connection
-    sock.connect(sa)
-E   ConnectionRefusedError: [Errno 111] Connection refused
-
-During handling of the above exception, another exception occurred:
-conftest.py:88: in db_connection
-    connection = pymysql.connect(
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:365: in __init__
-    self.connect()
-/usr/local/lib/python3.11/dist-packages/pymysql/connections.py:723: in connect
-    raise exc
-E   pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
----------------------------- Captured stdout setup -----------------------------
-WARNING: MariaDB is not running!
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Restore status check - Full response: {'status': 'running', 'link': '/status/b4947375-3334-4eae-8fb2-b30a7d60b9b1', 'pid': None, 'resource_id': None}
+DEBUG: Status value: running
+DEBUG: Restore status check - Full response: {'status': 'success', 'link': '/status/b4947375-3334-4eae-8fb2-b30a7d60b9b1', 'pid': None, 'resource_id': None}
+DEBUG: Status value: success
+DEBUG: Restore succeeded! Final status: {'status': 'success', 'link': '/status/b4947375-3334-4eae-8fb2-b30a7d60b9b1', 'pid': None, 'resource_id': None}
+__ ERROR at teardown of TestIncrementalBackupRestore.test_incremental_restore __
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
+  |     result: TResult | None = func()
+  |                              ^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 246, in <lambda>
+  |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_hooks.py", line 512, in __call__
+  |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_manager.py", line 120, in _hookexec
+  |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 167, in _multicall
+  |     raise exception
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/logging.py", line 858, in pytest_runtest_teardown
+  |     yield
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/capture.py", line 905, in pytest_runtest_teardown
+  |     return (yield)
+  |             ^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 121, in _multicall
+  |     res = hook_impl.function(*args)
+  |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 193, in pytest_runtest_teardown
+  |     item.session._setupstate.teardown_exact(nextitem)
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 557, in teardown_exact
+  |     raise exceptions[0]
+  | ExceptionGroup: errors while tearing down <Function test_incremental_restore> (2 sub-exceptions)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 546, in teardown_exact
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1069, in finish
+    |     raise exceptions[0]
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1058, in finish
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 939, in _teardown_yield_fixture
+    |     next(it)
+    |   File "/app/tests/e2e/conftest.py", line 99, in db_connection
+    |     connection.close()
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 424, in close
+    |     raise err.Error("Already closed")
+    | pymysql.err.Error: Already closed
+    +---------------- 2 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 546, in teardown_exact
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1069, in finish
+    |     raise exceptions[0]
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1058, in finish
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 939, in _teardown_yield_fixture
+    |     next(it)
+    |   File "/app/tests/e2e/conftest.py", line 133, in ensure_clean_state
+    |     cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/cursors.py", line 153, in execute
+    |     result = self._query(query)
+    |              ^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/cursors.py", line 322, in _query
+    |     conn.query(q)
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 574, in query
+    |     self._execute_command(COMMAND.COM_QUERY, sql)
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 844, in _execute_command
+    |     raise err.InterfaceError(0, "")
+    | pymysql.err.InterfaceError: (0, '')
+    +------------------------------------
+----------------------------- Captured stdout call -----------------------------
+DEBUG: Restore status check - Full response: {'status': 'running', 'link': '/status/040bc10a-c986-4d12-a0ff-be537f03e672', 'pid': None, 'resource_id': None}
+DEBUG: Status value: running
+DEBUG: Restore status check - Full response: {'status': 'success', 'link': '/status/040bc10a-c986-4d12-a0ff-be537f03e672', 'pid': None, 'resource_id': None}
+DEBUG: Status value: success
+DEBUG: Restore succeeded! Final status: {'status': 'success', 'link': '/status/040bc10a-c986-4d12-a0ff-be537f03e672', 'pid': None, 'resource_id': None}
+_ ERROR at teardown of TestRestorePreconditions.test_restore_requires_empty_data_directory _
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
+  |     result: TResult | None = func()
+  |                              ^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 246, in <lambda>
+  |     lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_hooks.py", line 512, in __call__
+  |     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_manager.py", line 120, in _hookexec
+  |     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 167, in _multicall
+  |     raise exception
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/logging.py", line 858, in pytest_runtest_teardown
+  |     yield
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 139, in _multicall
+  |     teardown.throw(exception)
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/capture.py", line 905, in pytest_runtest_teardown
+  |     return (yield)
+  |             ^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/pluggy/_callers.py", line 121, in _multicall
+  |     res = hook_impl.function(*args)
+  |           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 193, in pytest_runtest_teardown
+  |     item.session._setupstate.teardown_exact(nextitem)
+  |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 557, in teardown_exact
+  |     raise exceptions[0]
+  | ExceptionGroup: errors while tearing down <Function test_restore_requires_empty_data_directory> (2 sub-exceptions)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 546, in teardown_exact
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1069, in finish
+    |     raise exceptions[0]
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1058, in finish
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 939, in _teardown_yield_fixture
+    |     next(it)
+    |   File "/app/tests/e2e/conftest.py", line 99, in db_connection
+    |     connection.close()
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 424, in close
+    |     raise err.Error("Already closed")
+    | pymysql.err.Error: Already closed
+    +---------------- 2 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 546, in teardown_exact
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1069, in finish
+    |     raise exceptions[0]
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 1058, in finish
+    |     fin()
+    |   File "/usr/local/lib/python3.11/dist-packages/_pytest/fixtures.py", line 939, in _teardown_yield_fixture
+    |     next(it)
+    |   File "/app/tests/e2e/conftest.py", line 133, in ensure_clean_state
+    |     cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/cursors.py", line 153, in execute
+    |     result = self._query(query)
+    |              ^^^^^^^^^^^^^^^^^^
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/cursors.py", line 322, in _query
+    |     conn.query(q)
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 574, in query
+    |     self._execute_command(COMMAND.COM_QUERY, sql)
+    |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 844, in _execute_command
+    |     raise err.InterfaceError(0, "")
+    | pymysql.err.InterfaceError: (0, '')
+    +------------------------------------
 =================================== FAILURES ===================================
-___________________ TestFullBackupRestore.test_full_restore ____________________
-test_backup_restore.py:106: in test_full_restore
-    assert response.status_code in (HTTP_OK, HTTP_ACCEPTED), error_msg
-E   AssertionError: Failed to start restore: {"detail":"Method Not Allowed"}
-E   assert 405 in (200, 202)
-E    +  where 405 = <Response [405]>.status_code
+_____________________ TestBackupListing.test_list_backups ______________________
+test_backup_restore.py:440: in test_list_backups
+    backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_backup_restore.py:440: in <listcomp>
+    backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
+                                                          ^^^^^^^
+E   TypeError: string indices must be integers, not 'str'
+__________________ TestBackupListing.test_get_backup_details ___________________
+test_backup_restore.py:464: in test_get_backup_details
+    assert response.status_code == HTTP_OK
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
 =============================== warnings summary ===============================
-tests/e2e/test_backup_restore.py::TestFullBackupRestore::test_full_backup_creation
-tests/e2e/test_backup_restore.py::TestFullBackupRestore::test_full_backup_creation
-tests/e2e/test_backup_restore.py::TestFullBackupRestore::test_full_restore
-tests/e2e/test_backup_restore.py::TestFullBackupRestore::test_full_restore
+tests/e2e/test_backup_restore.py: 15 warnings
   /usr/local/lib/python3.11/dist-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'localhost'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
     warnings.warn(
 
@@ -267,14 +275,9 @@ tests/e2e/test_backup_restore.py::TestFullBackupRestore::test_full_restore
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 -------------- generated xml file: /tests/test-results/junit.xml ---------------
 =========================== short test summary info ============================
-FAILED test_backup_restore.py::TestFullBackupRestore::test_full_restore - Ass...
+FAILED test_backup_restore.py::TestBackupListing::test_list_backups - TypeErr...
+FAILED test_backup_restore.py::TestBackupListing::test_get_backup_details - a...
 ERROR test_backup_restore.py::TestFullBackupRestore::test_full_restore - Exce...
-ERROR test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_backup_creation
 ERROR test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_restore
-ERROR test_backup_restore.py::TestCredentialsValidation::test_backup_requires_credentials_file
-ERROR test_backup_restore.py::TestCredentialsValidation::test_backup_requires_client_dbcalm_section
-ERROR test_backup_restore.py::TestRestorePreconditions::test_restore_requires_server_stopped
 ERROR test_backup_restore.py::TestRestorePreconditions::test_restore_requires_empty_data_directory
-ERROR test_backup_restore.py::TestBackupListing::test_list_backups - pymysql....
-ERROR test_backup_restore.py::TestBackupListing::test_get_backup_details - py...
-============== 1 failed, 1 passed, 6 warnings, 9 errors in 32.08s ==============
+======== 2 failed, 8 passed, 17 warnings, 3 errors in 86.50s (0:01:26) =========

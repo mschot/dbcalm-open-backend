@@ -6,7 +6,7 @@ echo "=== E2E Test Entrypoint ==="
 
 # Start MariaDB in the background
 echo "Starting MariaDB..."
-mysqld_safe --datadir=/var/lib/mysql &
+mysqld_safe --datadir=/var/lib/mysql --log-error=/tests/logs/mariadb-error.log &
 MYSQL_PID=$!
 
 # Wait for MariaDB to be ready
