@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="3" failures="2" skipped="0" tests="13" time="86.502" timestamp="2025-10-15T16:12:50.788073+00:00" hostname="9a3e6803dd95"><testcase classname="tests.e2e.test_backup_restore.TestFullBackupRestore" name="test_full_backup_creation" time="6.676" /><testcase classname="tests.e2e.test_backup_restore.TestFullBackupRestore" name="test_full_restore" time="12.732"><error message="failed on teardown with &quot;ExceptionGroup: errors while tearing down &lt;Function test_full_restore&gt; (2 sub-exceptions)&quot;">+ Exception Group Traceback (most recent call last):
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="3" failures="0" skipped="0" tests="13" time="86.126" timestamp="2025-10-15T17:10:00.123533+00:00" hostname="0a3d70de4719"><testcase classname="tests.e2e.test_backup_restore.TestFullBackupRestore" name="test_full_backup_creation" time="6.645" /><testcase classname="tests.e2e.test_backup_restore.TestFullBackupRestore" name="test_full_restore" time="12.707"><error message="failed on teardown with &quot;ExceptionGroup: errors while tearing down &lt;Function test_full_restore&gt; (2 sub-exceptions)&quot;">+ Exception Group Traceback (most recent call last):
   |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
   |     result: TResult | None = func()
   |                              ^^^^^^
@@ -67,7 +67,7 @@
     |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 844, in _execute_command
     |     raise err.InterfaceError(0, "")
     | pymysql.err.InterfaceError: (0, '')
-    +------------------------------------</error></testcase><testcase classname="tests.e2e.test_backup_restore.TestIncrementalBackupRestore" name="test_incremental_backup_creation" time="10.773" /><testcase classname="tests.e2e.test_backup_restore.TestIncrementalBackupRestore" name="test_incremental_restore" time="17.085"><error message="failed on teardown with &quot;ExceptionGroup: errors while tearing down &lt;Function test_incremental_restore&gt; (2 sub-exceptions)&quot;">+ Exception Group Traceback (most recent call last):
+    +------------------------------------</error></testcase><testcase classname="tests.e2e.test_backup_restore.TestIncrementalBackupRestore" name="test_incremental_backup_creation" time="10.689" /><testcase classname="tests.e2e.test_backup_restore.TestIncrementalBackupRestore" name="test_incremental_restore" time="17.064"><error message="failed on teardown with &quot;ExceptionGroup: errors while tearing down &lt;Function test_incremental_restore&gt; (2 sub-exceptions)&quot;">+ Exception Group Traceback (most recent call last):
   |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
   |     result: TResult | None = func()
   |                              ^^^^^^
@@ -136,7 +136,7 @@
     |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 844, in _execute_command
     |     raise err.InterfaceError(0, "")
     | pymysql.err.InterfaceError: (0, '')
-    +------------------------------------</error></testcase><testcase classname="tests.e2e.test_backup_restore.TestCredentialsValidation" name="test_backup_requires_credentials_file" time="2.326" /><testcase classname="tests.e2e.test_backup_restore.TestCredentialsValidation" name="test_backup_requires_client_dbcalm_section" time="2.304" /><testcase classname="tests.e2e.test_backup_restore.TestRestorePreconditions" name="test_restore_requires_server_stopped" time="6.672" /><testcase classname="tests.e2e.test_backup_restore.TestRestorePreconditions" name="test_restore_requires_empty_data_directory" time="10.625"><error message="failed on teardown with &quot;ExceptionGroup: errors while tearing down &lt;Function test_restore_requires_empty_data_directory&gt; (2 sub-exceptions)&quot;">+ Exception Group Traceback (most recent call last):
+    +------------------------------------</error></testcase><testcase classname="tests.e2e.test_backup_restore.TestCredentialsValidation" name="test_backup_requires_credentials_file" time="2.311" /><testcase classname="tests.e2e.test_backup_restore.TestCredentialsValidation" name="test_backup_requires_client_dbcalm_section" time="2.316" /><testcase classname="tests.e2e.test_backup_restore.TestRestorePreconditions" name="test_restore_requires_server_stopped" time="6.629" /><testcase classname="tests.e2e.test_backup_restore.TestRestorePreconditions" name="test_restore_requires_empty_data_directory" time="10.575"><error message="failed on teardown with &quot;ExceptionGroup: errors while tearing down &lt;Function test_restore_requires_empty_data_directory&gt; (2 sub-exceptions)&quot;">+ Exception Group Traceback (most recent call last):
   |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
   |     result: TResult | None = func()
   |                              ^^^^^^
@@ -205,13 +205,4 @@
     |   File "/usr/local/lib/python3.11/dist-packages/pymysql/connections.py", line 844, in _execute_command
     |     raise err.InterfaceError(0, "")
     | pymysql.err.InterfaceError: (0, '')
-    +------------------------------------</error></testcase><testcase classname="tests.e2e.test_backup_restore.TestBackupListing" name="test_list_backups" time="10.811"><failure message="TypeError: string indices must be integers, not 'str'">test_backup_restore.py:440: in test_list_backups
-    backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-test_backup_restore.py:440: in &lt;listcomp&gt;
-    backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
-                                                          ^^^^^^^
-E   TypeError: string indices must be integers, not 'str'</failure></testcase><testcase classname="tests.e2e.test_backup_restore.TestBackupListing" name="test_get_backup_details" time="6.443"><failure message="assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">test_backup_restore.py:464: in test_get_backup_details
-    assert response.status_code == HTTP_OK
-E   assert 404 == 200
-E    +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase></testsuite></testsuites>
+    +------------------------------------</error></testcase><testcase classname="tests.e2e.test_backup_restore.TestBackupListing" name="test_list_backups" time="10.736" /><testcase classname="tests.e2e.test_backup_restore.TestBackupListing" name="test_get_backup_details" time="6.422" /></testsuite></testsuites>

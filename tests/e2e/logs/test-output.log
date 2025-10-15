@@ -16,8 +16,8 @@ test_backup_restore.py::TestCredentialsValidation::test_backup_requires_client_d
 test_backup_restore.py::TestRestorePreconditions::test_restore_requires_server_stopped PASSED [ 70%]
 test_backup_restore.py::TestRestorePreconditions::test_restore_requires_empty_data_directory PASSED [ 80%]
 test_backup_restore.py::TestRestorePreconditions::test_restore_requires_empty_data_directory ERROR [ 80%]
-test_backup_restore.py::TestBackupListing::test_list_backups FAILED      [ 90%]
-test_backup_restore.py::TestBackupListing::test_get_backup_details FAILED [100%]
+test_backup_restore.py::TestBackupListing::test_list_backups PASSED      [ 90%]
+test_backup_restore.py::TestBackupListing::test_get_backup_details PASSED [100%]
 
 ==================================== ERRORS ====================================
 _________ ERROR at teardown of TestFullBackupRestore.test_full_restore _________
@@ -92,11 +92,11 @@ _________ ERROR at teardown of TestFullBackupRestore.test_full_restore _________
     | pymysql.err.InterfaceError: (0, '')
     +------------------------------------
 ----------------------------- Captured stdout call -----------------------------
-DEBUG: Restore status check - Full response: {'status': 'running', 'link': '/status/b4947375-3334-4eae-8fb2-b30a7d60b9b1', 'pid': None, 'resource_id': None}
+DEBUG: Restore status check - Full response: {'status': 'running', 'link': '/status/b46ebe1e-4654-40e0-8f5d-1d4cf3fd3eae', 'pid': None, 'resource_id': None}
 DEBUG: Status value: running
-DEBUG: Restore status check - Full response: {'status': 'success', 'link': '/status/b4947375-3334-4eae-8fb2-b30a7d60b9b1', 'pid': None, 'resource_id': None}
+DEBUG: Restore status check - Full response: {'status': 'success', 'link': '/status/b46ebe1e-4654-40e0-8f5d-1d4cf3fd3eae', 'pid': None, 'resource_id': None}
 DEBUG: Status value: success
-DEBUG: Restore succeeded! Final status: {'status': 'success', 'link': '/status/b4947375-3334-4eae-8fb2-b30a7d60b9b1', 'pid': None, 'resource_id': None}
+DEBUG: Restore succeeded! Final status: {'status': 'success', 'link': '/status/b46ebe1e-4654-40e0-8f5d-1d4cf3fd3eae', 'pid': None, 'resource_id': None}
 __ ERROR at teardown of TestIncrementalBackupRestore.test_incremental_restore __
   + Exception Group Traceback (most recent call last):
   |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
@@ -169,11 +169,11 @@ __ ERROR at teardown of TestIncrementalBackupRestore.test_incremental_restore __
     | pymysql.err.InterfaceError: (0, '')
     +------------------------------------
 ----------------------------- Captured stdout call -----------------------------
-DEBUG: Restore status check - Full response: {'status': 'running', 'link': '/status/040bc10a-c986-4d12-a0ff-be537f03e672', 'pid': None, 'resource_id': None}
+DEBUG: Restore status check - Full response: {'status': 'running', 'link': '/status/70fa7dfc-742b-496c-8b77-0927077d4b24', 'pid': None, 'resource_id': None}
 DEBUG: Status value: running
-DEBUG: Restore status check - Full response: {'status': 'success', 'link': '/status/040bc10a-c986-4d12-a0ff-be537f03e672', 'pid': None, 'resource_id': None}
+DEBUG: Restore status check - Full response: {'status': 'success', 'link': '/status/70fa7dfc-742b-496c-8b77-0927077d4b24', 'pid': None, 'resource_id': None}
 DEBUG: Status value: success
-DEBUG: Restore succeeded! Final status: {'status': 'success', 'link': '/status/040bc10a-c986-4d12-a0ff-be537f03e672', 'pid': None, 'resource_id': None}
+DEBUG: Restore succeeded! Final status: {'status': 'success', 'link': '/status/70fa7dfc-742b-496c-8b77-0927077d4b24', 'pid': None, 'resource_id': None}
 _ ERROR at teardown of TestRestorePreconditions.test_restore_requires_empty_data_directory _
   + Exception Group Traceback (most recent call last):
   |   File "/usr/local/lib/python3.11/dist-packages/_pytest/runner.py", line 344, in from_call
@@ -245,20 +245,6 @@ _ ERROR at teardown of TestRestorePreconditions.test_restore_requires_empty_data
     |     raise err.InterfaceError(0, "")
     | pymysql.err.InterfaceError: (0, '')
     +------------------------------------
-=================================== FAILURES ===================================
-_____________________ TestBackupListing.test_list_backups ______________________
-test_backup_restore.py:440: in test_list_backups
-    backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-test_backup_restore.py:440: in <listcomp>
-    backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
-                                                          ^^^^^^^
-E   TypeError: string indices must be integers, not 'str'
-__________________ TestBackupListing.test_get_backup_details ___________________
-test_backup_restore.py:464: in test_get_backup_details
-    assert response.status_code == HTTP_OK
-E   assert 404 == 200
-E    +  where 404 = <Response [404]>.status_code
 =============================== warnings summary ===============================
 tests/e2e/test_backup_restore.py: 15 warnings
   /usr/local/lib/python3.11/dist-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'localhost'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
@@ -275,9 +261,7 @@ tests/e2e/test_backup_restore.py: 15 warnings
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 -------------- generated xml file: /tests/test-results/junit.xml ---------------
 =========================== short test summary info ============================
-FAILED test_backup_restore.py::TestBackupListing::test_list_backups - TypeErr...
-FAILED test_backup_restore.py::TestBackupListing::test_get_backup_details - a...
 ERROR test_backup_restore.py::TestFullBackupRestore::test_full_restore - Exce...
 ERROR test_backup_restore.py::TestIncrementalBackupRestore::test_incremental_restore
 ERROR test_backup_restore.py::TestRestorePreconditions::test_restore_requires_empty_data_directory
-======== 2 failed, 8 passed, 17 warnings, 3 errors in 86.50s (0:01:26) =========
+============= 10 passed, 17 warnings, 3 errors in 86.13s (0:01:26) =============

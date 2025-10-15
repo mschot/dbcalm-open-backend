@@ -45,6 +45,6 @@ async def create_backup(
     else:
         process = client.command("full_backup", {"id": id})
 
-    return process_status_response(process, response)
+    return process_status_response(process, response, resource_id=id)
 
 

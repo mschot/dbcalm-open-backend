@@ -41,4 +41,4 @@ async def create_restore(
         {"id_list": backups, "target": request.target},
     )
 
-    return process_status_response(process, response)
+    return process_status_response(process, response, resource_id=request.id)

@@ -2,6 +2,7 @@ __pycache__
 dist/*
 build/pyinstaller
 build/lib
+build/debian/*
 *.egg-info
 *.pyc
 .venv/*

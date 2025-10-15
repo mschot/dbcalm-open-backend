@@ -434,7 +434,8 @@ class TestBackupListing:
         )
 
         assert response.status_code == HTTP_OK
-        backups = response.json()
+        response_data = response.json()
+        backups = response_data["items"]
 
         # Verify our backups are in the list
         backup_ids_in_response = [b["id"] for b in backups if b["id"] in backup_ids]
@@ -464,4 +465,5 @@ class TestBackupListing:
         assert response.status_code == HTTP_OK
         backup = response.json()
         assert backup["id"] == backup_id
-        assert backup["backup_type"] == "full"
+        # Verify it's a full backup (from_backup_id should be None)
+        assert backup["from_backup_id"] is None

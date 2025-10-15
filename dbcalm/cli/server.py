@@ -18,6 +18,7 @@ from dbcalm.routes import (
     create_schedule,
     delete_client,
     delete_schedule,
+    get_backup,
     get_schedule,
     list_backups,
     list_clients,
@@ -48,6 +49,7 @@ app.include_router(authorize.router, prefix="/auth", tags=["Authentication"])
 app.include_router(token.router, prefix="/auth", tags=["Authentication"])
 app.include_router(create_backup.router, tags=["Backups"])
 app.include_router(list_backups.router, tags=["Backups"])
+app.include_router(get_backup.router, tags=["Backups"])
 app.include_router(list_clients.router, tags=["Clients"])
 app.include_router(delete_client.router, tags=["Clients"])
 app.include_router(update_client.router, tags=["Clients"])
