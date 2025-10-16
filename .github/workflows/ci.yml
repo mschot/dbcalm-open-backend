@@ -24,19 +24,14 @@ jobs:
     - name: Create virtual environment and install dependencies
       run: |
         python -m venv .venv
-        source .venv/bin/activate
-        pip install --upgrade pip
-        pip install -e ".[dev]"
+        .venv/bin/pip install --upgrade pip
+        .venv/bin/pip install -e ".[dev]"
 
     - name: Run ruff linter
-      run: |
-        source .venv/bin/activate
-        ruff check .
+      run: .venv/bin/ruff check .
 
     - name: Run unit tests
-      run: |
-        source .venv/bin/activate
-        python -m pytest tests/ --ignore=tests/e2e
+      run: .venv/bin/python -m pytest tests/ --ignore=tests/e2e
 
     - name: Upload test results
       if: always()
