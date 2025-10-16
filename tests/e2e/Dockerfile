@@ -22,12 +22,14 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create test directories
+# Create test directories with proper permissions
 RUN mkdir -p /tests/fixtures \
     /tests/scripts \
     /tests/artifacts \
     /tests/logs \
-    /tests/test-results
+    /tests/logs/dbcalm \
+    /tests/test-results && \
+    chmod -R 777 /tests/logs /tests/test-results /tests/artifacts
 
 # Copy test fixtures and scripts
 COPY fixtures/ /tests/fixtures/

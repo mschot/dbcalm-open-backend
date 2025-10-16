@@ -31,15 +31,14 @@ dev:
 deb:
 	source .venv/bin/activate && ./build-deb.sh
 
-# Build Debian package in Ubuntu 20.04 Docker container (recommended for production)
-# Ensures compatibility with Ubuntu 22.04, 24.04+ (GLIBC 2.31+)
+# Build Debian package in Ubuntu 22.04 Docker container (recommended for production)
+# Ensures compatibility with Ubuntu 22.04, 24.04+ (GLIBC 2.35+)
 deb-docker:
 	@echo "Building .deb in Ubuntu 22.04 container for maximum compatibility..."
 	docker build -f build.Dockerfile -t dbcalm-builder:ubuntu22.04 .
-	docker run --rm -v $(PWD):/build dbcalm-builder:ubuntu22.04 bash -c "\
+	docker run --rm -v $(PWD):/build -w /build dbcalm-builder:ubuntu22.04 bash -c "\
 		source /opt/build-venv/bin/activate && \
-		pip install -e /build && \
-		cd /build && \
+		pip install -e . && \
 		./build-deb.sh"
 	@echo "Build complete! Package: dist/dbcalm_$(VERSION)_amd64.deb"
 
