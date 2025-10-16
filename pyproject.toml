@@ -17,7 +17,16 @@ dependencies = [
     "requests",
 ]
 
-
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff",
+]
+e2e = [
+    "pytest>=8.0.0",
+    "pymysql>=1.1.0",
+    "cryptography>=41.0.0",
+]
 
 [tool.setuptools.packages.find]
 include = ["dbcalm_cmd*", "dbcalm_mariadb_cmd*", "dbcalm*"]
@@ -33,5 +42,5 @@ python_classes = "Test*"
 python_functions = "test_*"
 cache_dir = "/tmp/.pytest_cache"
 filterwarnings = [
-    "ignore::urllib3.exceptions.InsecureRequestWarning"
+    "ignore::urllib3.exceptions.InsecureRequestWarning",
 ]
