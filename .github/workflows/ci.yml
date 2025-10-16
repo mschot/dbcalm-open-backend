@@ -27,6 +27,9 @@ jobs:
         .venv/bin/pip install --upgrade pip
         .venv/bin/pip install -e ".[dev]"
 
+    - name: Run dev-install setup
+      run: sudo make dev-install
+
     - name: Run ruff linter
       run: .venv/bin/ruff check .
 
