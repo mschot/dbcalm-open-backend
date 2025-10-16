@@ -96,7 +96,8 @@ def db_connection() -> Generator[pymysql.Connection, None, None]:
 
     yield connection
 
-    connection.close()
+    if connection.open:
+        connection.close()
 
 
 @pytest.fixture
@@ -128,10 +129,11 @@ def ensure_clean_state(
     # Add delay between tests to prevent backup directory timestamp collisions
     time.sleep(2)
 
-    # Cleanup after test
-    with db_connection.cursor() as cursor:
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-        cursor.execute("TRUNCATE TABLE orders")
-        cursor.execute("TRUNCATE TABLE users")
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
-    db_connection.commit()
+    # Cleanup after test (only if connection is still open)
+    if db_connection.open:
+        with db_connection.cursor() as cursor:
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+            cursor.execute("TRUNCATE TABLE orders")
+            cursor.execute("TRUNCATE TABLE users")
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+        db_connection.commit()

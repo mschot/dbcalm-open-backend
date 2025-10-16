@@ -1,8 +1,6 @@
 __pycache__
 dist/*
-build/pyinstaller
-build/lib
-build/debian/
+build/*
 *.egg-info
 *.pyc
 .venv/*
@@ -12,3 +10,5 @@ build/debian/
 *.sqlite3
 tests/e2e/artifacts/*
 tests/e2e/logs/*
+tests/e2e/test-results/*
+

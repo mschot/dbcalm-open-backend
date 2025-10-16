@@ -79,7 +79,11 @@ class TestFullBackupRestore:
         # Load initial dataset and create backup
         load_sql_file(db_connection, "fixtures/initial_data.sql")
         process_id = create_backup(api_token, "full", api_base_url=api_base_url)
-        process_status = wait_for_backup_completion(api_token, process_id, api_base_url=api_base_url)
+        process_status = wait_for_backup_completion(
+            api_token,
+            process_id,
+            api_base_url=api_base_url,
+        )
         backup_id = process_status["resource_id"]
 
         # Add more data after backup
@@ -107,7 +111,7 @@ class TestFullBackupRestore:
         process_id = response.json()["pid"]
 
         # Wait for restore to complete
-        process_status = wait_for_restore_completion(
+        wait_for_restore_completion(
             api_token,
             process_id,
             api_base_url=api_base_url,
@@ -238,7 +242,7 @@ class TestIncrementalBackupRestore:
         process_id = response.json()["pid"]
 
         # Wait for restore to complete
-        process_status = wait_for_restore_completion(
+        wait_for_restore_completion(
             api_token,
             process_id,
             api_base_url=api_base_url,
@@ -346,7 +350,11 @@ class TestRestorePreconditions:
         # Create a backup to restore from
         load_sql_file(db_connection, "fixtures/initial_data.sql")
         process_id = create_backup(api_token, "full", api_base_url=api_base_url)
-        process_status = wait_for_backup_completion(api_token, process_id, api_base_url=api_base_url)
+        process_status = wait_for_backup_completion(
+            api_token,
+            process_id,
+            api_base_url=api_base_url,
+        )
         backup_id = process_status["resource_id"]
 
         # Ensure MariaDB is running
@@ -377,7 +385,11 @@ class TestRestorePreconditions:
         # Create a backup to restore from
         load_sql_file(db_connection, "fixtures/initial_data.sql")
         process_id = create_backup(api_token, "full", api_base_url=api_base_url)
-        process_status = wait_for_backup_completion(api_token, process_id, api_base_url=api_base_url)
+        process_status = wait_for_backup_completion(
+            api_token,
+            process_id,
+            api_base_url=api_base_url,
+        )
         backup_id = process_status["resource_id"]
 
         # Close connection and stop MariaDB (but don't clear data directory)
@@ -451,7 +463,11 @@ class TestBackupListing:
         # Create a backup
         load_sql_file(db_connection, "fixtures/initial_data.sql")
         process_id = create_backup(api_token, "full", api_base_url=api_base_url)
-        process_status = wait_for_backup_completion(api_token, process_id, api_base_url=api_base_url)
+        process_status = wait_for_backup_completion(
+            api_token,
+            process_id,
+            api_base_url=api_base_url,
+        )
         backup_id = process_status["resource_id"]
 
         # Get backup details

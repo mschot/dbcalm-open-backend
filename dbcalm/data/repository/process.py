@@ -21,7 +21,9 @@ class ProcessRepository:
         """
         from dbcalm.util.parse_query_with_operators import QueryFilter  # noqa: PLC0415
 
-        query_filters = [QueryFilter(field="command_id", operator="eq", value=command_id)]
+        query_filters = [
+            QueryFilter(field="command_id", operator="eq", value=command_id),
+        ]
         order_filters = [QueryFilter(field="id", operator="desc", value="desc")]
 
         processes, _ = self.adapter.get_list(

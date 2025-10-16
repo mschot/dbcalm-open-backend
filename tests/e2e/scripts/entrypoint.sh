@@ -4,6 +4,10 @@ set -e
 
 echo "=== E2E Test Entrypoint ==="
 
+# Clean up old logs before starting
+echo "Cleaning up old logs..."
+rm -f /tests/logs/*.log /tests/logs/dbcalm/*.log 2>/dev/null || true
+
 # Start MariaDB in the background
 echo "Starting MariaDB..."
 mysqld_safe --datadir=/var/lib/mysql --log-error=/tests/logs/mariadb-error.log &
@@ -63,6 +67,10 @@ echo "=== Cleanup ==="
 # Stop MariaDB
 echo "Stopping MariaDB..."
 mysqladmin -u root shutdown 2>/dev/null || kill $MYSQL_PID 2>/dev/null || true
+
+# Make logs readable on host
+echo "Making logs readable..."
+chmod -R 777 /tests/logs 2>/dev/null || true
 
 echo "=== Tests completed with exit code: $TEST_EXIT_CODE ==="
 exit $TEST_EXIT_CODE

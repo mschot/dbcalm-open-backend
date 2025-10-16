@@ -12,17 +12,17 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Check if there are tests to run
+# Check if there are tests to run (excluding E2E tests)
 if [ -d "tests" ]; then
-    echo "Running tests..."
+    echo "Running unit tests (excluding E2E)..."
     if [ -d "$VENV_PATH" ]; then
-        $VENV_PATH/bin/python -m pytest tests/ || {
+        $VENV_PATH/bin/python -m pytest tests/ --ignore=tests/e2e || {
             echo "Tests failed. Aborting commit."
             exit 1
         }
     else
         # Fallback to using the system python
-        python -m pytest tests/ || {
+        python -m pytest tests/ --ignore=tests/e2e || {
             echo "Tests failed. Aborting commit."
             exit 1
         }

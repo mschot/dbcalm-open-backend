@@ -16,35 +16,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build setuptools wheel
-
-    - name: Create virtual environment and install package
-      run: |
-        python -m venv .venv
-        source .venv/bin/activate
-        pip install -e ".[dev]"
-
-    - name: Build Debian package
-      run: |
-        source .venv/bin/activate
-        make deb
+    - name: Build Debian package in Docker
+      run: make deb-docker
 
     - name: Prepare E2E test artifacts
       run: |
         mkdir -p tests/e2e/artifacts
         cp dist/*.deb tests/e2e/artifacts/
         ls -lh tests/e2e/artifacts/
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
 
     - name: Build test container
       working-directory: tests/e2e
