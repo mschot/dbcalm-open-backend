@@ -1,14 +1,16 @@
 import jwt
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from dbcalm.config.config_factory import config_factory
 
-# OAuth2 scheme for receiving tokens
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2 = HTTPBearer()
 
 
-def verify_token(token: str = Depends(oauth2_scheme)) -> dict:
+def verify_token(
+    credentials: HTTPAuthorizationCredentials = Depends(oauth2),  # noqa: B008
+) -> dict:
+    token = credentials.credentials
     config = config_factory()
     jwt_algorithm  = config.value("jwt_algorithm", default="HS256")
     jwt_secret_key = config.value("jwt_secret_key")

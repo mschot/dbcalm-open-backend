@@ -13,12 +13,89 @@ from dbcalm_mariadb_cmd_client.client import Client
 
 router = APIRouter()
 
-@router.post("/backups")
+@router.post(
+    "/backups",
+    status_code=202,
+    responses={
+        202: {
+            "description": "Backup accepted and started - processing in background",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/StatusResponse"},
+                },
+            },
+        },
+        404: {
+            "description": "No existing backups found for incremental backup",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": (
+                            "No backups found to create incremental backup from"
+                        ),
+                    },
+                },
+            },
+        },
+        503: {
+            "description": "Service unavailable - server configuration issue",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "server_not_running": {
+                            "summary": "MySQL server not running",
+                            "value": {
+                                "detail": (
+                                    "cannot create backup, "
+                                    "MySQL/MariaDB server is not running"
+                                ),
+                            },
+                        },
+                        "credentials_missing": {
+                            "summary": "Credentials file missing",
+                            "value": {
+                                "detail": (
+                                    "credentials file not found or "
+                                    "missing [client-dbcalm] section"
+                                ),
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def create_backup(
     request: BackupRequest,
     response: Response,
     _: Annotated[dict, Depends(verify_token)],
-) -> StatusResponse :
+) -> StatusResponse:
+    """
+    Create a database backup.
+
+    **This is an asynchronous operation** - returns 202 Accepted immediately
+    and the backup runs in the background. Use the returned `link` to poll
+    for completion status at `/status/{pid}`.
+
+    Creates either a full or incremental backup of the MySQL/MariaDB database.
+    For incremental backups, automatically uses the latest backup as base if
+    `from_backup_id` is not specified.
+
+    **Requirements:**
+    - MySQL/MariaDB server must be running
+    - Valid credentials file must exist
+    - For incremental backups: at least one previous backup must exist
+
+    **Backup ID:**
+    - Auto-generated timestamp format: YYYY-MM-DD-HH-MM-SS
+    - Or provide custom ID (converted to kebab-case)
+
+    **Response:**
+    - Returns immediately with 202 Accepted
+    - Includes `link` field pointing to `/status/{pid}` for progress tracking
+    - Includes `resource_id` (the backup ID)
+    """
     client = Client()
 
     if request.id is None:

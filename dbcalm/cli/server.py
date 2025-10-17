@@ -35,7 +35,18 @@ from dbcalm.routes import (
 
 config = config_factory()
 
-app = FastAPI()
+app = FastAPI(
+    title="DBCalm API",
+    description="Database backup and restore management API for MariaDB/MySQL",
+    version="0.0.1",
+    contact={
+        "name": "DBCalm",
+        "url": "https://dbcalm.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,7 +65,7 @@ app.include_router(list_clients.router, tags=["Clients"])
 app.include_router(delete_client.router, tags=["Clients"])
 app.include_router(update_client.router, tags=["Clients"])
 app.include_router(create_client.router, tags=["Clients"])
-app.include_router(create_restore.router, tags=["Backups"])
+app.include_router(create_restore.router, tags=["Restores"])
 app.include_router(list_restores.router, tags=["Restores"])
 app.include_router(list_processes.router, tags=["Processes"])
 app.include_router(list_schedules.router, tags=["Schedules"])
