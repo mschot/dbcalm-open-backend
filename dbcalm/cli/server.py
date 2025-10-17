@@ -44,7 +44,9 @@ app = FastAPI(
         "url": "https://dbcalm.com",
     },
     license_info={
-        "name": "MIT",
+        "name": "Elastic License 2.0",
+        "identifier": "Elastic-2.0",
+        "url": "https://www.elastic.co/licensing/elastic-license",
     },
 )
 
