@@ -17,7 +17,7 @@ from utils import (
 # Constants
 HTTP_OK = 200
 HTTP_ACCEPTED = 202
-HTTP_PRECONDITION_FAILED = 412
+HTTP_SERVICE_UNAVAILABLE = 503
 HTTP_TIMEOUT = 10
 MIN_EXPECTED_BACKUPS = 2
 
@@ -287,7 +287,7 @@ class TestCredentialsValidation:
             credentials_file.unlink()
 
         try:
-            # Attempt backup - should fail with 412
+            # Attempt backup - should fail with 503
             response = requests.post(
                 f"{api_base_url}/backups",
                 headers={"Authorization": f"Bearer {api_token}"},
@@ -296,8 +296,8 @@ class TestCredentialsValidation:
                 timeout=HTTP_TIMEOUT,
             )
 
-            error_msg = f"Expected 412, got {response.status_code}"
-            assert response.status_code == HTTP_PRECONDITION_FAILED, error_msg
+            error_msg = f"Expected 503, got {response.status_code}"
+            assert response.status_code == HTTP_SERVICE_UNAVAILABLE, error_msg
             assert "credentials" in response.text.lower()
 
         finally:
@@ -318,7 +318,7 @@ class TestCredentialsValidation:
         credentials_file.write_text("[client]\nuser=test\npassword=test\n")
 
         try:
-            # Attempt backup - should fail with 412
+            # Attempt backup - should fail with 503
             response = requests.post(
                 f"{api_base_url}/backups",
                 headers={"Authorization": f"Bearer {api_token}"},
@@ -327,8 +327,8 @@ class TestCredentialsValidation:
                 timeout=HTTP_TIMEOUT,
             )
 
-            error_msg = f"Expected 412, got {response.status_code}"
-            assert response.status_code == HTTP_PRECONDITION_FAILED, error_msg
+            error_msg = f"Expected 503, got {response.status_code}"
+            assert response.status_code == HTTP_SERVICE_UNAVAILABLE, error_msg
             assert "client-dbcalm" in response.text.lower()
 
         finally:
@@ -360,7 +360,7 @@ class TestRestorePreconditions:
         # Ensure MariaDB is running
         mariadb_service.ensure_running()
 
-        # Attempt restore - should fail with 412
+        # Attempt restore - should fail with 503
         response = requests.post(
             f"{api_base_url}/restore",
             headers={"Authorization": f"Bearer {api_token}"},
@@ -369,8 +369,8 @@ class TestRestorePreconditions:
             timeout=HTTP_TIMEOUT,
         )
 
-        error_msg = f"Expected 412, got {response.status_code}"
-        assert response.status_code == HTTP_PRECONDITION_FAILED, error_msg
+        error_msg = f"Expected 503, got {response.status_code}"
+        assert response.status_code == HTTP_SERVICE_UNAVAILABLE, error_msg
         assert "server" in response.text.lower()
         assert "stopped" in response.text.lower() or "dead" in response.text.lower()
 
@@ -396,7 +396,7 @@ class TestRestorePreconditions:
         db_connection.close()
         mariadb_service.stop()
 
-        # Attempt restore - should fail with 412
+        # Attempt restore - should fail with 503
         response = requests.post(
             f"{api_base_url}/restore",
             headers={"Authorization": f"Bearer {api_token}"},
@@ -408,8 +408,8 @@ class TestRestorePreconditions:
         # Restart MariaDB for cleanup
         mariadb_service.start()
 
-        error_msg = f"Expected 412, got {response.status_code}"
-        assert response.status_code == HTTP_PRECONDITION_FAILED, error_msg
+        error_msg = f"Expected 503, got {response.status_code}"
+        assert response.status_code == HTTP_SERVICE_UNAVAILABLE, error_msg
         assert "data" in response.text.lower() or "dir" in response.text.lower()
         assert "empty" in response.text.lower()
 

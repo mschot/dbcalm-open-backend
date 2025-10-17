@@ -10,7 +10,7 @@ from dbcalm.data.model.backup import Backup
 
 VALID_REQUEST = 200
 INVALID_REQUEST = 400
-PREREQUISTE_FAILED = 412
+SERVICE_UNAVAILABLE = 503
 CONFLICT = 409
 NOT_FOUND = 404
 
@@ -143,12 +143,12 @@ class Validator:
 
     def backup(self, checks: list) -> tuple[int, str]:
         if not self.credentials_file_valid():
-            return PREREQUISTE_FAILED, (
+            return SERVICE_UNAVAILABLE, (
                 "credentials file not found or missing [client-dbcalm] section"
             )
 
         if "server_alive" in checks and not self.server_alive():
-            return PREREQUISTE_FAILED, (
+            return SERVICE_UNAVAILABLE, (
                 "cannot create backup, MySQL/MariaDB server is not running"
             )
 
@@ -156,17 +156,17 @@ class Validator:
 
     def database_restore(self, checks: list) -> tuple[int, str]:
         if not self.credentials_file_valid():
-            return PREREQUISTE_FAILED, (
+            return SERVICE_UNAVAILABLE, (
                 "credentials file not found or missing [client-dbcalm] section"
             )
 
         if "server_dead" in checks and not self.server_dead():
-            return PREREQUISTE_FAILED, (
+            return SERVICE_UNAVAILABLE, (
                 "cannot restore to database, MySQL/MariaDb server is not stopped"
             )
 
         if "data_dir_empty" in checks and not self.data_dir_empty():
-            return PREREQUISTE_FAILED, (
+            return SERVICE_UNAVAILABLE, (
                 "cannot restore to database, mysql/mariadb data directory is not empty "
                 "(usually /var/lib/mysql)"
             )

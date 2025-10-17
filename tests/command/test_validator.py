@@ -5,7 +5,7 @@ import pytest
 from dbcalm_mariadb_cmd.command.validator import (
     CONFLICT,
     INVALID_REQUEST,
-    PREREQUISTE_FAILED,
+    SERVICE_UNAVAILABLE,
     VALID_REQUEST,
     Validator,
 )
@@ -113,7 +113,7 @@ class TestValidator:
         mock_adapter_factory.return_value = mock_adapter
 
         # Mock database_restore to return a specific result
-        mock_database_restore.return_value = (PREREQUISTE_FAILED, "Test error")
+        mock_database_restore.return_value = (SERVICE_UNAVAILABLE, "Test error")
 
         command_data = {
             "cmd": "restore_backup",
@@ -124,7 +124,7 @@ class TestValidator:
         }
         status, message = validator.validate(command_data)
 
-        assert status == PREREQUISTE_FAILED
+        assert status == SERVICE_UNAVAILABLE
         assert message == "Test error"
 
         mock_database_restore.assert_called_once()
@@ -144,7 +144,7 @@ class TestValidator:
         mock_server_dead.return_value = False
         status, message = validator.database_restore(["server_dead"])
 
-        assert status == PREREQUISTE_FAILED
+        assert status == SERVICE_UNAVAILABLE
         assert "server is not stopped" in message
 
         # Test when server is dead
@@ -169,7 +169,7 @@ class TestValidator:
         mock_data_dir_empty.return_value = False
         status, message = validator.database_restore(["data_dir_empty"])
 
-        assert status == PREREQUISTE_FAILED
+        assert status == SERVICE_UNAVAILABLE
         assert "data directory is not empty" in message
 
         # Test when data dir is empty
