@@ -1,10 +1,15 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from dbcalm.api.model.query.schedule_query import (
     ScheduleOrderField,
     ScheduleQueryField,
+)
+from dbcalm.api.model.response.list_response import PaginationInfo
+from dbcalm.api.model.response.schedule_response import (
+    ScheduleListResponse,
+    ScheduleResponse,
 )
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.schedule import ScheduleRepository
@@ -63,7 +68,7 @@ async def list_schedules(
     ] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(ge=1, le=1000)] = 25,
-) -> dict[str, Any]:
+) -> ScheduleListResponse:
     repository = ScheduleRepository()
     query_filters = parse_query_with_operators(query)
     order_filters = parse_query_with_operators(order)
@@ -98,12 +103,12 @@ async def list_schedules(
         per_page=per_page,
     )
 
-    return {
-        "items": [item.model_dump() for item in items],
-        "pagination": {
-            "total": total,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": (total + per_page - 1) // per_page,
-        },
-    }
+    return ScheduleListResponse(
+        items=[ScheduleResponse(**item.model_dump()) for item in items],
+        pagination=PaginationInfo(
+            total=total,
+            page=page,
+            per_page=per_page,
+            total_pages=(total + per_page - 1) // per_page,
+        ),
+    )

@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from dbcalm.api.model.request.schedule_request import ScheduleRequest
+from dbcalm.api.model.response.schedule_response import ScheduleResponse
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.schedule import ScheduleRepository
 from dbcalm_cmd_client.client import Client
@@ -18,7 +19,7 @@ async def update_schedule(
     schedule_id: int,
     request: ScheduleRequest,
     _: Annotated[dict, Depends(verify_token)],
-) -> dict:
+) -> ScheduleResponse:
     schedule_repo = ScheduleRepository()
     schedule = schedule_repo.get(schedule_id)
 
@@ -61,4 +62,4 @@ async def update_schedule(
             ),
         )
 
-    return schedule.model_dump()
+    return ScheduleResponse(**schedule.model_dump())

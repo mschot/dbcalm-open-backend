@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
+from dbcalm.api.model.response.auth_response import AuthCodeResponse
 from dbcalm.data.model.auth_code import AuthCode
 from dbcalm.data.repository.auth_code import AuthCodeRepository
 from dbcalm.data.repository.user import UserRepository
@@ -18,7 +19,7 @@ router = APIRouter()
 @router.post("/authorize")
 async def authorize(
     user_login: UserLogin,
-) -> dict:
+) -> AuthCodeResponse:
 
     user = UserRepository().get(user_login.username)
     if not user or not pwd_context.verify(user_login.password, user.password):
@@ -36,4 +37,4 @@ async def authorize(
         expires_at=int(time.time() + 600),
     )
     AuthCodeRepository().create(auth_code)
-    return {"code" : auth_code.code}
+    return AuthCodeResponse(code=auth_code.code)

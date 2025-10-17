@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from dbcalm.api.model.response.client_response import ClientResponse
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.client import ClientRepository
 
@@ -19,7 +20,7 @@ async def update_client(
     _: Annotated[dict, Depends(verify_token)],
     client_id: str,
     request: UpdateClientRequest,
-) -> dict:
+) -> ClientResponse:
     """Update a client's label.
 
     Args:
@@ -52,4 +53,4 @@ async def update_client(
         )
 
     # Return the updated client information (excluding secret)
-    return updated_client.model_dump(exclude={"secret"})
+    return ClientResponse(**updated_client.model_dump(exclude={"secret"}))

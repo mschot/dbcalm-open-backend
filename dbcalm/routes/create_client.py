@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from dbcalm.api.model.response.client_response import ClientWithSecretResponse
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.client import ClientRepository
 
@@ -16,7 +17,7 @@ class CreateClientRequest(BaseModel):
 async def create_client(
     request: CreateClientRequest,
     _: Annotated[dict, Depends(verify_token)],
-) -> dict:
+) -> ClientWithSecretResponse:
     """Create a new client with an auto-generated ID and secret.
 
     Args:
@@ -31,4 +32,4 @@ async def create_client(
     new_client = client_repo.create(request.label)
 
     # Return both secret and ID since this is the only time the secret will be visible
-    return new_client.model_dump()
+    return ClientWithSecretResponse(**new_client.model_dump())

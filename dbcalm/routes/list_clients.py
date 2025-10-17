@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -6,6 +6,11 @@ from dbcalm.api.model.query.client_query import (
     ClientOrderField,
     ClientQueryField,
 )
+from dbcalm.api.model.response.client_response import (
+    ClientListResponse,
+    ClientResponse,
+)
+from dbcalm.api.model.response.list_response import PaginationInfo
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.client import ClientRepository
 from dbcalm.util.parse_query_with_operators import parse_query_with_operators
@@ -57,7 +62,7 @@ async def list_clients(
     ] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(ge=1, le=1000)] = 25,
-) -> dict[str, Any]:
+) -> ClientListResponse:
     repository = ClientRepository()
     query_filters = parse_query_with_operators(query)
     order_filters = parse_query_with_operators(order)
@@ -92,12 +97,12 @@ async def list_clients(
         per_page=per_page,
     )
 
-    return {
-        "items": [item.model_dump(exclude={"secret"}) for item in items],
-        "pagination": {
-            "total": total,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": (total + per_page - 1) // per_page,
-        },
-    }
+    return ClientListResponse(
+        items=[ClientResponse(**item.model_dump(exclude={"secret"})) for item in items],
+        pagination=PaginationInfo(
+            total=total,
+            page=page,
+            per_page=per_page,
+            total_pages=(total + per_page - 1) // per_page,
+        ),
+    )

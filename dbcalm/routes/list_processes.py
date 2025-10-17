@@ -1,10 +1,15 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from dbcalm.api.model.query.process_query import (
     ProcessOrderField,
     ProcessQueryField,
+)
+from dbcalm.api.model.response.list_response import PaginationInfo
+from dbcalm.api.model.response.process_response import (
+    ProcessListResponse,
+    ProcessResponse,
 )
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.process import ProcessRepository
@@ -61,7 +66,7 @@ async def list_processes(
     ] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(ge=1, le=1000)] = 25,
-) -> dict[str, Any]:
+) -> ProcessListResponse:
     repository = ProcessRepository()
     query_filters = parse_query_with_operators(query)
     order_filters = parse_query_with_operators(order)
@@ -96,12 +101,12 @@ async def list_processes(
         per_page=per_page,
     )
 
-    return {
-        "items": [item.model_dump() for item in items],
-        "pagination": {
-            "total": total,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": (total + per_page - 1) // per_page,
-        },
-    }
+    return ProcessListResponse(
+        items=[ProcessResponse(**item.model_dump()) for item in items],
+        pagination=PaginationInfo(
+            total=total,
+            page=page,
+            per_page=per_page,
+            total_pages=(total + per_page - 1) // per_page,
+        ),
+    )

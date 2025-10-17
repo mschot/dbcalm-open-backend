@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from dbcalm.api.model.response.delete_response import DeleteResponse
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.schedule import ScheduleRepository
 from dbcalm_cmd_client.client import Client
@@ -16,7 +17,7 @@ router = APIRouter()
 async def delete_schedule(
     schedule_id: int,
     _: Annotated[dict, Depends(verify_token)],
-) -> dict:
+) -> DeleteResponse:
     schedule_repo = ScheduleRepository()
     schedule = schedule_repo.get(schedule_id)
 
@@ -50,4 +51,4 @@ async def delete_schedule(
             ),
         )
 
-    return {"message": "Schedule deleted successfully"}
+    return DeleteResponse(message="Schedule deleted successfully")
