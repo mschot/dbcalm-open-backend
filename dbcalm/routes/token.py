@@ -1,8 +1,10 @@
 import time
+from typing import Annotated
 
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from passlib.context import CryptContext
+from pydantic import Field
 
 from dbcalm.api.model.request.token_auth_code_request import TokenAuthCodeRequest
 from dbcalm.api.model.request.token_client_request import TokenClientRequest
@@ -19,7 +21,32 @@ secret_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/token")
 async def issue_token(
-    request_data: TokenClientRequest | TokenAuthCodeRequest,
+    request_data: Annotated[
+        TokenClientRequest | TokenAuthCodeRequest,
+        Body(
+            description="Token request - use appropriate grant type",
+            openapi_examples={
+                "client_credentials": {
+                    "summary": "Client Credentials Grant",
+                    "description": "Use for machine-to-machine authentication",
+                    "value": {
+                        "grant_type": "client_credentials",
+                        "client_id": "your-client-id",
+                        "client_secret": "your-client-secret",
+                    },
+                },
+                "authorization_code": {
+                    "summary": "Authorization Code Grant",
+                    "description": "Use for user authentication via authorization code",
+                    "value": {
+                        "grant_type": "authorization_code",
+                        "code": "authcode_1234567890",
+                    },
+                },
+            },
+        ),
+        Field(discriminator="grant_type"),
+    ],
 ) -> TokenResponse:
     adapter = data_adapter_factory()
     config = config_factory()
