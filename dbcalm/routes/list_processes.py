@@ -16,7 +16,69 @@ from dbcalm.data.repository.process import ProcessRepository
 from dbcalm.util.parse_query_with_operators import parse_query_with_operators
 
 router = APIRouter()
-@router.get("/processes")
+@router.get(
+    "/processes",
+    responses={
+        200: {
+            "description": "List of processes",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "items": [
+                            {
+                                "id": 1234,
+                                "command": (
+                                    "mariabackup --backup "
+                                    "--target-dir=/var/backups/dbcalm/"
+                                    "2024-10-18-03-00-00"
+                                ),
+                                "command_id": "full_backup",
+                                "pid": 98765,
+                                "status": "completed",
+                                "output": "Backup completed successfully\\n",
+                                "error": None,
+                                "return_code": 0,
+                                "start_time": "2024-10-18T03:00:00",
+                                "end_time": "2024-10-18T03:15:32",
+                                "type": "backup",
+                                "args": {"id": "2024-10-18-03-00-00"},
+                            },
+                            {
+                                "id": 1235,
+                                "command": (
+                                    "mariabackup --backup "
+                                    "--target-dir=/var/backups/dbcalm/"
+                                    "2024-10-18-09-00-00 "
+                                    "--incremental-basedir=/var/backups/dbcalm/"
+                                    "2024-10-18-03-00-00"
+                                ),
+                                "command_id": "incremental_backup",
+                                "pid": 98766,
+                                "status": "running",
+                                "output": "Starting incremental backup...\\n",
+                                "error": None,
+                                "return_code": None,
+                                "start_time": "2024-10-18T09:00:00",
+                                "end_time": None,
+                                "type": "backup",
+                                "args": {
+                                    "id": "2024-10-18-09-00-00",
+                                    "from_backup_id": "2024-10-18-03-00-00",
+                                },
+                            },
+                        ],
+                        "pagination": {
+                            "total": 156,
+                            "page": 1,
+                            "per_page": 25,
+                            "total_pages": 7,
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def list_processes(
     _: Annotated[dict, Depends(verify_token)],
     query: Annotated[

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from dbcalm.api.model.request.schedule_request import ScheduleRequest
 from dbcalm.api.model.response.schedule_response import ScheduleResponse
@@ -14,10 +14,64 @@ HTTP_ACCEPTED = 202
 router = APIRouter()
 
 
-@router.put("/schedules/{schedule_id}")
+@router.put(
+    "/schedules/{schedule_id}",
+    responses={
+        200: {
+            "description": "Schedule updated successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "backup_type": "incremental",
+                        "frequency": "daily",
+                        "day_of_week": None,
+                        "day_of_month": None,
+                        "hour": 4,
+                        "minute": 15,
+                        "interval_value": None,
+                        "interval_unit": None,
+                        "enabled": True,
+                        "created_at": "2024-10-18T10:30:00",
+                        "updated_at": "2024-10-18T14:45:00",
+                    },
+                },
+            },
+        },
+    },
+)
 async def update_schedule(
     schedule_id: int,
-    request: ScheduleRequest,
+    request: Annotated[
+        ScheduleRequest,
+        Body(
+            openapi_examples={
+                "update_time": {
+                    "summary": "Update schedule time",
+                    "description": "Change daily backup time to 4:15 AM",
+                    "value": {
+                        "backup_type": "incremental",
+                        "frequency": "daily",
+                        "hour": 4,
+                        "minute": 15,
+                        "enabled": True,
+                    },
+                },
+                "disable_schedule": {
+                    "summary": "Disable schedule",
+                    "description": "Disable a schedule without deleting it",
+                    "value": {
+                        "backup_type": "full",
+                        "frequency": "weekly",
+                        "day_of_week": 0,
+                        "hour": 3,
+                        "minute": 0,
+                        "enabled": False,
+                    },
+                },
+            },
+        ),
+    ],
     _: Annotated[dict, Depends(verify_token)],
 ) -> ScheduleResponse:
     schedule_repo = ScheduleRepository()

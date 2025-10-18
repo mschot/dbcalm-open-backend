@@ -19,7 +19,28 @@ from dbcalm.data.repository.auth_code import AuthCodeRepository
 router = APIRouter()
 secret_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-@router.post("/token")
+@router.post(
+    "/token",
+    responses={
+        200: {
+            "description": "Token issued successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": (
+                            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                            "eyJzdWIiOiJjbGllbnRfYTFiMmMzZDRlNWY2IiwiZXhwIjox"
+                            "NzI5MjM4MTY3LCJzY29wZXMiOlsiYmFja3VwczpyZWFkIiwi"
+                            "YmFja3Vwczp3cml0ZSJdfQ."
+                            "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                        ),
+                        "token_type": "bearer",
+                    },
+                },
+            },
+        },
+    },
+)
 async def issue_token(
     request_data: Annotated[
         TokenClientRequest | TokenAuthCodeRequest,
@@ -37,7 +58,9 @@ async def issue_token(
                 },
                 "authorization_code": {
                     "summary": "Authorization Code Grant",
-                    "description": "Use for user authentication via authorization code",
+                    "description": (
+                        "Use for user authentication via authorization code"
+                    ),
                     "value": {
                         "grant_type": "authorization_code",
                         "code": "authcode_1234567890",

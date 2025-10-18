@@ -8,7 +8,47 @@ from dbcalm.data.repository.process import ProcessRepository
 
 router = APIRouter()
 
-@router.get("/status/{status_id}")
+@router.get(
+    "/status/{status_id}",
+    responses={
+        200: {
+            "description": "Process status",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "running": {
+                            "summary": "Process still running",
+                            "value": {
+                                "status": "running",
+                                "link": "/status/1234",
+                                "pid": "1234",
+                                "resource_id": "2024-10-18-03-00-00",
+                            },
+                        },
+                        "completed": {
+                            "summary": "Process completed successfully",
+                            "value": {
+                                "status": "completed",
+                                "link": "/status/1234",
+                                "pid": "1234",
+                                "resource_id": "2024-10-18-03-00-00",
+                            },
+                        },
+                        "failed": {
+                            "summary": "Process failed",
+                            "value": {
+                                "status": "failed",
+                                "link": "/status/1234",
+                                "pid": "1234",
+                                "resource_id": "2024-10-18-03-00-00",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def get_status(
     status_id: str,
     _: Annotated[dict, Depends(verify_token)],

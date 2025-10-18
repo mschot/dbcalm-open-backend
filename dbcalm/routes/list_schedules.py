@@ -18,7 +18,56 @@ from dbcalm.util.parse_query_with_operators import parse_query_with_operators
 router = APIRouter()
 
 
-@router.get("/schedules")
+@router.get(
+    "/schedules",
+    responses={
+        200: {
+            "description": "List of schedules",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "items": [
+                            {
+                                "id": 1,
+                                "backup_type": "full",
+                                "frequency": "daily",
+                                "day_of_week": None,
+                                "day_of_month": None,
+                                "hour": 3,
+                                "minute": 0,
+                                "interval_value": None,
+                                "interval_unit": None,
+                                "enabled": True,
+                                "created_at": "2024-10-15T10:30:00",
+                                "updated_at": "2024-10-15T10:30:00",
+                            },
+                            {
+                                "id": 2,
+                                "backup_type": "incremental",
+                                "frequency": "interval",
+                                "day_of_week": None,
+                                "day_of_month": None,
+                                "hour": None,
+                                "minute": None,
+                                "interval_value": 6,
+                                "interval_unit": "hours",
+                                "enabled": True,
+                                "created_at": "2024-10-16T14:15:00",
+                                "updated_at": "2024-10-16T14:15:00",
+                            },
+                        ],
+                        "pagination": {
+                            "total": 5,
+                            "page": 1,
+                            "per_page": 25,
+                            "total_pages": 1,
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def list_schedules(
     _: Annotated[dict, Depends(verify_token)],
     query: Annotated[

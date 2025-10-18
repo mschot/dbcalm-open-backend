@@ -16,7 +16,42 @@ from dbcalm.data.repository.client import ClientRepository
 from dbcalm.util.parse_query_with_operators import parse_query_with_operators
 
 router = APIRouter()
-@router.get("/clients")
+@router.get(
+    "/clients",
+    responses={
+        200: {
+            "description": "List of clients",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "items": [
+                            {
+                                "id": "client_a1b2c3d4e5f6",
+                                "label": "Production API Client",
+                                "scopes": [
+                                    "backups:read",
+                                    "backups:write",
+                                    "schedules:read",
+                                ],
+                            },
+                            {
+                                "id": "client_x9y8z7w6v5u4",
+                                "label": "Backup Automation Service",
+                                "scopes": ["backups:write"],
+                            },
+                        ],
+                        "pagination": {
+                            "total": 8,
+                            "page": 1,
+                            "per_page": 25,
+                            "total_pages": 1,
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def list_clients(
     _: Annotated[dict, Depends(verify_token)],
     query: Annotated[

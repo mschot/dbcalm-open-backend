@@ -9,7 +9,32 @@ from dbcalm.data.repository.schedule import ScheduleRepository
 router = APIRouter()
 
 
-@router.get("/schedules/{schedule_id}")
+@router.get(
+    "/schedules/{schedule_id}",
+    responses={
+        200: {
+            "description": "Schedule details",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "backup_type": "full",
+                        "frequency": "daily",
+                        "day_of_week": None,
+                        "day_of_month": None,
+                        "hour": 3,
+                        "minute": 0,
+                        "interval_value": None,
+                        "interval_unit": None,
+                        "enabled": True,
+                        "created_at": "2024-10-15T10:30:00",
+                        "updated_at": "2024-10-15T10:30:00",
+                    },
+                },
+            },
+        },
+    },
+)
 async def get_schedule(
     schedule_id: int,
     _: Annotated[dict, Depends(verify_token)],

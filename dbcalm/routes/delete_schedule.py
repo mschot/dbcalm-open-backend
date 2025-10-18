@@ -13,7 +13,21 @@ HTTP_ACCEPTED = 202
 router = APIRouter()
 
 
-@router.delete("/schedules/{schedule_id}")
+@router.delete(
+    "/schedules/{schedule_id}",
+    responses={
+        200: {
+            "description": "Schedule deleted successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message": "Schedule deleted successfully",
+                    },
+                },
+            },
+        },
+    },
+)
 async def delete_schedule(
     schedule_id: int,
     _: Annotated[dict, Depends(verify_token)],

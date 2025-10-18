@@ -9,7 +9,25 @@ from dbcalm.data.repository.backup import BackupRepository
 router = APIRouter()
 
 
-@router.get("/backups/{backup_id}")
+@router.get(
+    "/backups/{backup_id}",
+    responses={
+        200: {
+            "description": "Backup details",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "2024-10-18-03-00-00",
+                        "from_backup_id": None,
+                        "start_time": "2024-10-18T03:00:00",
+                        "end_time": "2024-10-18T03:15:32",
+                        "process_id": 1234,
+                    },
+                },
+            },
+        },
+    },
+)
 async def get_backup(
     backup_id: str,
     _: Annotated[dict, Depends(verify_token)],

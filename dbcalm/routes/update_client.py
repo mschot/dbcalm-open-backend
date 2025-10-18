@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from dbcalm.api.model.response.client_response import ClientResponse
@@ -15,11 +15,41 @@ class UpdateClientRequest(BaseModel):
     label: str
 
 
-@router.put("/clients/{client_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    "/clients/{client_id}",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "description": "Client updated successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "client_a1b2c3d4e5f6",
+                        "label": "Updated Production Client",
+                        "scopes": ["backups:read", "backups:write"],
+                    },
+                },
+            },
+        },
+    },
+)
 async def update_client(
     _: Annotated[dict, Depends(verify_token)],
     client_id: str,
-    request: UpdateClientRequest,
+    request: Annotated[
+        UpdateClientRequest,
+        Body(
+            openapi_examples={
+                "rename_client": {
+                    "summary": "Rename client",
+                    "description": "Update the label of an existing client",
+                    "value": {
+                        "label": "Updated Production Client",
+                    },
+                },
+            },
+        ),
+    ],
 ) -> ClientResponse:
     """Update a client's label.
 

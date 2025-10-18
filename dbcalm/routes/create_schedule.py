@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from dbcalm.api.model.request.schedule_request import ScheduleRequest
 from dbcalm.api.model.response.schedule_response import ScheduleResponse
@@ -15,9 +15,88 @@ HTTP_ACCEPTED = 202
 router = APIRouter()
 
 
-@router.post("/schedules")
+@router.post(
+    "/schedules",
+    responses={
+        200: {
+            "description": "Schedule created successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "backup_type": "full",
+                        "frequency": "daily",
+                        "day_of_week": None,
+                        "day_of_month": None,
+                        "hour": 3,
+                        "minute": 0,
+                        "interval_value": None,
+                        "interval_unit": None,
+                        "enabled": True,
+                        "created_at": "2024-10-18T10:30:00",
+                        "updated_at": "2024-10-18T10:30:00",
+                    },
+                },
+            },
+        },
+    },
+)
 async def create_schedule(
-    request: ScheduleRequest,
+    request: Annotated[
+        ScheduleRequest,
+        Body(
+            openapi_examples={
+                "daily_full_backup": {
+                    "summary": "Daily full backup at 3:00 AM",
+                    "description": "Schedule a daily full backup at 3:00 AM",
+                    "value": {
+                        "backup_type": "full",
+                        "frequency": "daily",
+                        "hour": 3,
+                        "minute": 0,
+                        "enabled": True,
+                    },
+                },
+                "weekly_incremental_backup": {
+                    "summary": "Weekly incremental backup on Sundays",
+                    "description": (
+                        "Schedule incremental backup every Sunday at 3:30 AM"
+                    ),
+                    "value": {
+                        "backup_type": "incremental",
+                        "frequency": "weekly",
+                        "day_of_week": 0,
+                        "hour": 3,
+                        "minute": 30,
+                        "enabled": True,
+                    },
+                },
+                "monthly_backup": {
+                    "summary": "Monthly backup on 1st at midnight",
+                    "description": "Schedule monthly full backup on 1st day at 00:00",
+                    "value": {
+                        "backup_type": "full",
+                        "frequency": "monthly",
+                        "day_of_month": 1,
+                        "hour": 0,
+                        "minute": 0,
+                        "enabled": True,
+                    },
+                },
+                "interval_backup": {
+                    "summary": "Every 4 hours incremental backup",
+                    "description": "Schedule incremental backup every 4 hours",
+                    "value": {
+                        "backup_type": "incremental",
+                        "frequency": "interval",
+                        "interval_value": 4,
+                        "interval_unit": "hours",
+                        "enabled": True,
+                    },
+                },
+            },
+        ),
+    ],
     _: Annotated[dict, Depends(verify_token)],
 ) -> ScheduleResponse:
     schedule = Schedule(

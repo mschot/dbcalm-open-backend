@@ -1,6 +1,7 @@
 import time
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
@@ -16,9 +17,40 @@ class UserLogin(BaseModel):
     password: str
 
 router = APIRouter()
-@router.post("/authorize")
+@router.post(
+    "/authorize",
+    responses={
+        200: {
+            "description": "Authorization successful",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "code": "authcode_1729234567",
+                    },
+                },
+            },
+        },
+    },
+)
 async def authorize(
-    user_login: UserLogin,
+    user_login: Annotated[
+        UserLogin,
+        Body(
+            openapi_examples={
+                "user_login": {
+                    "summary": "User login",
+                    "description": (
+                        "Authenticate with username and password "
+                        "to get authorization code"
+                    ),
+                    "value": {
+                        "username": "admin",
+                        "password": "your-secure-password",
+                    },
+                },
+            },
+        ),
+    ],
 ) -> AuthCodeResponse:
 
     user = UserRepository().get(user_login.username)

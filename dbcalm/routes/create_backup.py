@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
 
 from dbcalm.api.model.request.backup_request import BackupRequest
 from dbcalm.api.model.response.status_response import StatusResponse
@@ -22,6 +22,12 @@ router = APIRouter()
             "content": {
                 "application/json": {
                     "schema": {"$ref": "#/components/schemas/StatusResponse"},
+                    "example": {
+                        "status": "running",
+                        "link": "/status/1234",
+                        "pid": "1234",
+                        "resource_id": "2024-10-18-03-00-00",
+                    },
                 },
             },
         },
@@ -67,7 +73,45 @@ router = APIRouter()
     },
 )
 async def create_backup(
-    request: BackupRequest,
+    request: Annotated[
+        BackupRequest,
+        Body(
+            openapi_examples={
+                "full_backup": {
+                    "summary": "Full backup with auto-generated ID",
+                    "description": "Create a complete backup with timestamp-based ID",
+                    "value": {
+                        "type": "full",
+                    },
+                },
+                "full_backup_custom_id": {
+                    "summary": "Full backup with custom ID",
+                    "description": "Create a complete backup with custom identifier",
+                    "value": {
+                        "type": "full",
+                        "id": "production-backup-2024-10-18",
+                    },
+                },
+                "incremental_backup": {
+                    "summary": "Incremental backup",
+                    "description": "Create incremental backup from latest base backup",
+                    "value": {
+                        "type": "incremental",
+                    },
+                },
+                "incremental_backup_specific": {
+                    "summary": "Incremental backup from specific base",
+                    "description": (
+                        "Create incremental backup from specific base backup"
+                    ),
+                    "value": {
+                        "type": "incremental",
+                        "from_backup_id": "2024-10-17-03-00-00",
+                    },
+                },
+            },
+        ),
+    ],
     response: Response,
     _: Annotated[dict, Depends(verify_token)],
 ) -> StatusResponse:

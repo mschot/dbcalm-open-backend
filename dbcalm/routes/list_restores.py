@@ -16,7 +16,50 @@ from dbcalm.data.repository.restore import RestoreRepository
 from dbcalm.util.parse_query_with_operators import parse_query_with_operators
 
 router = APIRouter()
-@router.get("/restores")
+@router.get(
+    "/restores",
+    responses={
+        200: {
+            "description": "List of restores",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "items": [
+                            {
+                                "id": 1,
+                                "start_time": "2024-10-18T10:15:00",
+                                "end_time": "2024-10-18T10:25:42",
+                                "target": "database",
+                                "target_path": "/var/lib/mysql",
+                                "backup_id": "2024-10-17-03-00-00",
+                                "backup_timestamp": "2024-10-17T03:00:00",
+                                "process_id": 5678,
+                            },
+                            {
+                                "id": 2,
+                                "start_time": "2024-10-17T14:30:00",
+                                "end_time": "2024-10-17T14:35:12",
+                                "target": "folder",
+                                "target_path": (
+                                    "/tmp/dbcalm-restore-2024-10-17-14-30-00"  # noqa: S108
+                                ),
+                                "backup_id": "2024-10-16-03-00-00",
+                                "backup_timestamp": "2024-10-16T03:00:00",
+                                "process_id": 5677,
+                            },
+                        ],
+                        "pagination": {
+                            "total": 12,
+                            "page": 1,
+                            "per_page": 25,
+                            "total_pages": 1,
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def list_restores(
     _: Annotated[dict, Depends(verify_token)],
     query: Annotated[

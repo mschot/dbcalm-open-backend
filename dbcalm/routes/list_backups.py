@@ -16,7 +16,42 @@ from dbcalm.data.repository.backup import BackupRepository
 from dbcalm.util.parse_query_with_operators import parse_query_with_operators
 
 router = APIRouter()
-@router.get("/backups")
+@router.get(
+    "/backups",
+    responses={
+        200: {
+            "description": "List of backups",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "items": [
+                            {
+                                "id": "2024-10-18-03-00-00",
+                                "from_backup_id": None,
+                                "start_time": "2024-10-18T03:00:00",
+                                "end_time": "2024-10-18T03:15:32",
+                                "process_id": 1234,
+                            },
+                            {
+                                "id": "2024-10-18-09-00-00",
+                                "from_backup_id": "2024-10-18-03-00-00",
+                                "start_time": "2024-10-18T09:00:00",
+                                "end_time": "2024-10-18T09:05:18",
+                                "process_id": 1235,
+                            },
+                        ],
+                        "pagination": {
+                            "total": 42,
+                            "page": 1,
+                            "per_page": 25,
+                            "total_pages": 2,
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 async def list_backups(
     _: Annotated[dict, Depends(verify_token)],
     query: Annotated[

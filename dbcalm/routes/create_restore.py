@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from dbcalm.api.model.response.status_response import StatusResponse
@@ -34,6 +34,12 @@ router = APIRouter()
             "content": {
                 "application/json": {
                     "schema": {"$ref": "#/components/schemas/StatusResponse"},
+                    "example": {
+                        "status": "running",
+                        "link": "/status/5678",
+                        "pid": "5678",
+                        "resource_id": "2024-10-17-03-00-00",
+                    },
                 },
             },
         },
@@ -85,7 +91,33 @@ router = APIRouter()
     },
 )
 async def create_restore(
-    request: RestoreRequest,
+    request: Annotated[
+        RestoreRequest,
+        Body(
+            openapi_examples={
+                "restore_to_database": {
+                    "summary": "Restore to database",
+                    "description": (
+                        "Restore a backup directly to MySQL/MariaDB data directory"
+                    ),
+                    "value": {
+                        "id": "2024-10-17-03-00-00",
+                        "target": "database",
+                    },
+                },
+                "restore_to_folder": {
+                    "summary": "Restore to folder for inspection",
+                    "description": (
+                        "Restore a backup to a temporary folder for inspection"
+                    ),
+                    "value": {
+                        "id": "2024-10-17-03-00-00",
+                        "target": "folder",
+                    },
+                },
+            },
+        ),
+    ],
     _: Annotated[dict, Depends(verify_token)],
     response: Response,
 ) -> StatusResponse:
