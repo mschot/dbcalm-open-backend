@@ -28,16 +28,12 @@ router = APIRouter()
                             {
                                 "id": "client_a1b2c3d4e5f6",
                                 "label": "Production API Client",
-                                "scopes": [
-                                    "backups:read",
-                                    "backups:write",
-                                    "schedules:read",
-                                ],
+                                "scopes": ["*"],
                             },
                             {
                                 "id": "client_x9y8z7w6v5u4",
                                 "label": "Backup Automation Service",
-                                "scopes": ["backups:write"],
+                                "scopes": ["*"],
                             },
                         ],
                         "pagination": {

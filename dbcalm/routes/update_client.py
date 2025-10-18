@@ -26,7 +26,7 @@ class UpdateClientRequest(BaseModel):
                     "example": {
                         "id": "client_a1b2c3d4e5f6",
                         "label": "Updated Production Client",
-                        "scopes": ["backups:read", "backups:write"],
+                        "scopes": ["*"],
                     },
                 },
             },

@@ -30,9 +30,8 @@ secret_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
                         "access_token": (
                             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
                             "eyJzdWIiOiJjbGllbnRfYTFiMmMzZDRlNWY2IiwiZXhwIjox"
-                            "NzI5MjM4MTY3LCJzY29wZXMiOlsiYmFja3VwczpyZWFkIiwi"
-                            "YmFja3Vwczp3cml0ZSJdfQ."
-                            "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                            "NzI5MjM4MTY3LCJzY29wZXMiOlsiKiJdfQ."
+                            "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
                         ),
                         "token_type": "bearer",
                     },

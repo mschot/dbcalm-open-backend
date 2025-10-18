@@ -24,7 +24,7 @@ class CreateClientRequest(BaseModel):
                         "id": "client_a1b2c3d4e5f6",
                         "secret": "secret_x9y8z7w6v5u4t3s2r1q0",
                         "label": "Production API Client",
-                        "scopes": ["backups:read", "backups:write"],
+                        "scopes": ["*"],
                     },
                 },
             },
