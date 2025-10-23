@@ -10,15 +10,12 @@ Licensed Work:        DBCalm Open
 
 Additional Use Grant: You may make production use of the Licensed Work, including embedding
                       it within your own products or services, provided that you do not offer
-                      database backup as a standalone commercial service to third parties.
+                      database backup as a commercial service to third parties.
 
                       Specifically:
 
                       PERMITTED USES:
                       - Internal use for backing up your own infrastructure
-                      - Embedding in applications where backup supports your primary product
-                      - Including backup as a standard feature in hosting/platform services
-                      - White-labeling for enterprise customers' internal use
 
                       PROHIBITED USES:
                       - Operating a database backup service as your primary business
