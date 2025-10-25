@@ -1,7 +1,8 @@
 
 from datetime import UTC, datetime
 
-from sqlmodel import Field, SQLModel
+from sqlalchemy import DateTime
+from sqlmodel import Column, Field, SQLModel
 
 
 def now() -> datetime:
@@ -20,8 +21,14 @@ class Schedule(SQLModel, table=True):
     interval_value: int | None = None  # interval value (e.g., 15, 30, 2)
     interval_unit: str | None = None  # "minutes" or "hours"
     enabled: bool = Field(default=True, nullable=False)
-    created_at: datetime = Field(default_factory=now, nullable=False)
-    updated_at: datetime = Field(default_factory=now, nullable=False)
+    created_at: datetime = Field(
+        default_factory=now,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    updated_at: datetime = Field(
+        default_factory=now,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
 
 
 Schedule.model_rebuild()

@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on any tag starting with 'v' (e.g., v0.1, v1.0, v1.2.3)
+
+permissions:
+  contents: write  # Required for creating releases and uploading assets
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Extract version from tag
+      id: get_version
+      run: |
+        # Remove 'v' prefix from tag (e.g., v0.1 -> 0.1)
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "Building version: ${VERSION}"
+
+    - name: Update version in pyproject.toml
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        sed -i "s/^version=.*/version=\"${VERSION}\"/" pyproject.toml
+        echo "Updated pyproject.toml to version ${VERSION}"
+        grep "version=" pyproject.toml
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build .deb package in Docker
+      run: |
+        echo "Building .deb package for version ${{ steps.get_version.outputs.version }}..."
+        docker build -f build.Dockerfile -t dbcalm-builder:ubuntu22.04 .
+        docker run --rm \
+          -v $(pwd):/build \
+          -w /build \
+          dbcalm-builder:ubuntu22.04 \
+          bash -c "source /opt/build-venv/bin/activate && pip install -e . && ./build-deb.sh"
+
+        # Verify the package was created
+        ls -lh dist/*.deb
+
+        # Create a copy with generic name for 'latest' downloads
+        VERSION="${{ steps.get_version.outputs.version }}"
+        cp "dist/dbcalm_${VERSION}_amd64.deb" "dist/dbcalm_amd64.deb"
+
+        # Also create version-specific name with dash (dbcalm-VERSION_amd64.deb)
+        cp "dist/dbcalm_${VERSION}_amd64.deb" "dist/dbcalm-${VERSION}_amd64.deb"
+
+    - name: Build .rpm package (placeholder for future)
+      run: |
+        echo "RPM build not yet implemented - placeholder for future RPM support"
+        echo "When implemented, this will build: dbcalm-${{ steps.get_version.outputs.version }}.x86_64.rpm"
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        TAG="${{ steps.get_version.outputs.tag }}"
+
+        # Get the previous tag
+        PREV_TAG=$(git describe --tags --abbrev=0 ${TAG}^ 2>/dev/null || echo "")
+
+        # Create release notes
+        cat > release_notes.md << EOF
+        # DBCalm ${VERSION}
+
+        ## Installation
+
+        ### Debian/Ubuntu (.deb)
+        \`\`\`bash
+        # Download and install
+        wget https://github.com/mschot/dbcalm-open-backend/releases/download/${TAG}/dbcalm-${VERSION}_amd64.deb
+        sudo dpkg -i dbcalm-${VERSION}_amd64.deb
+        \`\`\`
+
+        Or use the latest link (always points to most recent release):
+        \`\`\`bash
+        wget https://github.com/mschot/dbcalm-open-backend/releases/latest/download/dbcalm_amd64.deb
+        sudo dpkg -i dbcalm_amd64.deb
+        \`\`\`
+
+        ### Requirements
+        - Ubuntu 22.04+ or Debian 11+
+        - MariaDB or MySQL server
+        - OpenSSL
+
+        ## What's Changed
+        EOF
+
+        # Add commit history since last tag
+        if [ -n "$PREV_TAG" ]; then
+          echo "" >> release_notes.md
+          git log ${PREV_TAG}..${TAG} --pretty=format:"* %s (%h)" --no-merges >> release_notes.md
+        else
+          echo "" >> release_notes.md
+          echo "Initial release" >> release_notes.md
+        fi
+
+        cat release_notes.md
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: DBCalm ${{ steps.get_version.outputs.version }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: ${{ contains(steps.get_version.outputs.version, '-') }}  # Mark as pre-release if version contains '-' (e.g., 0.1-beta)
+        files: |
+          dist/dbcalm-${{ steps.get_version.outputs.version }}_amd64.deb
+          dist/dbcalm_amd64.deb
+        fail_on_unmatched_files: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload build artifacts (for workflow debugging)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: debian-packages
+        path: dist/*.deb
+        retention-days: 30

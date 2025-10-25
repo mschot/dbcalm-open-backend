@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from dbcalm.api.model.response.base_response import BaseResponse
 from dbcalm.api.model.response.list_response import PaginationInfo
 from dbcalm.data.data_types.enum_types import RestoreTarget
 
 
-class RestoreResponse(BaseModel):
+class RestoreResponse(BaseResponse):
     """Response model for a single restore."""
 
     id: int = Field(description="Unique restore identifier")
@@ -25,7 +26,7 @@ class RestoreResponse(BaseModel):
     process_id: int = Field(description="ID of the restore process")
 
 
-class RestoreListResponse(BaseModel):
+class RestoreListResponse(BaseResponse):
     """Response model for paginated list of restores."""
 
     items: list[RestoreResponse] = Field(description="List of restores")

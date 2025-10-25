@@ -10,6 +10,10 @@ import threading
 import time
 from pathlib import Path
 
+# Get absolute paths for executables
+BACKEND_DIR = Path(__file__).parent.parent.resolve()
+PYTHON_PATH = str(BACKEND_DIR / ".venv" / "bin" / "python3")
+
 
 def tail_log(log_file: str, stop_event: threading.Event) -> None:
     """Continuously reads and prints new log entries from the specified file."""
@@ -128,30 +132,54 @@ def create_runtime_directory() -> None:
 
 
 def start_processes() -> list[subprocess.Popen]:
-    """Start the API, MariaDB CMD, and generic CMD server processes."""
+    """Start the API, MariaDB CMD, and generic CMD server processes.
+
+    All processes started with debugpy support for remote debugging.
+    """
     # Create runtime directory
     create_runtime_directory()
 
-    # Start API process as dbcalm user
-    api_process = subprocess.Popen(
-        ["sudo", "-u", "dbcalm", "./.venv/bin/python3", "dbcalm.py", "server"],  # noqa: S607
+    # Start API process as dbcalm user with debugpy on port 5678
+    api_process = subprocess.Popen(  # noqa: S603
+        [  # noqa: S607
+            "sudo", "-u", "dbcalm",
+            PYTHON_PATH, "-m", "debugpy",
+            "--listen", "0.0.0.0:5678",
+            str(BACKEND_DIR / "dbcalm.py"), "server",
+        ],
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
-    print(f"Started API process with PID {api_process.pid}")
+    print(f"Started API process with PID {api_process.pid} (debugpy on port 5678)")
 
-    # Start MariaDB CMD server process as mysql user (for backup/restore operations)
-    mariadb_cmd_process = subprocess.Popen(
-        ["sudo", "-u", "mysql", "./.venv/bin/python3", "dbcalm-mariadb-cmd.py"],  # noqa: S607
+    # Start MariaDB CMD server process as mysql user with debugpy on port 5679
+    mariadb_cmd_process = subprocess.Popen(  # noqa: S603
+        [  # noqa: S607
+            "sudo", "-u", "mysql",
+            PYTHON_PATH, "-m", "debugpy",
+            "--listen", "0.0.0.0:5679",
+            str(BACKEND_DIR / "dbcalm-mariadb-cmd.py"),
+        ],
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
-    print(f"Started MariaDB CMD Server process with PID {mariadb_cmd_process.pid}")
+    print(
+        f"Started MariaDB CMD Server process with PID "
+        f"{mariadb_cmd_process.pid} (debugpy on port 5679)",
+    )
 
-    # Start generic CMD server process as root (for system operations)
-    cmd_process = subprocess.Popen(
-        ["sudo", "-u", "root", "./.venv/bin/python3", "dbcalm-cmd.py"],  # noqa: S607
+    # Start generic CMD server process as root with debugpy on port 5680
+    cmd_process = subprocess.Popen(  # noqa: S603
+        [  # noqa: S607
+            "sudo", "-u", "root",
+            PYTHON_PATH, "-m", "debugpy",
+            "--listen", "0.0.0.0:5680",
+            str(BACKEND_DIR / "dbcalm-cmd.py"),
+        ],
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
-    print(f"Started CMD Server process with PID {cmd_process.pid}")
+    print(
+        f"Started CMD Server process with PID "
+        f"{cmd_process.pid} (debugpy on port 5680)",
+    )
 
     return [api_process, mariadb_cmd_process, cmd_process]
 

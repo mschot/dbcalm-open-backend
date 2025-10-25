@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from dbcalm.api.model.response.base_response import BaseResponse
 
 
-class StatusResponse(BaseModel):
+class StatusResponse(BaseResponse):
     status: str
     link: str | None = None
     pid: str | None = None

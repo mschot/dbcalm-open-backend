@@ -1,9 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from dbcalm.api.model.response.base_response import BaseResponse
 from dbcalm.api.model.response.list_response import PaginationInfo
 
 
-class ClientResponse(BaseModel):
+class ClientResponse(BaseResponse):
     """Response model for a single client."""
 
     id: str = Field(description="Unique client identifier")
@@ -11,7 +12,7 @@ class ClientResponse(BaseModel):
     scopes: list[str] = Field(description="List of OAuth2 scopes granted to the client")
 
 
-class ClientWithSecretResponse(BaseModel):
+class ClientWithSecretResponse(BaseResponse):
     """Response model for client creation (includes secret)."""
 
     id: str = Field(description="Unique client identifier")
@@ -20,7 +21,7 @@ class ClientWithSecretResponse(BaseModel):
     scopes: list[str] = Field(description="List of OAuth2 scopes granted to the client")
 
 
-class ClientListResponse(BaseModel):
+class ClientListResponse(BaseResponse):
     """Response model for paginated list of clients."""
 
     items: list[ClientResponse] = Field(

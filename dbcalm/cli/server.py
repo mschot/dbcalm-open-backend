@@ -3,7 +3,7 @@ import os
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse as FastAPIJSONResponse
 from starlette import status
 
 from dbcalm.config.config_factory import config_factory
@@ -39,6 +39,7 @@ app = FastAPI(
     title="DBCalm API",
     description="Database backup and restore management API for MariaDB/MySQL",
     version="0.0.1",
+    default_response_class=FastAPIJSONResponse,
     contact={
         "name": "DBCalm",
         "url": "https://dbcalm.com",
@@ -78,7 +79,9 @@ app.include_router(delete_schedule.router, tags=["Schedules"])
 app.include_router(status_route.router, tags=["Status"])
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, _exc: Exception) -> JSONResponse:
+async def global_exception_handler(
+    request: Request, _exc: Exception,
+) -> FastAPIJSONResponse:
     """Catch all unhandled exceptions and log them"""
     logger = logger_factory()
     logger.exception(
@@ -86,7 +89,7 @@ async def global_exception_handler(request: Request, _exc: Exception) -> JSONRes
         request.method,
         request.url.path,
     )
-    return JSONResponse(
+    return FastAPIJSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error"},
     )

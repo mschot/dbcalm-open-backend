@@ -1,7 +1,8 @@
 
 from datetime import UTC, datetime
 
-from sqlmodel import Field, SQLModel
+from sqlalchemy import DateTime
+from sqlmodel import Column, Field, SQLModel
 
 
 def now() -> datetime:
@@ -12,9 +13,11 @@ class Backup(SQLModel, table=True):
     from_backup_id: str | None
     start_time: datetime = Field(
         default_factory=now,
-        nullable=False,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    end_time: datetime | None = None
+    end_time: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True)),
+    )
     process_id: int
 
 Backup.model_rebuild()

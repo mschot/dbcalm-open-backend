@@ -1,11 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from dbcalm.api.model.response.base_response import BaseResponse
 from dbcalm.api.model.response.list_response import PaginationInfo
 
 
-class ScheduleResponse(BaseModel):
+class ScheduleResponse(BaseResponse):
     """Response model for a single schedule."""
 
     id: int = Field(description="Unique schedule identifier")
@@ -32,7 +33,7 @@ class ScheduleResponse(BaseModel):
     updated_at: datetime = Field(description="When the schedule was last updated")
 
 
-class ScheduleListResponse(BaseModel):
+class ScheduleListResponse(BaseResponse):
     """Response model for paginated list of schedules."""
 
     items: list[ScheduleResponse] = Field(description="List of schedules")

@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from dbcalm.api.model.response.base_response import BaseResponse
 
 
-class DeleteResponse(BaseModel):
+class DeleteResponse(BaseResponse):
     """Generic response for successful deletion."""
 
     message: str = Field(description="Confirmation message")

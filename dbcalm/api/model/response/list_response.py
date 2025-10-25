@@ -1,9 +1,11 @@
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from dbcalm.api.model.response.base_response import BaseResponse
 
 
-class PaginationInfo(BaseModel):
+class PaginationInfo(BaseResponse):
     """Pagination metadata for list responses."""
 
     total: int = Field(description="Total number of items across all pages")
@@ -15,7 +17,7 @@ class PaginationInfo(BaseModel):
 T = TypeVar("T")
 
 
-class ListResponse(BaseModel, Generic[T]):
+class ListResponse(BaseResponse, Generic[T]):
     """Generic paginated list response."""
 
     items: list[T] = Field(description="List of items for the current page")

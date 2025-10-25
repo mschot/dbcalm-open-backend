@@ -1,11 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from dbcalm.api.model.response.base_response import BaseResponse
 from dbcalm.api.model.response.list_response import PaginationInfo
 
 
-class ProcessResponse(BaseModel):
+class ProcessResponse(BaseResponse):
     """Response model for a single process."""
 
     id: int = Field(description="Unique process identifier")
@@ -26,7 +27,7 @@ class ProcessResponse(BaseModel):
     args: dict = Field(description="Arguments passed to the command")
 
 
-class ProcessListResponse(BaseModel):
+class ProcessListResponse(BaseResponse):
     """Response model for paginated list of processes."""
 
     items: list[ProcessResponse] = Field(description="List of processes")
