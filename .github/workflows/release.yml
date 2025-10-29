@@ -21,40 +21,61 @@ jobs:
       id: get_version
       run: |
         # Remove 'v' prefix from tag (e.g., v0.1 -> 0.1)
+        echo "GITHUB_REF is: ${GITHUB_REF}"
         VERSION=${GITHUB_REF#refs/tags/v}
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        echo "Building version: ${VERSION}"
-
-    - name: Update version in pyproject.toml
-      run: |
-        VERSION="${{ steps.get_version.outputs.version }}"
-        sed -i "s/^version=.*/version=\"${VERSION}\"/" pyproject.toml
-        echo "Updated pyproject.toml to version ${VERSION}"
-        grep "version=" pyproject.toml
+        echo "Extracted version: ${VERSION}"
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
     - name: Build .deb package in Docker
       run: |
-        echo "Building .deb package for version ${{ steps.get_version.outputs.version }}..."
+        VERSION="${{ steps.get_version.outputs.version }}"
+        echo "Building .deb package for version ${VERSION}..."
+        mkdir -p dist
         docker build -f build.Dockerfile -t dbcalm-builder:ubuntu22.04 .
-        docker run --rm \
+
+        # Run without --rm to persist container for file extraction
+        # Pass VERSION as environment variable to avoid volume mount caching issues
+        CONTAINER_ID=$(docker create \
           -v $(pwd):/build \
           -w /build \
+          -e VERSION="${VERSION}" \
           dbcalm-builder:ubuntu22.04 \
-          bash -c "source /opt/build-venv/bin/activate && pip install -e . && ./build-deb.sh"
+          bash -c "source /opt/build-venv/bin/activate && pip install -e . && ./build-deb.sh")
+
+        echo "Starting container ${CONTAINER_ID}"
+        docker start -a ${CONTAINER_ID}
+
+        # Copy files out of container
+        echo "Extracting files from container..."
+        docker cp ${CONTAINER_ID}:/build/dist/. ./dist/
+
+        # Clean up container
+        docker rm ${CONTAINER_ID}
+
+        # Fix permissions on extracted files
+        echo "Fixing permissions on dist/"
+        sudo chown -R $(id -u):$(id -g) dist/ 2>/dev/null || chown -R $(id -u):$(id -g) dist/ 2>/dev/null || true
 
         # Verify the package was created
         ls -lh dist/*.deb
 
         # Create a copy with generic name for 'latest' downloads
-        VERSION="${{ steps.get_version.outputs.version }}"
-        cp "dist/dbcalm_${VERSION}_amd64.deb" "dist/dbcalm_amd64.deb"
+        DEB_FILE=$(ls dist/dbcalm_*_amd64.deb | grep -v "dbcalm_amd64.deb" | head -1)
+        if [ -f "$DEB_FILE" ]; then
+          cp "$DEB_FILE" "dist/dbcalm_amd64.deb"
+          echo "Created generic copy: dist/dbcalm_amd64.deb"
 
-        # Also create version-specific name with dash (dbcalm-VERSION_amd64.deb)
-        cp "dist/dbcalm_${VERSION}_amd64.deb" "dist/dbcalm-${VERSION}_amd64.deb"
+          # Also create version-specific name with dash
+          cp "$DEB_FILE" "dist/dbcalm-${VERSION}_amd64.deb"
+          echo "Created version-specific copy: dist/dbcalm-${VERSION}_amd64.deb"
+        else
+          echo "Error: .deb file not found"
+          exit 1
+        fi
 
     - name: Build .rpm package (placeholder for future)
       run: |

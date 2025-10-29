@@ -2,8 +2,10 @@
 set -e
 
 
-# Get version from pyproject.toml or default to 1.0.0
-VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' pyproject.toml 2>/dev/null || echo "1.0.0")
+# Get version from environment variable, or from pyproject.toml, or default to 1.0.0
+if [ -z "$VERSION" ]; then
+  VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' pyproject.toml 2>/dev/null || echo "1.0.0")
+fi
 PACKAGE_NAME="dbcalm"
 ARCH="amd64"
 
