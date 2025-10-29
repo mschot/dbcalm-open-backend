@@ -63,3 +63,7 @@ echo "Building Debian package..."
 fakeroot dpkg-deb --build build/debian "dist/${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
 echo "Package created: dist/${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
+
+# Clean up temporary build artifacts
+echo "Cleaning up build artifacts..."
+rm -rf dist/production
