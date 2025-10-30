@@ -4,7 +4,7 @@ Section: database
 Priority: optional
 Architecture: amd64
 Depends: mariadb-server | mysql-server, openssl
-Maintainer: DBCalm Maintainers <maintainers@dbcalm.org>
+Maintainer: DBCalm <info@dbcalm.com>
 Description: Database backup and restore manager
  DBCalm is a tool for managing database backups and restores
  with a web API interface.

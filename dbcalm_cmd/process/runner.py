@@ -1,4 +1,6 @@
+import os
 import subprocess
+import sys
 import threading
 import uuid
 from datetime import UTC, datetime
@@ -10,6 +12,25 @@ from dbcalm.data.adapter.adapter_factory import (
 from dbcalm.data.model.process import Process
 from dbcalm.data.repository.process import ProcessRepository
 from dbcalm.logger.logger_factory import logger_factory
+
+
+def get_clean_env_for_system_binaries() -> dict[str, str]:
+    """Get environment for system binaries when running from PyInstaller.
+
+    When running as a PyInstaller bundle, clear the bundled library path
+    and use system libraries instead. This prevents conflicts when executing
+    system binaries like mariabackup, mysqladmin, etc.
+    """
+    env = os.environ.copy()
+
+    # If running from PyInstaller bundle, use system libraries
+    if getattr(sys, "frozen", False):
+        # Clear the PyInstaller library path
+        env.pop("LD_LIBRARY_PATH", None)
+        # Use system library paths
+        env["LD_LIBRARY_PATH"] = "/usr/lib/x86_64-linux-gnu:/usr/lib:/lib"
+
+    return env
 
 
 class Runner:
@@ -88,6 +109,7 @@ class Runner:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            env=get_clean_env_for_system_binaries(),
         )
 
         if command_id is None:

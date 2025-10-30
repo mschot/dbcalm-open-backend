@@ -1,5 +1,7 @@
 
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 from dbcalm.config.config_factory import config_factory
@@ -13,6 +15,26 @@ INVALID_REQUEST = 400
 SERVICE_UNAVAILABLE = 503
 CONFLICT = 409
 NOT_FOUND = 404
+
+
+def get_clean_env_for_system_binaries() -> dict[str, str]:
+    """Get environment for system binaries when running from PyInstaller.
+
+    When running as a PyInstaller bundle, clear the bundled library path
+    and use system libraries instead. This prevents conflicts when executing
+    system binaries like mariabackup, mysqladmin, etc.
+    """
+    env = os.environ.copy()
+
+    # If running from PyInstaller bundle, use system libraries
+    if getattr(sys, "frozen", False):
+        # Clear the PyInstaller library path
+        env.pop("LD_LIBRARY_PATH", None)
+        # Use system library paths
+        env["LD_LIBRARY_PATH"] = "/usr/lib/x86_64-linux-gnu:/usr/lib:/lib"
+
+    return env
+
 
 class Validator:
     def __init__(self) -> None:
@@ -191,6 +213,7 @@ class Validator:
             capture_output=True,
             text=True,
             check=False,
+            env=get_clean_env_for_system_binaries(),
         )
 
         # If mysqladmin ping succeeds (return code 0), the server is alive
@@ -214,6 +237,7 @@ class Validator:
             capture_output=True,
             text=True,
             check=False,
+            env=get_clean_env_for_system_binaries(),
         )
 
         # If mysqladmin ping succeeds (return code 0), the server is alive

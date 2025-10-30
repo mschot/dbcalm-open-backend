@@ -179,12 +179,18 @@ class TestValidator:
         assert status == VALID_REQUEST
         assert message == ""
 
+    @patch("dbcalm_mariadb_cmd.command.validator.get_clean_env_for_system_binaries")
     @patch("dbcalm_mariadb_cmd.command.validator.subprocess.run")
     def test_server_dead(
         self,
         mock_subprocess_run: MagicMock,
+        mock_get_env: MagicMock,
         validator: Validator,
     ) -> None:
+        # Mock the environment function
+        mock_env = {"PATH": "/usr/bin"}
+        mock_get_env.return_value = mock_env
+
         # First test: Server is alive (return code 0)
         mock_result_alive = MagicMock()
         mock_result_alive.returncode = 0
@@ -205,6 +211,7 @@ class TestValidator:
             capture_output=True,
             text=True,
             check=False,
+            env=mock_env,
         )
 
         # Reset mock for second test
@@ -224,6 +231,7 @@ class TestValidator:
             capture_output=True,
             text=True,
             check=False,
+            env=mock_env,
         )
 
     @patch("pathlib.Path.is_dir")
