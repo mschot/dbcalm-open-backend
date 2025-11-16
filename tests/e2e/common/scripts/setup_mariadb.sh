@@ -34,10 +34,3 @@ mysql -u root testdb < /tests/fixtures/test_schema.sql
 echo "MariaDB setup complete!"
 echo "Test database: testdb"
 echo "Backup user: backupuser"
-
-# Update credentials file with test password
-echo "Updating MariaDB credentials file..."
-if [ -f /etc/dbcalm/credentials.cnf ]; then
-    sed -i 's/password=.*/password=s0m3p455w0rd/' /etc/dbcalm/credentials.cnf
-    echo "Credentials file updated for E2E tests"
-fi

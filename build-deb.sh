@@ -21,12 +21,15 @@ mkdir -p "build/debian/var/log/$PACKAGE_NAME"
 mkdir -p "build/debian/var/lib/$PACKAGE_NAME"
 mkdir -p "build/debian/var/run/$PACKAGE_NAME"
 mkdir -p "build/debian/var/backups/$PACKAGE_NAME"
+mkdir -p "build/debian/usr/share/$PACKAGE_NAME/scripts"
 
 #copy files to the right location
 cp "templates/$PACKAGE_NAME-api.service" "build/debian/usr/lib/systemd/system/"
 cp "templates/$PACKAGE_NAME-cmd.service" "build/debian/usr/lib/systemd/system/"
 cp "templates/$PACKAGE_NAME-mariadb-cmd.service" "build/debian/usr/lib/systemd/system/"
 cp templates/DEBIAN/* build/debian/DEBIAN/
+cp templates/scripts/*.sh "build/debian/usr/share/$PACKAGE_NAME/scripts/"
+chmod +x "build/debian/usr/share/$PACKAGE_NAME/scripts/"*.sh
 
 echo "Building ${PACKAGE_NAME} version ${VERSION} for ${ARCH}..."
 

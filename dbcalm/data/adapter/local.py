@@ -65,7 +65,7 @@ class Local(Adapter):
         self.session.refresh(model)
         return model
 
-    def _apply_filter_operator(self, column, operator: str, value):  # noqa: ANN001, ANN202, PLR0911
+    def _apply_filter_operator(self, column, operator: str, value):  # noqa: ANN001, ANN202, PLR0911, C901
         """Apply a filter operator to a column with a value."""
         if operator == "eq":
             return column == value
@@ -87,6 +87,10 @@ class Local(Adapter):
             # For NOT IN operator, convert each value in the list
             converted_values = [self._convert_value_type(column, v) for v in value]
             return ~column.in_(converted_values)
+        if operator == "isnull":
+            return column.is_(None)
+        if operator == "isnotnull":
+            return column.is_not(None)
         return None
 
     def get_list(
@@ -104,8 +108,12 @@ class Local(Adapter):
             for filter_obj in query:
                 column = getattr(model, filter_obj.field)
 
-                # Convert value to appropriate type based on column type
-                value = self._convert_value_type(column, filter_obj.value)
+                # For null operators, value is None and doesn't need conversion
+                if filter_obj.operator in ["isnull", "isnotnull"]:
+                    value = None
+                else:
+                    # Convert value to appropriate type based on column type
+                    value = self._convert_value_type(column, filter_obj.value)
 
                 # Apply the filter operation
                 filter_condition = self._apply_filter_operator(

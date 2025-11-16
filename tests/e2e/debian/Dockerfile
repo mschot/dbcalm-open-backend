@@ -31,12 +31,7 @@ RUN mkdir -p /tests/fixtures \
     /tests/test-results && \
     chmod -R 777 /tests/logs /tests/test-results /tests/artifacts
 
-# Copy test fixtures and scripts
-COPY fixtures/ /tests/fixtures/
-COPY scripts/ /tests/scripts/
-
-# Make scripts executable
-RUN chmod +x /tests/scripts/*.sh
+# Note: Scripts and fixtures will be mounted as volumes from common/ directory
 
 # Install Python test dependencies
 RUN python3.11 -m pip install --no-cache-dir \
@@ -63,8 +58,8 @@ RUN mkdir -p /var/backups/dbcalm \
 # Expose ports
 EXPOSE 8335 3306
 
-# Copy and set entrypoint
-COPY scripts/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Set working directory
+WORKDIR /app/tests/e2e/common
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Run entrypoint script (mounted as volume from common/)
+ENTRYPOINT ["/tests/scripts/entrypoint.sh"]

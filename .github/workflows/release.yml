@@ -77,10 +77,48 @@ jobs:
           exit 1
         fi
 
-    - name: Build .rpm package (placeholder for future)
+    - name: Build .rpm package in Docker
       run: |
-        echo "RPM build not yet implemented - placeholder for future RPM support"
-        echo "When implemented, this will build: dbcalm-${{ steps.get_version.outputs.version }}.x86_64.rpm"
+        VERSION="${{ steps.get_version.outputs.version }}"
+        echo "Building .rpm package for version ${VERSION}..."
+        mkdir -p dist
+        docker build -f build-rpm.Dockerfile -t dbcalm-builder:rocky9 .
+
+        # Run without --rm to persist container for file extraction
+        # Pass VERSION as environment variable
+        CONTAINER_ID=$(docker create \
+          -v $(pwd):/build \
+          -w /build \
+          -e VERSION="${VERSION}" \
+          dbcalm-builder:rocky9 \
+          bash -c "source /opt/build-venv/bin/activate && pip install -e . && ./build-rpm.sh")
+
+        echo "Starting container ${CONTAINER_ID}"
+        docker start -a ${CONTAINER_ID}
+
+        # Copy files out of container
+        echo "Extracting files from container..."
+        docker cp ${CONTAINER_ID}:/build/dist/. ./dist/
+
+        # Clean up container
+        docker rm ${CONTAINER_ID}
+
+        # Fix permissions on extracted files
+        echo "Fixing permissions on dist/"
+        sudo chown -R $(id -u):$(id -g) dist/ 2>/dev/null || chown -R $(id -u):$(id -g) dist/ 2>/dev/null || true
+
+        # Verify the package was created
+        ls -lh dist/*.rpm
+
+        # Create a copy with generic name for 'latest' downloads
+        RPM_FILE=$(ls dist/dbcalm-*-1.el9.x86_64.rpm | grep -v "dbcalm-.*\.x86_64\.rpm" | head -1)
+        if [ -f "$RPM_FILE" ]; then
+          cp "$RPM_FILE" "dist/dbcalm.x86_64.rpm"
+          echo "Created generic copy: dist/dbcalm.x86_64.rpm"
+        else
+          echo "Error: .rpm file not found"
+          exit 1
+        fi
 
     - name: Generate release notes
       id: release_notes
@@ -110,8 +148,22 @@ jobs:
         sudo dpkg -i dbcalm_amd64.deb
         \`\`\`
 
+        ### RHEL/Rocky/AlmaLinux (.rpm)
+        \`\`\`bash
+        # Download and install
+        wget https://github.com/mschot/dbcalm-open-backend/releases/download/${TAG}/dbcalm-${VERSION}-1.el9.x86_64.rpm
+        sudo dnf install -y dbcalm-${VERSION}-1.el9.x86_64.rpm
+        \`\`\`
+
+        Or use the latest link (always points to most recent release):
+        \`\`\`bash
+        wget https://github.com/mschot/dbcalm-open-backend/releases/latest/download/dbcalm.x86_64.rpm
+        sudo dnf install -y dbcalm.x86_64.rpm
+        \`\`\`
+
         ### Requirements
-        - Ubuntu 22.04+ or Debian 11+
+        - **Debian/Ubuntu**: Ubuntu 22.04+ or Debian 11+
+        - **RHEL/Rocky**: Rocky Linux 9+, RHEL 9+, or AlmaLinux 9+
         - MariaDB or MySQL server
         - OpenSSL
 
@@ -139,6 +191,8 @@ jobs:
         files: |
           dist/dbcalm-${{ steps.get_version.outputs.version }}_amd64.deb
           dist/dbcalm_amd64.deb
+          dist/dbcalm-${{ steps.get_version.outputs.version }}-1.el9.x86_64.rpm
+          dist/dbcalm.x86_64.rpm
         fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -147,6 +201,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: debian-packages
-        path: dist/*.deb
+        name: packages
+        path: |
+          dist/*.deb
+          dist/*.rpm
         retention-days: 30

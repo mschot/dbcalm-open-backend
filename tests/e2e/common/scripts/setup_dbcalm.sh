@@ -3,21 +3,49 @@ set -e
 
 echo "=== Setting up DBCalm for E2E tests ==="
 
-# Find and install the .deb package
-DEB_FILE=$(ls /tests/artifacts/*.deb 2>/dev/null | head -1)
-if [ -z "$DEB_FILE" ]; then
-    echo "ERROR: No .deb package found in /tests/artifacts/"
+# Determine distro (default to debian for backward compatibility)
+DISTRO=${DISTRO:-debian}
+echo "Distribution: $DISTRO"
+
+# Find and install the package based on distro
+if [ "$DISTRO" = "debian" ]; then
+    PACKAGE_FILE=$(ls /tests/artifacts/*.deb 2>/dev/null | head -1)
+    if [ -z "$PACKAGE_FILE" ]; then
+        echo "ERROR: No .deb package found in /tests/artifacts/"
+        exit 1
+    fi
+    echo "Installing DBCalm from $PACKAGE_FILE..."
+    dpkg -i "$PACKAGE_FILE" || apt-get install -f -y
+elif [ "$DISTRO" = "rocky" ]; then
+    PACKAGE_FILE=$(ls /tests/artifacts/*.rpm 2>/dev/null | head -1)
+    if [ -z "$PACKAGE_FILE" ]; then
+        echo "ERROR: No .rpm package found in /tests/artifacts/"
+        exit 1
+    fi
+    echo "Installing DBCalm from $PACKAGE_FILE..."
+    dnf install -y "$PACKAGE_FILE" || yum install -y "$PACKAGE_FILE"
+else
+    echo "ERROR: Unsupported distro: $DISTRO"
     exit 1
 fi
-
-echo "Installing DBCalm from $DEB_FILE..."
-dpkg -i "$DEB_FILE" || apt-get install -f -y
 
 # Create runtime directory (normally done by systemd via RuntimeDirectory)
 echo "Creating runtime directory..."
 mkdir -p /var/run/dbcalm
 chmod 2774 /var/run/dbcalm
 chown root:dbcalm /var/run/dbcalm
+
+# Ensure log file exists with correct permissions
+# The volume mount overlays /var/log/dbcalm, hiding files created during RPM install
+echo "Ensuring log file exists with correct permissions..."
+if [ ! -f /var/log/dbcalm/dbcalm.log ]; then
+    touch /var/log/dbcalm/dbcalm.log
+    chown mysql:dbcalm /var/log/dbcalm/dbcalm.log
+    chmod 664 /var/log/dbcalm/dbcalm.log
+    echo "Created log file: /var/log/dbcalm/dbcalm.log"
+else
+    echo "Log file already exists"
+fi
 
 # Start DBCalm services manually (no systemd in container)
 echo "Starting DBCalm services..."
@@ -88,4 +116,6 @@ ps aux | grep -E "(dbcalm|dbcalm-cmd|dbcalm-mariadb-cmd)" | grep -v grep || echo
 
 # Verify command sockets
 echo ""
+# Ensure verify_sockets.sh is executable
+chmod +x /tests/scripts/verify_sockets.sh 2>/dev/null || true
 /tests/scripts/verify_sockets.sh

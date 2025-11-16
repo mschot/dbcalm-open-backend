@@ -1,0 +1,36 @@
+# Test artifacts and logs
+tests/e2e/logs/
+tests/e2e/artifacts/
+tests/e2e/test-results/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+
+# Temporary files
+*.tmp
+*.bak
+*.log

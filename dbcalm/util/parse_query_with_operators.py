@@ -13,19 +13,22 @@ class QueryOperator(str, Enum):
     LTE = "lte"
     IN = "in"
     NIN = "nin"
+    ISNULL = "isnull"
+    ISNOTNULL = "isnotnull"
 
 
 class QueryFilter(BaseModel):
     field: str
     operator: str
-    value: str | list[str]
+    value: str | list[str] | None = None
 
 
 def parse_query_with_operators(query_str: str | None) -> list[QueryFilter]:
     """Parse query string into list of QueryFilter objects.
 
-    Supports two formats:
+    Supports multiple formats:
     - 2 parts (field|value): Defaults to equality operator
+    - 2 parts (field|isnull or field|isnotnull): Null check operators
     - 3 parts (field|operator|value): Uses specified operator
 
     Args:
@@ -44,6 +47,8 @@ def parse_query_with_operators(query_str: str | None) -> list[QueryFilter]:
         "status|in|running,completed" ->
             [QueryFilter(field='status', operator='in',
                         value=['running', 'completed'])]
+        "from_backup_id|isnull" ->
+            [QueryFilter(field='from_backup_id', operator='isnull', value=None)]
     """
     filters = []
     if not query_str:
@@ -55,14 +60,26 @@ def parse_query_with_operators(query_str: str | None) -> list[QueryFilter]:
         parts = pair.split("|")
 
         if len(parts) == 2:  # noqa: PLR2004
-            # 2 parts: field|value (default to eq)
-            filters.append(
-                QueryFilter(
-                    field=parts[0],
-                    operator="eq",
-                    value=parts[1],
-                ),
-            )
+            # 2 parts: could be field|value (default to eq) or field|isnull/isnotnull
+            potential_operator = parts[1].lower()
+            if potential_operator in ["isnull", "isnotnull"]:
+                # field|isnull or field|isnotnull (no value needed)
+                filters.append(
+                    QueryFilter(
+                        field=parts[0],
+                        operator=potential_operator,
+                        value=None,
+                    ),
+                )
+            else:
+                # field|value (default to eq)
+                filters.append(
+                    QueryFilter(
+                        field=parts[0],
+                        operator="eq",
+                        value=parts[1],
+                    ),
+                )
         elif len(parts) == 3:  # noqa: PLR2004
             # 3 parts: field|operator|value
             operator = parts[1].lower()

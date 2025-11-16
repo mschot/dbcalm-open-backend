@@ -4,9 +4,19 @@ set -e
 
 echo "=== E2E Test Entrypoint ==="
 
+# Ensure all scripts are executable (needed for volume-mounted scripts)
+chmod +x /tests/scripts/*.sh 2>/dev/null || true
+
 # Clean up old logs before starting
 echo "Cleaning up old logs..."
 rm -f /tests/logs/*.log /tests/logs/dbcalm/*.log 2>/dev/null || true
+
+# Initialize MariaDB if needed (Rocky/RHEL requires explicit initialization)
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "Initializing MariaDB data directory..."
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    echo "MariaDB initialization complete"
+fi
 
 # Start MariaDB in the background
 echo "Starting MariaDB..."
@@ -48,7 +58,7 @@ else
 fi
 
 # Change to test directory
-cd /app/tests/e2e
+cd /app/tests/e2e/common
 
 # Run tests
 echo "=== Running pytest ==="

@@ -1,4 +1,4 @@
-name: End-to-End Tests
+name: End-to-End Tests (RPM)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  e2e-tests:
+  e2e-tests-rpm:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -19,23 +19,23 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build Debian package in Docker
-      run: make deb-docker
+    - name: Build RPM package in Docker
+      run: make rpm-docker
 
     - name: Prepare E2E test artifacts
       run: |
         mkdir -p tests/e2e/artifacts
-        cp dist/*.deb tests/e2e/artifacts/
+        cp dist/*.rpm tests/e2e/artifacts/
         ls -lh tests/e2e/artifacts/
 
     - name: Build test container
       working-directory: tests/e2e/common
-      run: DISTRO=debian DISTRO_DIR=debian docker compose build --no-cache
+      run: DISTRO=rocky DISTRO_DIR=rocky docker compose build --no-cache
 
     - name: Run E2E tests
       working-directory: tests/e2e/common
       run: |
-        DISTRO=debian DISTRO_DIR=debian docker compose up --abort-on-container-exit --exit-code-from test-runner
+        DISTRO=rocky DISTRO_DIR=rocky docker compose up --abort-on-container-exit --exit-code-from test-runner
       continue-on-error: false
 
     - name: Collect logs
@@ -49,7 +49,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: e2e-test-results
+        name: e2e-test-results-rpm
         path: test-artifacts/
         retention-days: 7
 
@@ -57,7 +57,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: e2e-test-logs-failure
+        name: e2e-test-logs-rpm-failure
         path: test-artifacts/logs/
         retention-days: 14
 
@@ -65,14 +65,14 @@ jobs:
       if: always()
       working-directory: tests/e2e/common
       run: |
-        DISTRO=debian DISTRO_DIR=debian docker compose down -v || true
+        DISTRO=rocky DISTRO_DIR=rocky docker compose down -v || true
         docker system prune -f || true
 
     - name: Report test summary
       if: always()
       run: |
         if [ -f tests/e2e/test-results/junit.xml ]; then
-          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## E2E Test Results (RPM)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           python3 -c "
           import xml.etree.ElementTree as ET
