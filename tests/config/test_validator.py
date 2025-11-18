@@ -34,6 +34,8 @@ class TestConfigValidator:
                 return ["http://example.com"]
             if key == "api_port":
                 return 123
+            if key == "db_type":
+                return "mariadb"
             return "test_value"
 
         # Setup the config to return valid values for all keys

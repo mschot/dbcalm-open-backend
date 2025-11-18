@@ -122,7 +122,7 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
         command.append(new_backup_path)
         # Don't close redo log if there are more incremental backups to apply
         if self.server_version < APPY_LOG_ONLY_BEFORE_VERSION \
-            and len(id_list) > 0:
+            and len(id_list_copy) > 0:
                 command.append("--apply-log-only")
 
         command_list.append(command)

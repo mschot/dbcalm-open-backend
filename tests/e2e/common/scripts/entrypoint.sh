@@ -4,44 +4,85 @@ set -e
 
 echo "=== E2E Test Entrypoint ==="
 
+# Determine database type (default to mariadb for backward compatibility)
+DB_TYPE=${DB_TYPE:-mariadb}
+echo "Database type: $DB_TYPE"
+
 # Ensure all scripts are executable (needed for volume-mounted scripts)
 chmod +x /tests/scripts/*.sh 2>/dev/null || true
 
-# Clean up old logs before starting
-echo "Cleaning up old logs..."
-rm -f /tests/logs/*.log /tests/logs/dbcalm/*.log 2>/dev/null || true
-
-# Initialize MariaDB if needed (Rocky/RHEL requires explicit initialization)
+# Initialize database if needed (Rocky/RHEL requires explicit initialization)
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "Initializing MariaDB data directory..."
-    mysql_install_db --user=mysql --datadir=/var/lib/mysql
-    echo "MariaDB initialization complete"
+    echo "Initializing $DB_TYPE data directory..."
+
+    # Clean up any partial initialization files
+    # (mysqld --initialize-insecure fails if directory is not empty)
+    if [ "$(ls -A /var/lib/mysql 2>/dev/null)" ]; then
+        echo "Cleaning up partial initialization files..."
+        rm -rf /var/lib/mysql/*
+    fi
+
+    # Ensure data directory exists and has correct ownership
+    mkdir -p /var/lib/mysql
+    chown -R mysql:mysql /var/lib/mysql
+    chmod 750 /var/lib/mysql
+
+    # Initialize with mysqld (works for both MariaDB and MySQL)
+    # Use --user=mysql flag to run as mysql user (required by modern MariaDB/MySQL)
+
+    if [ "$DB_TYPE" = "mariadb" ]; then
+        echo "Running mariadb --initialize-insecure --user=mysql..."
+        mariadb-install-db --user=mysql --datadir=/var/lib/mysql
+        echo "Initialization complete"
+    else
+        echo "Running /usr/libexec/mysqld --initialize-insecure --user=mysql..."
+        /usr/libexec/mysqld --initialize-insecure --user=mysql --datadir=/var/lib/mysql
+        echo "Initialization complete"
+    fi
+
 fi
 
-# Start MariaDB in the background
-echo "Starting MariaDB..."
-mysqld_safe --datadir=/var/lib/mysql --log-error=/tests/logs/mariadb-error.log &
-MYSQL_PID=$!
+# Create log file with correct ownership for database error logs
+echo "Setting up database log file..."
+touch /var/log/db-error.log
+chown mysql:mysql /var/log/db-error.log
+chmod 664 /var/log/db-error.log
 
-# Wait for MariaDB to be ready
-echo "Waiting for MariaDB to be ready..."
+# Start database in the background
+if [ "$DB_TYPE" = "mariadb" ]; then
+    echo "Starting MariaDB..."
+    mysqld --user=mysql --datadir=/var/lib/mysql --log-error=/var/log/db-error.log &
+    DB_PID=$!
+else
+    echo "Starting MySQL..."
+    mysqld --user=mysql --datadir=/var/lib/mysql --log-error=/var/log/db-error.log &
+    DB_PID=$!
+fi
+
+# Wait for database to be ready
+echo "Waiting for $DB_TYPE to be ready..."
 for i in {1..30}; do
     if mysqladmin ping -h localhost --silent 2>/dev/null; then
-        echo "MariaDB is ready!"
+        echo "$DB_TYPE is ready!"
         break
     fi
-    echo "Waiting for MariaDB... ($i/30)"
+    echo "Waiting for $DB_TYPE... ($i/30)"
     sleep 2
 done
 
 if ! mysqladmin ping -h localhost --silent 2>/dev/null; then
-    echo "ERROR: MariaDB failed to start"
+    echo "ERROR: $DB_TYPE failed to start"
     exit 1
 fi
 
-# Setup MariaDB (create user, database, load schema)
-echo "Setting up MariaDB..."
-/tests/scripts/setup_mariadb.sh
+# Setup database (create user, database, load schema)
+if [ "$DB_TYPE" = "mariadb" ]; then
+    echo "Setting up MariaDB..."
+    /tests/scripts/setup_mariadb.sh
+else
+    echo "Setting up MySQL..."
+    /tests/scripts/setup_mysql.sh
+fi
 
 # Install and setup DBCalm
 echo "Setting up DBCalm..."
@@ -62,25 +103,20 @@ cd /app/tests/e2e/common
 
 # Run tests
 echo "=== Running pytest ==="
-python3.11 -m pytest -v --tb=short \
+python3.11 -m pytest -v -x --tb=short \
     --junitxml=/tests/test-results/junit.xml \
     --log-cli-level=INFO \
-    test_backup_restore.py \
-    2>&1 | tee /tests/logs/test-output.log
+    test_backup_restore.py
 
-TEST_EXIT_CODE=${PIPESTATUS[0]}
+TEST_EXIT_CODE=$?
 
 # Cleanup
 echo "=== Cleanup ==="
 /tests/scripts/cleanup.sh || true
 
-# Stop MariaDB
-echo "Stopping MariaDB..."
-mysqladmin -u root shutdown 2>/dev/null || kill $MYSQL_PID 2>/dev/null || true
-
-# Make logs readable on host
-echo "Making logs readable..."
-chmod -R 777 /tests/logs 2>/dev/null || true
+# Stop database
+echo "Stopping $DB_TYPE..."
+mysqladmin -u root shutdown 2>/dev/null || kill $DB_PID 2>/dev/null || true
 
 echo "=== Tests completed with exit code: $TEST_EXIT_CODE ==="
 exit $TEST_EXIT_CODE

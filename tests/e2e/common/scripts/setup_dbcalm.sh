@@ -29,6 +29,16 @@ else
     exit 1
 fi
 
+# Re-run post-install setup to fix permissions
+# (needed because volume mounts may overlay files created during package install)
+echo "Running post-install setup to fix permissions..."
+/usr/share/dbcalm/scripts/common-setup.sh dbcalm
+
+# Configure db_type based on DB_TYPE environment variable
+DB_TYPE=${DB_TYPE:-mariadb}
+echo "Configuring DBCalm for database type: $DB_TYPE..."
+sed -i "s/^db_type:.*/db_type: $DB_TYPE/" /etc/dbcalm/config.yml
+
 # Create runtime directory (normally done by systemd via RuntimeDirectory)
 echo "Creating runtime directory..."
 mkdir -p /var/run/dbcalm

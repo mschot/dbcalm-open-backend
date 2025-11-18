@@ -3,12 +3,12 @@ services:
     build:
       context: ../${DISTRO_DIR:-debian}
       dockerfile: Dockerfile
+      args:
+        DB_TYPE: ${DB_TYPE:-mariadb}
     volumes:
       - ../artifacts:/tests/artifacts:ro
-      - ../logs:/tests/logs:rw
       - ../test-results:/tests/test-results:rw
       - ../../../:/app:ro  # Mount entire backend directory for test access
-      - ../logs/dbcalm:/var/log/dbcalm:rw  # Expose DBCalm application logs
       - ./scripts:/tests/scripts:ro  # Mount common scripts
       - ./fixtures:/tests/fixtures:ro  # Mount common fixtures
     environment:
@@ -16,6 +16,11 @@ services:
       - E2E_TEST_MODE=true
       - API_BASE_URL=https://localhost:8335
       - DISTRO=${DISTRO:-debian}
+      - DB_TYPE=${DB_TYPE:-mariadb}
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    privileged: true
     working_dir: /app/tests/e2e/common
     networks:
       - dbcalm-test

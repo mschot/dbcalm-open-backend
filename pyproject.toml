@@ -37,6 +37,9 @@ include = ["dbcalm_cmd*", "dbcalm_mariadb_cmd*", "dbcalm*"]
 select = ["ALL"]
 ignore = ["D",  "TD", "BLE", "T201", "FA100", "S101", "A001", "A002"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S603", "S607"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"

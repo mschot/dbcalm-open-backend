@@ -44,6 +44,16 @@ class Validator:
             msg = f"api_host must be a string in {self.config.CONFIG_PATH}"
             raise ValidationError(msg)
 
+        # Validate db_type is one of the supported types
+        db_type = self.config.value("db_type")
+        valid_db_types = ["mariadb", "mysql"]
+        if db_type not in valid_db_types:
+            msg = (
+                f"db_type must be one of {valid_db_types} in "
+                f"{self.config.CONFIG_PATH}, got: {db_type}"
+            )
+            raise ValidationError(msg)
+
     def validate_backup_path(self) -> None:
         # Check if backup path exists
         backup_path = Path(self.config.value("backup_dir"))

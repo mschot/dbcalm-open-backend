@@ -308,19 +308,83 @@ class MariaDBService:
     @staticmethod
     def start() -> None:
         """Start MariaDB service."""
-        # Start MariaDB in background
-        subprocess.Popen(
-            ["mysqld_safe", "--log-error=/tests/logs/mariadb-restart.log"],  # noqa: S607
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+        # Create log file with correct ownership
+        log_file = Path("/var/log/db-restart.log")
+        log_file.touch(exist_ok=True)
+        subprocess.run(
+            ["chown", "mysql:mysql", str(log_file)],
+            check=False,
         )
+        subprocess.run(
+            ["chmod", "664", str(log_file)],
+            check=False,
+        )
+
+        # Start MariaDB in background
+        cmd = ["mysqld_safe", "--log-error=/var/log/db-restart.log"]
+        print(f"DEBUG: Starting MariaDB with command: {' '.join(cmd)}")
+
+        # Capture output to log files instead of discarding
+        with (
+            Path("/var/log/db-restart-stdout.log").open("w") as stdout_log,
+            Path("/var/log/db-restart-stderr.log").open("w") as stderr_log,
+        ):
+            process = subprocess.Popen(
+                cmd,
+                stdout=stdout_log,
+                stderr=stderr_log,
+            )
+
+        print(f"DEBUG: MariaDB process started with PID: {process.pid}")
         time.sleep(MARIADB_START_WAIT)
 
+        # Check if process is still alive
+        poll_result = process.poll()
+        if poll_result is not None:
+            print(
+                "ERROR: MariaDB process died immediately with "
+                f"exit code {poll_result}",
+            )
+            print("DEBUG: Contents of /var/log/db-restart.log:")
+            try:
+                with Path("/var/log/db-restart.log").open() as f:
+                    print(f.read())
+            except Exception as e:
+                print(f"Could not read log file: {e}")
+            msg = f"MariaDB process died immediately with exit code {poll_result}"
+            raise RuntimeError(msg)
+
+        print("DEBUG: MariaDB process is still running, waiting for it to be ready...")
+
         # Wait for MariaDB to be ready (up to 30 seconds)
-        for _ in range(30):
+        for i in range(30):
             if MariaDBService.is_running():
+                print(f"DEBUG: MariaDB is ready after {i+1} seconds!")
                 return
+
+            # Check if process died during wait
+            poll_result = process.poll()
+            if poll_result is not None:
+                print(f"ERROR: MariaDB process died with exit code {poll_result}")
+                print("DEBUG: Contents of /var/log/db-restart.log:")
+                try:
+                    with Path("/var/log/db-restart.log").open() as f:
+                        print(f.read())
+                except Exception as e:
+                    print(f"Could not read log file: {e}")
+                msg = f"MariaDB process died with exit code {poll_result}"
+                raise RuntimeError(msg)
+
             time.sleep(1)
+
+        # Timeout reached - print logs to help diagnose
+        print("ERROR: MariaDB failed to become ready within 30 seconds")
+        print("DEBUG: Contents of /var/log/db-restart.log:")
+        try:
+            with Path("/var/log/db-restart.log").open() as f:
+                print(f.read())
+        except Exception as e:
+            print(f"Could not read log file: {e}")
 
         msg = "Failed to start MariaDB within 30 seconds"
         raise RuntimeError(msg)
@@ -329,7 +393,7 @@ class MariaDBService:
     def stop() -> None:
         """Stop MariaDB service."""
         subprocess.run(
-            ["mysqladmin", "-u", "root", "shutdown"],  # noqa: S607
+            ["mysqladmin", "-u", "root", "shutdown"],
             check=False,
         )
         time.sleep(MYSQL_SHUTDOWN_WAIT)
@@ -338,7 +402,7 @@ class MariaDBService:
     def is_running() -> bool:
         """Check if MariaDB service is running."""
         result = subprocess.run(
-            ["mysqladmin", "ping", "-h", "localhost", "--silent"],  # noqa: S607
+            ["mysqladmin", "ping", "-h", "localhost", "--silent"],
             check=False,
             capture_output=True,
             text=True,
@@ -353,3 +417,204 @@ class MariaDBService:
         if not MariaDBService.is_running():
             print("WARNING: MariaDB is not running!")
             time.sleep(MARIADB_STATUS_CHECK_WAIT)
+
+
+class MySQLService:
+    """Helper class to manage MySQL service (without systemd)."""
+
+    @staticmethod
+    def start() -> None:  # noqa: C901, PLR0915
+        """Start MySQL service."""
+        # Debug: Check data directory ownership before starting
+        print("DEBUG: Checking /var/lib/mysql ownership before starting MySQL...")
+        result = subprocess.run(
+            ["ls", "-la", "/var/lib/mysql"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        print(result.stdout)
+
+        # Fix ownership of data directory (needed after restore operations)
+        # XtraBackup restores files as root, but MySQL needs them owned by mysql user
+        print("DEBUG: Fixing ownership of /var/lib/mysql...")
+        subprocess.run(
+            ["chown", "-R", "mysql:mysql", "/var/lib/mysql"],
+            check=False,
+        )
+
+        # Create log file with correct ownership
+        log_file = Path("/var/log/db-restart.log")
+        log_file.touch(exist_ok=True)
+        subprocess.run(
+            ["chown", "mysql:mysql", str(log_file)],
+            check=False,
+        )
+        subprocess.run(
+            ["chmod", "664", str(log_file)],
+            check=False,
+        )
+
+        # Start MySQL in background
+        # MySQL 8.x uses mysqld directly (no mysqld_safe)
+        # Note: MySQL 8.x requires --user=mysql flag when running as root
+        cmd = ["mysqld", "--user=mysql", "--log-error=/var/log/db-restart.log"]
+        print(f"DEBUG: Starting MySQL with command: {' '.join(cmd)}")
+
+        # Capture output to log files instead of discarding
+        with (
+            Path("/var/log/db-restart-stdout.log").open("w") as stdout_log,
+            Path("/var/log/db-restart-stderr.log").open("w") as stderr_log,
+        ):
+            process = subprocess.Popen(
+                cmd,
+                stdout=stdout_log,
+                stderr=stderr_log,
+            )
+
+        print(f"DEBUG: MySQL process started with PID: {process.pid}")
+        time.sleep(MARIADB_START_WAIT)
+
+        # Check if process is still alive
+        poll_result = process.poll()
+        if poll_result is not None:
+            print(f"ERROR: MySQL process died immediately with exit code {poll_result}")
+
+            # Try to read all possible log files
+            print("DEBUG: Contents of /var/log/db-restart.log:")
+            try:
+                with Path("/var/log/db-restart.log").open() as f:
+                    print(f.read())
+            except Exception as e:
+                print(f"Could not read db-restart.log: {e}")
+
+            print("DEBUG: Contents of /var/log/db-restart-stdout.log:")
+            try:
+                with Path("/var/log/db-restart-stdout.log").open() as f:
+                    content = f.read()
+                    print(content if content else "(empty)")
+            except Exception as e:
+                print(f"Could not read db-restart-stdout.log: {e}")
+
+            print("DEBUG: Contents of /var/log/db-restart-stderr.log:")
+            try:
+                with Path("/var/log/db-restart-stderr.log").open() as f:
+                    content = f.read()
+                    print(content if content else "(empty)")
+            except Exception as e:
+                print(f"Could not read db-restart-stderr.log: {e}")
+
+            # Check if /var/log directory exists and is writable
+            print("DEBUG: Checking /var/log directory:")
+            result = subprocess.run(
+                ["ls", "-la", "/var/log/"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            print(result.stdout)
+
+            msg = (
+                f"MySQL process died immediately with exit code {poll_result}"
+            )
+            raise RuntimeError(msg)
+
+        print("DEBUG: MySQL process is still running, waiting for it to be ready...")
+
+        # Wait for MySQL to be ready (up to 30 seconds)
+        for i in range(30):
+            if MySQLService.is_running():
+                print(f"DEBUG: MySQL is ready after {i+1} seconds!")
+                return
+
+            # Check if process died during wait
+            poll_result = process.poll()
+            if poll_result is not None:
+                print(
+                    f"ERROR: MySQL process died with exit code {poll_result}",
+                )
+
+                # Try to read all log files
+                log_files = [
+                    "db-restart.log",
+                    "db-restart-stdout.log",
+                    "db-restart-stderr.log",
+                ]
+                for log_file in log_files:
+                    print(f"DEBUG: Contents of /var/log/{log_file}:")
+                    try:
+                        with Path(f"/var/log/{log_file}").open() as f:
+                            content = f.read()
+                            print(content if content else "(empty)")
+                    except Exception as e:
+                        print(f"Could not read {log_file}: {e}")
+
+                msg = f"MySQL process died with exit code {poll_result}"
+                raise RuntimeError(msg)
+
+            time.sleep(1)
+
+        # Timeout reached - print logs to help diagnose
+        print("ERROR: MySQL failed to become ready within 30 seconds")
+
+        # Try to read all log files
+        log_files = [
+            "db-restart.log",
+            "db-restart-stdout.log",
+            "db-restart-stderr.log",
+        ]
+        for log_file in log_files:
+            print(f"DEBUG: Contents of /var/log/{log_file}:")
+            try:
+                with Path(f"/var/log/{log_file}").open() as f:
+                    content = f.read()
+                    print(content if content else "(empty)")
+            except Exception as e:
+                print(f"Could not read {log_file}: {e}")
+
+        msg = "Failed to start MySQL within 30 seconds"
+        raise RuntimeError(msg)
+
+    @staticmethod
+    def stop() -> None:
+        """Stop MySQL service."""
+        subprocess.run(
+            ["mysqladmin", "-u", "root", "shutdown"],
+            check=False,
+        )
+        time.sleep(MYSQL_SHUTDOWN_WAIT)
+
+    @staticmethod
+    def is_running() -> bool:
+        """Check if MySQL service is running."""
+        result = subprocess.run(
+            ["mysqladmin", "ping", "-h", "localhost", "--silent"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0
+
+    @staticmethod
+    def ensure_running() -> None:
+        """Ensure MySQL is running."""
+        # MySQL should always be running in the container
+        # This is mainly for test compatibility
+        if not MySQLService.is_running():
+            print("WARNING: MySQL is not running!")
+            time.sleep(MARIADB_STATUS_CHECK_WAIT)
+
+
+def get_database_service() -> type[MariaDBService] | type[MySQLService]:
+    """Get appropriate database service based on DB_TYPE environment variable.
+
+    Returns:
+        MariaDBService or MySQLService class based on DB_TYPE env var
+    """
+    import os  # noqa: PLC0415
+
+    db_type = os.getenv("DB_TYPE", "mariadb")
+
+    if db_type == "mysql":
+        return MySQLService
+    return MariaDBService

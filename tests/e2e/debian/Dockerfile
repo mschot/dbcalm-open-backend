@@ -1,24 +1,46 @@
 FROM ubuntu:22.04
 
+# Build argument to select database type (mariadb or mysql)
+ARG DB_TYPE=mariadb
+
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
-# Install MariaDB, Python, and other dependencies (no systemd needed)
+# Install base dependencies and Python
 RUN apt-get update && apt-get install -y \
     software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt-get update && apt-get install -y \
-    mariadb-server \
-    mariadb-client \
-    mariadb-backup \
+    wget \
+    lsb-release \
+    gnupg \
+    curl \
+    ca-certificates \
     python3.11 \
     python3-pip \
     python3.11-venv \
     sudo \
-    curl \
-    ca-certificates \
     procps \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Percona repository and XtraBackup
+RUN wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb \
+    && dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb \
+    && percona-release enable-only tools release \
+    && apt-get update \
+    && apt-get install -y percona-xtrabackup-80 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* percona-release_latest.*.deb
+
+# Install database server based on DB_TYPE build arg
+RUN apt-get update && \
+    if [ "$DB_TYPE" = "mariadb" ]; then \
+        apt-get install -y mariadb-server mariadb-client mariadb-backup; \
+    else \
+        apt-get install -y mysql-server mysql-client; \
+    fi \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

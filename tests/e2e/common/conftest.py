@@ -8,7 +8,7 @@ import pymysql
 import pytest
 import requests
 import urllib3
-from utils import MariaDBService
+from utils import get_database_service
 
 # Constants
 HTTP_OK = 200
@@ -82,8 +82,9 @@ def api_token(
 @pytest.fixture
 def db_connection() -> Generator[pymysql.Connection, None, None]:
     """Create a database connection for testing."""
-    # Ensure MariaDB is running
-    MariaDBService.ensure_running()
+    # Ensure database is running
+    db_service = get_database_service()
+    db_service.ensure_running()
 
     connection = pymysql.connect(
         host="localhost",
@@ -101,9 +102,9 @@ def db_connection() -> Generator[pymysql.Connection, None, None]:
 
 
 @pytest.fixture
-def mariadb_service() -> type[MariaDBService]:
-    """Provide MariaDB service management."""
-    return MariaDBService
+def db_service() -> type:
+    """Provide database service management (MariaDB or MySQL based on DB_TYPE)."""
+    return get_database_service()
 
 
 @pytest.fixture(autouse=True)

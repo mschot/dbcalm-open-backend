@@ -68,6 +68,16 @@ class Validator:
                 value in self.commands[command].items() if "unique" in value
             ]
 
+    def _get_admin_binary(self) -> str:
+        """Get the admin binary name based on db_type configuration.
+
+        Returns:
+            str: 'mysqladmin' for both MariaDB and MySQL (mysqladmin works for both)
+        """
+        # mysqladmin works for both MariaDB and MySQL
+        # Could use mariadb-admin for MariaDB 10.5+ but mysqladmin is universal
+        return "mysqladmin"
+
     def _validate_required_args(self, command_data: dict) -> tuple[int, str]:
         """Check if all required arguments are present."""
         for arg in self.required_args(command_data["cmd"]):
@@ -202,7 +212,7 @@ class Validator:
                 else f"/etc/{ self.config.PROJECT_NAME }/credentials.cnf")
 
         command = [
-            "mysqladmin",
+            self._get_admin_binary(),
             f"--defaults-file={credentials_file}",
             "--defaults-group-suffix=-dbcalm",
             "ping",
@@ -216,7 +226,7 @@ class Validator:
             env=get_clean_env_for_system_binaries(),
         )
 
-        # If mysqladmin ping succeeds (return code 0), the server is alive
+        # If admin ping succeeds (return code 0), the server is alive
         # If it fails (non-zero return code), the server is dead
         return result.returncode != 0
 
@@ -226,7 +236,7 @@ class Validator:
                 else f"/etc/{ self.config.PROJECT_NAME }/credentials.cnf")
 
         command = [
-            "mysqladmin",
+            self._get_admin_binary(),
             f"--defaults-file={credentials_file}",
             "--defaults-group-suffix=-dbcalm",
             "ping",
@@ -246,7 +256,7 @@ class Validator:
 
     def data_dir_empty(self) -> bool:
         # Get data directory from config or use default
-        data_dir = self.config.value("mysql_data_dir")
+        data_dir = self.config.value("data_dir")
         if data_dir is None:
             data_dir = "/var/lib/mysql"
 

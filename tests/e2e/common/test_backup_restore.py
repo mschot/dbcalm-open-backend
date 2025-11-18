@@ -4,7 +4,6 @@ from pathlib import Path
 import pymysql
 import requests
 from utils import (
-    MariaDBService,
     clear_mysql_data_directory,
     create_backup,
     load_sql_file,
@@ -73,7 +72,7 @@ class TestFullBackupRestore:
         api_token: str,
         api_base_url: str,
         db_connection: pymysql.Connection,
-        mariadb_service: type[MariaDBService],
+        db_service: type,
     ) -> None:
         """Test restoring from a full backup."""
         # Load initial dataset and create backup
@@ -93,8 +92,8 @@ class TestFullBackupRestore:
         # Close connection before restore
         db_connection.close()
 
-        # Stop MariaDB and clear data directory
-        mariadb_service.stop()
+        # Stop database and clear data directory
+        db_service.stop()
         clear_mysql_data_directory()
 
         # Restore via API
@@ -117,8 +116,8 @@ class TestFullBackupRestore:
             api_base_url=api_base_url,
         )
 
-        # Start MariaDB
-        mariadb_service.start()
+        # Start database
+        db_service.start()
 
         # Reconnect and validate
         new_connection = pymysql.connect(
@@ -193,7 +192,7 @@ class TestIncrementalBackupRestore:
         api_token: str,
         api_base_url: str,
         db_connection: pymysql.Connection,
-        mariadb_service: type[MariaDBService],
+        db_service: type,
     ) -> None:
         """Test restoring from incremental backup (includes full backup chain)."""
         # Load initial dataset and create full backup
@@ -224,8 +223,8 @@ class TestIncrementalBackupRestore:
         # Close connection before restore
         db_connection.close()
 
-        # Stop MariaDB and clear data directory
-        mariadb_service.stop()
+        # Stop database and clear data directory
+        db_service.stop()
         clear_mysql_data_directory()
 
         # Restore incremental backup (should restore full + incremental)
@@ -248,8 +247,8 @@ class TestIncrementalBackupRestore:
             api_base_url=api_base_url,
         )
 
-        # Start MariaDB
-        mariadb_service.start()
+        # Start database
+        db_service.start()
 
         # Reconnect and validate
         new_connection = pymysql.connect(
@@ -344,9 +343,9 @@ class TestRestorePreconditions:
         api_token: str,
         api_base_url: str,
         db_connection: pymysql.Connection,
-        mariadb_service: type[MariaDBService],
+        db_service: type,
     ) -> None:
-        """Test that database restore fails when MariaDB is running."""
+        """Test that database restore fails when database server is running."""
         # Create a backup to restore from
         load_sql_file(db_connection, "fixtures/initial_data.sql")
         process_id = create_backup(api_token, "full", api_base_url=api_base_url)
@@ -357,8 +356,8 @@ class TestRestorePreconditions:
         )
         backup_id = process_status["resource_id"]
 
-        # Ensure MariaDB is running
-        mariadb_service.ensure_running()
+        # Ensure database is running
+        db_service.ensure_running()
 
         # Attempt restore - should fail with 503
         response = requests.post(
@@ -379,7 +378,7 @@ class TestRestorePreconditions:
         api_token: str,
         api_base_url: str,
         db_connection: pymysql.Connection,
-        mariadb_service: type[MariaDBService],
+        db_service: type,
     ) -> None:
         """Test that restore fails when data directory is not empty."""
         # Create a backup to restore from
@@ -392,9 +391,9 @@ class TestRestorePreconditions:
         )
         backup_id = process_status["resource_id"]
 
-        # Close connection and stop MariaDB (but don't clear data directory)
+        # Close connection and stop database (but don't clear data directory)
         db_connection.close()
-        mariadb_service.stop()
+        db_service.stop()
 
         # Attempt restore - should fail with 503
         response = requests.post(
@@ -405,8 +404,8 @@ class TestRestorePreconditions:
             timeout=HTTP_TIMEOUT,
         )
 
-        # Restart MariaDB for cleanup
-        mariadb_service.start()
+        # Restart database for cleanup
+        db_service.start()
 
         error_msg = f"Expected 503, got {response.status_code}"
         assert response.status_code == HTTP_SERVICE_UNAVAILABLE, error_msg

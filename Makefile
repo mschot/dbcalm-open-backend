@@ -66,77 +66,135 @@ rpm-docker:
 install-rpm:
 	sudo dnf install -y "dist/dbcalm-${VERSION}-1.el9.x86_64.rpm"
 
-# End-to-End Tests - Debian/Ubuntu
-# Build .deb in Ubuntu 22.04 container and run E2E tests
-e2e-test: deb-docker
-	@echo "Preparing Debian E2E test artifacts..."
+# End-to-End Tests - MariaDB on Debian/Ubuntu
+e2e-test-mariadb-deb: deb-docker
+	@echo "Preparing MariaDB Debian E2E test artifacts..."
 	@mkdir -p tests/e2e/artifacts
 	@cp dist/*.deb tests/e2e/artifacts/
-	@echo "Running Debian E2E tests in Docker..."
-	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian docker compose up --build --force-recreate --abort-on-container-exit --exit-code-from test-runner
+	@echo "Running MariaDB Debian E2E tests in Docker..."
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose up --build --force-recreate --abort-on-container-exit --exit-code-from test-runner
 
-# Run E2E tests with existing .deb (faster for iterative testing)
-e2e-test-quick:
+e2e-test-mariadb-deb-quick:
 	@if [ ! -f tests/e2e/artifacts/*.deb ]; then \
 		echo "No .deb package found in tests/e2e/artifacts/"; \
-		echo "Run 'make e2e-test' first to build and test."; \
+		echo "Run 'make e2e-test-mariadb-deb' first to build and test."; \
 		exit 1; \
 	fi
-	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian docker compose up --abort-on-container-exit --exit-code-from test-runner
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose -p dbcalm-e2e-deb-mariadb up --abort-on-container-exit --exit-code-from test-runner
 
-# Open shell in Debian test container for debugging
-e2e-shell:
-	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian docker compose run --rm test-runner /bin/bash
+e2e-shell-mariadb-deb:
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose run --rm test-runner /bin/bash
 
-# Clean up Debian E2E test environment
-e2e-clean:
-	@echo "Cleaning Debian E2E test environment..."
-	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian docker compose down -v || true
+e2e-clean-mariadb-deb:
+	@echo "Cleaning MariaDB Debian E2E test environment..."
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose down -v || true
 	rm -rf tests/e2e/artifacts/*.deb tests/e2e/logs/* tests/e2e/test-results/* || true
 	docker system prune -f || true
 
-# View Debian E2E test logs
-e2e-logs:
+e2e-logs-mariadb-deb:
 	@if [ -f tests/e2e/logs/test-output.log ]; then \
 		cat tests/e2e/logs/test-output.log; \
 	else \
-		echo "No test logs found. Run 'make e2e-test' first."; \
+		echo "No test logs found. Run 'make e2e-test-mariadb-deb' first."; \
 	fi
 
-# End-to-End Tests - Rocky/RHEL
-# Build .rpm in Rocky Linux 9 container and run E2E tests
-e2e-test-rpm: rpm-docker
-	@echo "Preparing Rocky E2E test artifacts..."
+# End-to-End Tests - MySQL on Debian/Ubuntu
+e2e-test-mysql-deb: deb-docker
+	@echo "Preparing MySQL Debian E2E test artifacts..."
 	@mkdir -p tests/e2e/artifacts
-	@cp dist/*.rpm tests/e2e/artifacts/
-	@echo "Running Rocky E2E tests in Docker..."
-	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky docker compose up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
+	@cp dist/*.deb tests/e2e/artifacts/
+	@echo "Running MySQL Debian E2E tests in Docker..."
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose up --build --force-recreate --abort-on-container-exit --exit-code-from test-runner
 
-# Run RPM E2E tests with existing .rpm (faster for iterative testing)
-e2e-test-rpm-quick:
-	@if [ ! -f tests/e2e/artifacts/*.rpm ]; then \
-		echo "No .rpm package found in tests/e2e/artifacts/"; \
-		echo "Run 'make e2e-test-rpm' first to build and test."; \
+e2e-test-mysql-deb-quick:
+	@if [ ! -f tests/e2e/artifacts/*.deb ]; then \
+		echo "No .deb package found in tests/e2e/artifacts/"; \
+		echo "Run 'make e2e-test-mysql-deb' first to build and test."; \
 		exit 1; \
 	fi
-	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky docker compose up --abort-on-container-exit --exit-code-from test-runner
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose -p dbcalm-e2e-deb-mysql up --abort-on-container-exit --exit-code-from test-runner
 
-# Open shell in Rocky test container for debugging
-e2e-shell-rpm:
-	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky docker compose run --rm test-runner /bin/bash
+e2e-shell-mysql-deb:
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose run --rm test-runner /bin/bash
 
-# Clean up Rocky E2E test environment
-e2e-clean-rpm:
-	@echo "Cleaning Rocky E2E test environment..."
-	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky docker compose down -v || true
+e2e-clean-mysql-deb:
+	@echo "Cleaning MySQL Debian E2E test environment..."
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose down -v || true
+	rm -rf tests/e2e/artifacts/*.deb tests/e2e/logs/* tests/e2e/test-results/* || true
+	docker system prune -f || true
+
+e2e-logs-mysql-deb:
+	@if [ -f tests/e2e/logs/test-output.log ]; then \
+		cat tests/e2e/logs/test-output.log; \
+	else \
+		echo "No test logs found. Run 'make e2e-test-mysql-deb' first."; \
+	fi
+
+# End-to-End Tests - MariaDB on Rocky/RHEL
+e2e-test-mariadb-rpm: rpm-docker
+	@echo "Preparing MariaDB Rocky E2E test artifacts..."
+	@mkdir -p tests/e2e/artifacts
+	@cp dist/*.rpm tests/e2e/artifacts/
+	@echo "Running MariaDB Rocky E2E tests in Docker..."
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
+
+e2e-test-mariadb-rpm-quick:
+	@if [ ! -f tests/e2e/artifacts/*.rpm ]; then \
+		echo "No .rpm package found in tests/e2e/artifacts/"; \
+		echo "Run 'make e2e-test-mariadb-rpm' first to build and test."; \
+		exit 1; \
+	fi
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose -p dbcalm-e2e-rpm-mariadb up --abort-on-container-exit --exit-code-from test-runner
+
+e2e-shell-mariadb-rpm:
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose run --rm test-runner /bin/bash
+
+e2e-clean-mariadb-rpm:
+	@echo "Cleaning MariaDB Rocky E2E test environment..."
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose down -v || true
 	rm -rf tests/e2e/artifacts/*.rpm tests/e2e/logs/* tests/e2e/test-results/* || true
 	docker system prune -f || true
 
-# View Rocky E2E test logs
-e2e-logs-rpm:
+e2e-logs-mariadb-rpm:
 	@if [ -f tests/e2e/logs/test-output.log ]; then \
 		cat tests/e2e/logs/test-output.log; \
 	else \
-		echo "No test logs found. Run 'make e2e-test-rpm' first."; \
+		echo "No test logs found. Run 'make e2e-test-mariadb-rpm' first."; \
 	fi
+
+# End-to-End Tests - MySQL on Rocky/RHEL
+e2e-test-mysql-rpm: rpm-docker
+	@echo "Preparing MySQL Rocky E2E test artifacts..."
+	@mkdir -p tests/e2e/artifacts
+	@cp dist/*.rpm tests/e2e/artifacts/
+	@echo "Running MySQL Rocky E2E tests in Docker..."
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
+
+e2e-test-mysql-rpm-quick:
+	@if [ ! -f tests/e2e/artifacts/*.rpm ]; then \
+		echo "No .rpm package found in tests/e2e/artifacts/"; \
+		echo "Run 'make e2e-test-mysql-rpm' first to build and test."; \
+		exit 1; \
+	fi
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose -p dbcalm-e2e-rpm-mysql up --abort-on-container-exit --exit-code-from test-runner
+
+e2e-shell-mysql-rpm:
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose run --rm test-runner /bin/bash
+
+e2e-clean-mysql-rpm:
+	@echo "Cleaning MySQL Rocky E2E test environment..."
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose down -v || true
+	rm -rf tests/e2e/artifacts/*.rpm tests/e2e/logs/* tests/e2e/test-results/* || true
+	docker system prune -f || true
+
+e2e-logs-mysql-rpm:
+	@if [ -f tests/e2e/logs/test-output.log ]; then \
+		cat tests/e2e/logs/test-output.log; \
+	else \
+		echo "No test logs found. Run 'make e2e-test-mysql-rpm' first."; \
+	fi
+
+# Run all E2E tests in parallel (builds packages then runs all test combinations)
+e2e-test-all:
+	python3 tests/e2e/run_all_tests.py
 

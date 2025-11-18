@@ -3,20 +3,35 @@
 
 FROM rockylinux:9
 
+# Build argument to select database type (mariadb or mysql)
+ARG DB_TYPE=mariadb
+
 ENV TZ=UTC
 
-# Install MariaDB, Python 3.11, and test dependencies
+# Install base dependencies and Python
 # Use --allowerasing to replace curl-minimal with full curl
 RUN dnf install -y --allowerasing \
-    mariadb-server \
-    mariadb \
-    mariadb-backup \
     python3.11 \
     python3.11-pip \
     curl \
     openssl \
     sudo \
     procps \
+    file \
+    && dnf clean all
+
+# Install Percona repository and XtraBackup
+RUN dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm \
+    && percona-release enable-only tools release \
+    && dnf install -y percona-xtrabackup-80 \
+    && dnf clean all
+
+# Install database server based on DB_TYPE build arg
+RUN if [ "$DB_TYPE" = "mariadb" ]; then \
+        dnf install -y mariadb-server mariadb mariadb-backup; \
+    else \
+        dnf install -y mysql-server mysql; \
+    fi \
     && dnf clean all
 
 # Install Python test dependencies
