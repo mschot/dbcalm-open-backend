@@ -17,23 +17,34 @@ class Mariadb(adapter.Adapter):
         self.command_runner = command_runner
         self.config = config_factory()
 
-    def full_backup(self, id: str) -> Process:
+    def full_backup(self, id: str, schedule_id: int | None = None) -> Process:
         command = self.command_builder.build_full_backup_cmd(id)
+        args = {"id": id}
+        if schedule_id is not None:
+            args["schedule_id"] = schedule_id
         return self.command_runner.execute(
             command=command,
             command_type="backup",
-            args={"id": id},
+            args=args,
         )
 
-    def incremental_backup(self, id: str, from_backup_id: str) -> Process:
+    def incremental_backup(
+        self,
+        id: str,
+        from_backup_id: str,
+        schedule_id: int | None = None,
+    ) -> Process:
         command = self.command_builder.build_incremental_backup_cmd(
             id,
             from_backup_id,
         )
+        args = {"id": id, "from_backup_id": from_backup_id}
+        if schedule_id is not None:
+            args["schedule_id"] = schedule_id
         return self.command_runner.execute(
             command=command,
             command_type="backup",
-            args={"id": id, "from_backup_id": from_backup_id},
+            args=args,
         )
 
     def restore_backup(self, id_list: list, target: RestoreTarget) -> Process:

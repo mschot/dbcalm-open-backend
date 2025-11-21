@@ -99,6 +99,31 @@ async def create_schedule(
     ],
     _: Annotated[dict, Depends(verify_token)],
 ) -> ScheduleResponse:
+    schedule_repo = ScheduleRepository()
+
+    # Validate: incremental schedules require at least one enabled full backup schedule
+    if request.backup_type == "incremental":
+        from dbcalm.util.parse_query_with_operators import QueryFilter  # noqa: PLC0415
+
+        full_schedules = schedule_repo.get_list(
+            query=[
+                QueryFilter(field="backup_type", operator="eq", value="full"),
+                QueryFilter(field="enabled", operator="eq", value=True),
+            ],
+            order=None,
+            page=None,
+            per_page=None,
+        )[0]
+
+        if not full_schedules:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Cannot create incremental backup schedule without at least "
+                    "one enabled full backup schedule"
+                ),
+            )
+
     schedule = Schedule(
         backup_type=request.backup_type,
         frequency=request.frequency,
@@ -108,10 +133,11 @@ async def create_schedule(
         minute=request.minute,
         interval_value=request.interval_value,
         interval_unit=request.interval_unit,
+        retention_value=request.retention_value,
+        retention_unit=request.retention_unit,
         enabled=request.enabled,
     )
 
-    schedule_repo = ScheduleRepository()
     created_schedule = schedule_repo.create(schedule)
 
     # Update cron file with all schedules via cmd service

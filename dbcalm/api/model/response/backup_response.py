@@ -21,6 +21,27 @@ class BackupResponse(BaseResponse):
         description="When the backup completed (null if still running)",
     )
     process_id: int = Field(description="ID of the process that created this backup")
+    schedule_id: int | None = Field(
+        default=None,
+        description=(
+            "ID of the schedule that created this backup "
+            "(null for manual backups)"
+        ),
+    )
+    retention_value: int | None = Field(
+        default=None,
+        description=(
+            "Retention value from the schedule "
+            "(null if no retention or manual backup)"
+        ),
+    )
+    retention_unit: str | None = Field(
+        default=None,
+        description=(
+            "Retention unit from the schedule "
+            "(days/weeks/months, null if no retention or manual backup)"
+        ),
+    )
 
 
 class BackupListResponse(BaseResponse):

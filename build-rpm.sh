@@ -28,9 +28,6 @@ mkdir -p "build/rpm/staging/var/run/$PACKAGE_NAME"
 mkdir -p "build/rpm/staging/var/backups/$PACKAGE_NAME"
 mkdir -p "build/rpm/staging/usr/share/$PACKAGE_NAME/scripts"
 
-# Pre-create empty database file to be included in package
-touch "build/rpm/staging/var/lib/$PACKAGE_NAME/db.sqlite3"
-
 echo "Building ${PACKAGE_NAME} version ${VERSION} for ${ARCH}..."
 
 # Create binary executables with pyinstaller

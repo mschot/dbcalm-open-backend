@@ -11,11 +11,16 @@ class Adapter(ABC):
         self.default_stream_compression = "gzip"
 
     @abstractmethod
-    def full_backup(self, id: str) -> Process:
+    def full_backup(self, id: str, schedule_id: int | None = None) -> Process:
         pass
 
     @abstractmethod
-    def incremental_backup(self, id: str, from_backup_id: str) -> Process:
+    def incremental_backup(
+        self,
+        id: str,
+        from_backup_id: str,
+        schedule_id: int | None = None,
+    ) -> Process:
         pass
 
     @abstractmethod

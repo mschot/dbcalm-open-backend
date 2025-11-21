@@ -265,6 +265,62 @@ def wait_for_restore_completion(
     raise TimeoutError(timeout_msg)
 
 
+def wait_for_cleanup_completion(
+    token: str,
+    process_id: int,
+    timeout: int = 60,
+    api_base_url: str = "https://localhost:8335",
+) -> dict[str, Any]:
+    """Wait for a cleanup process to complete by polling its status.
+
+    Args:
+        token: Bearer token for API authentication
+        process_id: Process ID from the HTTP 202 response
+        timeout: Maximum time to wait in seconds (default 60)
+        api_base_url: Base URL for API
+
+    Returns:
+        Final process status dict with cleanup information
+
+    Raises:
+        TimeoutError: If cleanup doesn't complete within timeout
+        RuntimeError: If cleanup fails
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        # Poll the status endpoint
+        response = requests.get(
+            f"{api_base_url}/status/{process_id}",
+            headers=headers,
+            verify=False,  # noqa: S501
+            timeout=HTTP_TIMEOUT,
+        )
+        response.raise_for_status()
+        process_status = response.json()
+
+        status = process_status.get("status")
+        if status == "success":
+            # Cleanup completed successfully
+            return process_status
+        if status == "failed":
+            error_msg = (
+                f"Cleanup process failed. "
+                f"Full status: {process_status}"
+            )
+            raise RuntimeError(error_msg)
+
+        time.sleep(BACKUP_POLL_INTERVAL)
+
+    # Include final status in timeout error for debugging
+    timeout_msg = (
+        f"Cleanup process {process_id} did not complete within {timeout}s. "
+        f"Last status: {process_status}"
+    )
+    raise TimeoutError(timeout_msg)
+
+
 def create_backup(
     token: str,
     backup_type: str,

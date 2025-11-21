@@ -27,5 +27,12 @@ class BackupRequest(BaseModel):
             "Auto-detected (uses latest backup) if not provided"
         ),
     )
+    schedule_id: int | None = Field(
+        None,
+        description=(
+            "Schedule ID that triggered this backup. "
+            "None for manual backups"
+        ),
+    )
 
 

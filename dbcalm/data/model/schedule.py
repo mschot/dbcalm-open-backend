@@ -20,6 +20,8 @@ class Schedule(SQLModel, table=True):
     minute: int | None = None  # 0-59, only for non-interval schedules
     interval_value: int | None = None  # interval value (e.g., 15, 30, 2)
     interval_unit: str | None = None  # "minutes" or "hours"
+    retention_value: int | None = None  # retention period value (e.g., 7, 30, 52)
+    retention_unit: str | None = None  # "days", "weeks", "months"
     enabled: bool = Field(default=True, nullable=False)
     created_at: datetime = Field(
         default_factory=now,

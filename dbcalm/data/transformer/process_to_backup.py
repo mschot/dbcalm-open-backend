@@ -23,9 +23,14 @@ def process_to_backup(process: Process) -> Backup:
     if process.args.get("from_backup_id"):
         from_backup_id = process.args.get("from_backup_id")
 
+    schedule_id = None
+    if process.args.get("schedule_id"):
+        schedule_id = process.args.get("schedule_id")
+
     return Backup(
         id=process.args.get("id"),
         from_backup_id=from_backup_id,
+        schedule_id=schedule_id,
         start_time=process.start_time,
         end_time=process.end_time,
         process_id=process.id,

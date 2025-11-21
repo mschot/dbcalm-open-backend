@@ -106,7 +106,7 @@ echo "=== Running pytest ==="
 python3.11 -m pytest -v -x --tb=short \
     --junitxml=/tests/test-results/junit.xml \
     --log-cli-level=INFO \
-    test_backup_restore.py
+    .
 
 TEST_EXIT_CODE=$?
 

@@ -28,6 +28,12 @@ class ScheduleResponse(BaseResponse):
     interval_unit: str | None = Field(
         description="Interval unit (minutes or hours)",
     )
+    retention_value: int | None = Field(
+        description="Retention period value (e.g., 7, 30, 52)",
+    )
+    retention_unit: str | None = Field(
+        description="Retention period unit (days, weeks, months)",
+    )
     enabled: bool = Field(description="Whether the schedule is enabled")
     created_at: datetime = Field(description="When the schedule was created")
     updated_at: datetime = Field(description="When the schedule was last updated")

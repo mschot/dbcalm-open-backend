@@ -80,6 +80,30 @@ async def update_schedule(
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
+    # Validate: if changing to incremental, require at least one enabled
+    # full backup schedule
+    if request.backup_type == "incremental" and schedule.backup_type != "incremental":
+        from dbcalm.util.parse_query_with_operators import QueryFilter  # noqa: PLC0415
+
+        full_schedules = schedule_repo.get_list(
+            query=[
+                QueryFilter(field="backup_type", operator="eq", value="full"),
+                QueryFilter(field="enabled", operator="eq", value=True),
+            ],
+            order=None,
+            page=None,
+            per_page=None,
+        )[0]
+
+        if not full_schedules:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Cannot change to incremental backup schedule without at least "
+                    "one enabled full backup schedule"
+                ),
+            )
+
     schedule.backup_type = request.backup_type
     schedule.frequency = request.frequency
     schedule.day_of_week = request.day_of_week
@@ -88,6 +112,8 @@ async def update_schedule(
     schedule.minute = request.minute
     schedule.interval_value = request.interval_value
     schedule.interval_unit = request.interval_unit
+    schedule.retention_value = request.retention_value
+    schedule.retention_unit = request.retention_unit
     schedule.enabled = request.enabled
 
     schedule_repo.update(schedule)

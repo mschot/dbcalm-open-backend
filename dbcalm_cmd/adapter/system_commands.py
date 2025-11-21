@@ -56,3 +56,50 @@ class SystemCommands(adapter.Adapter):
             command_type="update_cron_schedules",
             args={"schedule_count": len(schedules)},
         )
+
+    def delete_directory(self, directory_path: str) -> tuple[Process, Queue]:
+        """Delete a directory and all its contents.
+
+        Args:
+            directory_path: Absolute path to directory to delete
+
+        Returns:
+            Tuple of (Process, Queue) for tracking execution
+        """
+        # Use rm -rf to recursively delete directory
+        # Runs with elevated permissions (root or sudo) via command service
+        command = [
+            "/bin/rm",
+            "-rf",
+            directory_path,
+        ]
+
+        return self.command_runner.execute(
+            command=command,
+            command_type="delete_directory",
+            args={"path": directory_path},
+        )
+
+    def cleanup_backups(
+        self,
+        backup_ids: list[str],
+        folders: list[str],
+    ) -> tuple[Process, Queue]:
+        """Delete multiple backup folders.
+
+        Args:
+            backup_ids: List of backup IDs to delete (stored in process args)
+            folders: List of folder paths to delete
+
+        Returns:
+            Tuple of (Process, Queue) for tracking execution
+        """
+        # Build command to delete all folders in a single rm call
+        # This is more efficient than running separate commands
+        command = ["/bin/rm", "-rf", *folders]
+
+        return self.command_runner.execute(
+            command=command,
+            command_type="cleanup_backups",
+            args={"backup_ids": backup_ids},
+        )

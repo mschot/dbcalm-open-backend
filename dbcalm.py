@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from dbcalm.cli import backup, clients, server, users
+from dbcalm.cli import backup, cleanup, clients, server, users
 
 
 def main() -> None:
@@ -32,6 +32,9 @@ def main() -> None:
     # Backup command
     backup.configure_parser(subparsers)
 
+    # Cleanup command
+    cleanup.configure_parser(subparsers)
+
     args = parser.parse_args()
 
     # If no command provided, show help
@@ -48,6 +51,8 @@ def main() -> None:
         clients.run(args, clients_parser)
     elif args.command == "backup":
         backup.run(args)
+    elif args.command == "cleanup":
+        cleanup.run(args)
     else:
         parser.print_help()
         sys.exit(1)

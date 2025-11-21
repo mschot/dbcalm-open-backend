@@ -9,6 +9,7 @@ from dbcalm.data.adapter.adapter_factory import (
     adapter_factory as data_adapter_factory,
 )
 from dbcalm.data.data_types.enum_types import RestoreTarget
+from dbcalm.data.model.backup import Backup
 from dbcalm.data.model.process import Process
 from dbcalm.data.transformer.process_to_backup import process_to_backup
 from dbcalm.data.transformer.process_to_restore import process_to_restore
@@ -53,6 +54,8 @@ class ProcessQueueHandler:
                         args=(restore.target_path,),
                         daemon=True,
                     ).start()
+            elif process.type == "cleanup_backups":
+                self.process_cleanup_backups(process)
 
     def cleanup(self, process: Process) -> None:
 
@@ -61,6 +64,9 @@ class ProcessQueueHandler:
             and process.args.get("id")
         ):
             self.remove_backup_folder(process.args.get("id"))
+        elif process.type == "cleanup_backups":
+            # Handle partial failures - delete records for folders that were deleted
+            self.process_cleanup_backups(process)
 
     def remove_backup_folder(self, id: str) -> None:
         # do cleanup of backup folder in case it was created but not completed
@@ -94,3 +100,57 @@ class ProcessQueueHandler:
                     "Failed to cleanup tmp restore folder %s",
                     restore_path,
                 )
+
+    def process_cleanup_backups(self, process: Process) -> None:
+        """Process cleanup_backups command - delete backup records for deleted folders.
+
+        After the command service deletes backup folders, this method:
+        - Checks which folders were actually deleted
+        - Deletes the corresponding backup records from the database
+        - Only deletes records if the folder no longer exists
+
+        This follows the same pattern for both success and failure:
+        - On success: folders should be deleted, remove all records
+        - On failure: some folders may still exist, only remove records for
+          deleted folders
+        """
+        if not hasattr(process, "args") or not process.args:
+            self.logger.warning("cleanup_backups process has no args")
+            return
+
+        backup_ids = process.args.get("backup_ids", [])
+        if not backup_ids:
+            self.logger.warning("cleanup_backups process has no backup_ids")
+            return
+
+        backup_dir = self.config.value("backup_dir").rstrip("/")
+        records_deleted = 0
+
+        for backup_id in backup_ids:
+            folder_path = Path(f"{backup_dir}/{backup_id}")
+
+            # Only delete the record if the folder no longer exists
+            if not folder_path.exists():
+                try:
+                    self.data_adapter.delete(Backup, {"id": backup_id})
+                    records_deleted += 1
+                    self.logger.debug(
+                        "Deleted backup record %s (folder no longer exists)",
+                        backup_id,
+                    )
+                except Exception:
+                    self.logger.exception(
+                        "Failed to delete backup record %s from database",
+                        backup_id,
+                    )
+            else:
+                self.logger.warning(
+                    "Backup folder %s still exists, keeping record",
+                    folder_path,
+                )
+
+        self.logger.info(
+            "Cleanup complete: deleted %d backup records out of %d",
+            records_deleted,
+            len(backup_ids),
+        )

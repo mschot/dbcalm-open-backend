@@ -143,7 +143,7 @@ class Local(Adapter):
 
         return items, count
 
-    def _convert_value_type(self, column, value: str):  # noqa: ANN202, ANN001, PLR0911
+    def _convert_value_type(self, column, value: str):  # noqa: ANN202, ANN001, PLR0911, C901
         """Convert string value to appropriate type based on column type."""
         # Try to get the column's Python type
         try:
@@ -156,11 +156,19 @@ class Local(Adapter):
         # Handle datetime conversion
         if column_type is datetime:
             try:
-                # Try ISO format first (e.g., "2025-10-01T00:00:00")
-                return datetime.fromisoformat(value)
+                # Try ISO format first (e.g., "2025-10-01T00:00:00+00:00")
+                # fromisoformat() preserves timezone info if present
+                dt = datetime.fromisoformat(value)
+                # If the datetime is naive but the column expects timezone-aware,
+                # assume UTC (since our application uses UTC throughout)
+                if dt.tzinfo is None:
+                    from datetime import UTC  # noqa: PLC0415
+                    dt = dt.replace(tzinfo=UTC)
             except (ValueError, AttributeError):
                 # If that fails, return as string and let SQLAlchemy handle it
                 return value
+            else:
+                return dt
 
         # Handle integer conversion
         if column_type is int:

@@ -14,6 +14,13 @@ class Validator:
             "update_cron_schedules": {
                 "schedules": "required",
             },
+            "delete_directory": {
+                "path": "required",
+            },
+            "cleanup_backups": {
+                "backup_ids": "required",
+                "folders": "required",
+            },
         }
 
         self.valid_frequencies = ["daily", "weekly", "monthly", "hourly", "interval"]

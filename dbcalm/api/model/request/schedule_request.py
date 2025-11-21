@@ -16,6 +16,8 @@ class ScheduleRequest(BaseModel):
     minute: int | None = None
     interval_value: int | None = None
     interval_unit: str | None = None
+    retention_value: int | None = None
+    retention_unit: str | None = None
     enabled: bool = True
 
     @field_validator("backup_type")
@@ -82,5 +84,21 @@ class ScheduleRequest(BaseModel):
     def validate_interval_unit(cls, v: str | None) -> str | None:
         if v is not None and v not in ["minutes", "hours"]:
             msg = "interval_unit must be 'minutes' or 'hours'"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("retention_value")
+    @classmethod
+    def validate_retention_value(cls, v: int | None) -> int | None:
+        if v is not None and v <= 0:
+            msg = "retention_value must be greater than 0"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("retention_unit")
+    @classmethod
+    def validate_retention_unit(cls, v: str | None) -> str | None:
+        if v is not None and v not in ["days", "weeks", "months"]:
+            msg = "retention_unit must be 'days', 'weeks', or 'months'"
             raise ValueError(msg)
         return v

@@ -51,11 +51,12 @@ class CronFileBuilder:
 
     def generate_cron_command(self, schedule: Schedule) -> str:
         """Generate the dbcalm backup command that will be executed by cron."""
-        # Build command to call dbcalm backup CLI
-        return (
-            f"/usr/bin/dbcalm backup {schedule.backup_type} "
-            f">> /var/log/{self.config.PROJECT_NAME}/cron-{schedule.id}.log 2>&1"
-        )
+        # Build command to call dbcalm backup CLI with schedule_id
+        backup_cmd = f"/usr/bin/dbcalm backup {schedule.backup_type}"
+        schedule_arg = f"--schedule-id {schedule.id}"
+        log_file = f"/var/log/{self.config.PROJECT_NAME}/cron-{schedule.id}.log"
+        log_redirect = f">> {log_file} 2>&1"
+        return f"{backup_cmd} {schedule_arg} {log_redirect}"
 
     def build_cron_file_content(self, schedules: list[Schedule]) -> str:
         """Build complete cron file content from list of schedules.
@@ -74,6 +75,14 @@ class CronFileBuilder:
             f"# Last updated: {timestamp}",
             "",
         ]
+
+        # Add daily cleanup job (runs at 2:00 AM)
+        lines.append("# Daily cleanup job")
+        lines.append(
+            f"0 2 * * * root /usr/bin/dbcalm cleanup "
+            f">> /var/log/{self.config.PROJECT_NAME}/cleanup.log 2>&1",
+        )
+        lines.append("")
 
         # Add each schedule
         for schedule in enabled_schedules:

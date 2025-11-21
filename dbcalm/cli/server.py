@@ -12,6 +12,7 @@ from dbcalm.errors.validation_error import ValidationError
 from dbcalm.logger.logger_factory import logger_factory
 from dbcalm.routes import (
     authorize,
+    cleanup,
     create_backup,
     create_client,
     create_restore,
@@ -64,6 +65,7 @@ app.include_router(token.router, prefix="/auth", tags=["Authentication"])
 app.include_router(create_backup.router, tags=["Backups"])
 app.include_router(list_backups.router, tags=["Backups"])
 app.include_router(get_backup.router, tags=["Backups"])
+app.include_router(cleanup.router, tags=["Cleanup"])
 app.include_router(list_clients.router, tags=["Clients"])
 app.include_router(delete_client.router, tags=["Clients"])
 app.include_router(update_client.router, tags=["Clients"])

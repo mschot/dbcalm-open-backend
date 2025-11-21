@@ -158,13 +158,15 @@ async def create_backup(
         )
         from_backup_id = latest_backup.id
 
+    args = {"id": id}
+    if request.schedule_id is not None:
+        args["schedule_id"] = request.schedule_id
+
     if from_backup_id is not None:
-        process = client.command(
-            "incremental_backup",
-            {"id": id, "from_backup_id": from_backup_id},
-        )
+        args["from_backup_id"] = from_backup_id
+        process = client.command("incremental_backup", args)
     else:
-        process = client.command("full_backup", {"id": id})
+        process = client.command("full_backup", args)
 
     return process_status_response(process, response, resource_id=id)
 

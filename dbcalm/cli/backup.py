@@ -2,117 +2,27 @@ import argparse
 import sys
 
 import requests
-import urllib3
 
-from dbcalm.config.config_factory import config_factory
-from dbcalm.data.repository.client import ClientRepository
-from dbcalm.logger.logger_factory import logger_factory
-
-# Disable SSL warnings for self-signed certificates
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-TEMP_CLIENT_LABEL = "temp-system-cron"
+from dbcalm.cli.api_client_helper import (
+    APIError,
+    cleanup_temp_client,
+    get_api_url,
+    get_bearer_token,
+    get_or_create_temp_client,
+)
 
 
-class BackupError(Exception):
-    """Exception raised for backup-related errors."""
-
-
-def get_api_url() -> str:
-    """Get the API URL from config."""
-    config = config_factory()
-    host = config.value("api_host", "127.0.0.1")
-    port = config.value("api_port", 8335)
-    protocol = (
-        "https" if config.value("ssl_cert") and config.value("ssl_key") else "http"
-    )
-    return f"{protocol}://{host}:{port}"
-
-
-def get_or_create_temp_client() -> tuple[str, str]:
-    """Ensure a fresh temporary client exists.
-
-    Deletes any existing temp client and creates a new one.
-
-    Returns:
-        Tuple of (client_id, client_secret)
-    """
-    client_repo = ClientRepository()
-
-    # Get all clients and find the temp one
-    clients, _ = client_repo.get_list(None, None, 1, 1000)
-    temp_client = next(
-        (c for c in clients if c.label == TEMP_CLIENT_LABEL),
-        None,
-    )
-
-    # Delete if exists
-    if temp_client:
-        client_repo.delete(temp_client.id)
-
-    # Create new temporary client
-    new_client = client_repo.create(TEMP_CLIENT_LABEL)
-    return new_client.id, new_client.secret
-
-
-def cleanup_temp_client(client_id: str) -> None:
-    """Delete the temporary client.
-
-    Args:
-        client_id: ID of the client to delete
-    """
-    try:
-        client_repo = ClientRepository()
-        client_repo.delete(client_id)
-    except Exception:
-        # Best effort cleanup - don't fail if client doesn't exist
-        logger = logger_factory()
-        logger.warning("Failed to cleanup temporary client %s", client_id)
-
-
-def get_bearer_token(client_id: str, client_secret: str) -> str:
-    """Authenticate with client credentials and get bearer token.
-
-    Args:
-        client_id: Client ID
-        client_secret: Client secret
-
-    Returns:
-        Bearer token string
-
-    Raises:
-        Exception: If authentication fails
-    """
-    api_url = get_api_url()
-    token_url = f"{api_url}/auth/token"
-
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret,
-    }
-
-    try:
-        response = requests.post(
-            token_url,
-            json=data,
-            timeout=10,
-            verify=False,  # noqa: S501
-        )
-        response.raise_for_status()
-        token_data = response.json()
-        return token_data["access_token"]
-    except requests.exceptions.RequestException as e:
-        msg = f"Failed to authenticate: {e!s}"
-        raise BackupError(msg) from e
-
-
-def trigger_backup(token: str, backup_type: str) -> dict:
+def trigger_backup(
+    token: str,
+    backup_type: str,
+    schedule_id: int | None = None,
+) -> dict:
     """Call the backup API endpoint.
 
     Args:
         token: Bearer token for authentication
         backup_type: Type of backup ("full" or "incremental")
+        schedule_id: Optional schedule ID that triggered this backup
 
     Returns:
         Response JSON from the API
@@ -129,6 +39,8 @@ def trigger_backup(token: str, backup_type: str) -> dict:
     }
 
     data = {"type": backup_type}
+    if schedule_id is not None:
+        data["schedule_id"] = schedule_id
 
     try:
         response = requests.post(
@@ -148,13 +60,13 @@ def trigger_backup(token: str, backup_type: str) -> dict:
         except Exception:
             error_msg = str(e)
         msg = f"Backup request failed: {error_msg}"
-        raise BackupError(msg) from e
+        raise APIError(msg) from e
     except requests.exceptions.RequestException as e:
         msg = f"Backup request failed: {e!s}"
-        raise BackupError(msg) from e
+        raise APIError(msg) from e
 
 
-def create_backup(backup_type: str) -> None:
+def create_backup(backup_type: str, schedule_id: int | None = None) -> None:
     """Create a backup using temporary client credentials.
 
     This function:
@@ -166,6 +78,7 @@ def create_backup(backup_type: str) -> None:
 
     Args:
         backup_type: Type of backup ("full" or "incremental")
+        schedule_id: Optional schedule ID that triggered this backup
     """
     # Validate backup type
     if backup_type not in ["full", "incremental"]:
@@ -182,7 +95,7 @@ def create_backup(backup_type: str) -> None:
         token = get_bearer_token(client_id, client_secret)
 
         # Step 3: Trigger backup
-        response = trigger_backup(token, backup_type)
+        response = trigger_backup(token, backup_type, schedule_id)
 
         # Step 4: Cleanup
         cleanup_temp_client(client_id)
@@ -208,7 +121,8 @@ def run(args: argparse.Namespace) -> None:
     Args:
         args: Parsed command line arguments
     """
-    create_backup(args.backup_type)
+    schedule_id = getattr(args, "schedule_id", None)
+    create_backup(args.backup_type, schedule_id)
 
 
 def configure_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -225,4 +139,10 @@ def configure_parser(subparsers: argparse._SubParsersAction) -> None:
         "backup_type",
         choices=["full", "incremental"],
         help="Type of backup to create",
+    )
+    backup_parser.add_argument(
+        "--schedule-id",
+        type=int,
+        required=False,
+        help="Schedule ID that triggered this backup",
     )

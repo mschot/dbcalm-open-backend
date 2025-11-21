@@ -13,6 +13,7 @@ from dbcalm.api.model.response.backup_response import (
 from dbcalm.api.model.response.list_response import PaginationInfo
 from dbcalm.auth.verify_token import verify_token
 from dbcalm.data.repository.backup import BackupRepository
+from dbcalm.data.repository.schedule import ScheduleRepository
 from dbcalm.util.parse_query_with_operators import parse_query_with_operators
 
 router = APIRouter()
@@ -136,8 +137,23 @@ async def list_backups(
         per_page=per_page,
     )
 
+    # Fetch schedule data for backups that have a schedule
+    schedule_repository = ScheduleRepository()
+    backup_responses = []
+    for item in items:
+        backup_data = item.model_dump()
+
+        # Add retention info from schedule if available
+        if item.schedule_id:
+            schedule = schedule_repository.get(item.schedule_id)
+            if schedule:
+                backup_data["retention_value"] = schedule.retention_value
+                backup_data["retention_unit"] = schedule.retention_unit
+
+        backup_responses.append(BackupResponse(**backup_data))
+
     return BackupListResponse(
-        items=[BackupResponse(**item.model_dump()) for item in items],
+        items=backup_responses,
         pagination=PaginationInfo(
             total=total,
             page=page,
