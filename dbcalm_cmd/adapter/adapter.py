@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from queue import Queue
 
-from dbcalm.data.model.process import Process
+from dbcalm_cmd.process.process_model import Process
 
 
 class Adapter(ABC):

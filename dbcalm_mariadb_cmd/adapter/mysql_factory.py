@@ -1,7 +1,3 @@
-from typing import Annotated
-
-from fastapi import Depends
-
 from dbcalm.config.config import Config
 from dbcalm_cmd.process.runner_factory import runner_factory
 from dbcalm_mariadb_cmd.adapter.mysql import Mysql
@@ -20,6 +16,6 @@ def mysql_factory(config: Config) -> Mysql:
         Mysql: Configured MySQL adapter instance
     """
     return Mysql(
-        Annotated[mysql_backup_cmd_builder_factory, Depends()](config),
-        Annotated[runner_factory, Depends()](),
+        mysql_backup_cmd_builder_factory(config),
+        runner_factory(),
     )

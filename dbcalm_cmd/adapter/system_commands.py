@@ -1,11 +1,11 @@
 import uuid
 from queue import Queue
 
-from dbcalm.data.model.process import Process
 from dbcalm.data.model.schedule import Schedule
 from dbcalm.logger.logger_factory import logger_factory
 from dbcalm.service.cron_file_builder import CronFileBuilder
 from dbcalm_cmd.adapter import adapter
+from dbcalm_cmd.process.process_model import Process
 from dbcalm_cmd.process.runner import Runner
 
 

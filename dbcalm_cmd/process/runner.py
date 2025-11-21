@@ -6,12 +6,9 @@ import uuid
 from datetime import UTC, datetime
 from queue import Queue
 
-from dbcalm.data.adapter.adapter_factory import (
-    adapter_factory as data_adapter_factory,
-)
-from dbcalm.data.model.process import Process
-from dbcalm.data.repository.process import ProcessRepository
 from dbcalm.logger.logger_factory import logger_factory
+from dbcalm_cmd.database.process_writer import ProcessWriter
+from dbcalm_cmd.process.process_model import Process
 
 
 def get_clean_env_for_system_binaries() -> dict[str, str]:
@@ -35,7 +32,7 @@ def get_clean_env_for_system_binaries() -> dict[str, str]:
 
 class Runner:
     def __init__(self) -> None:
-        self.data_adapter = data_adapter_factory()
+        self.process_writer = ProcessWriter()
         self.logger = logger_factory()
 
     def create_process(  # noqa: PLR0913
@@ -46,16 +43,27 @@ class Runner:
             command_type: str,
             args: dict | None=None,
         ) -> Process:
-        return self.data_adapter.create(
-            Process(
-                pid=pid,
-                command=command,
-                command_id=command_id,
-                start_time=start_time,
-                type=command_type,
-                args=args,
-                status="running",
-            ),
+        # Create process record in database
+        process_id = self.process_writer.create_process(
+            command=command,
+            command_id=command_id,
+            pid=pid,
+            status="running",
+            process_type=command_type,
+            args=args,
+            start_time=start_time,
+        )
+
+        # Return lightweight Process model
+        return Process(
+            id=process_id,
+            pid=pid,
+            command=command,
+            command_id=command_id,
+            start_time=start_time,
+            type=command_type,
+            args=args if args else {},
+            status="running",
         )
 
     def update_process(
@@ -79,16 +87,29 @@ class Runner:
                 if combined_output:
                     combined_output += "\n"
                 combined_output += stderr
-            process.output = combined_output if combined_output else None
-            process.error = None
+            output = combined_output if combined_output else None
+            error = None
         else:
-            process.output = stdout if stdout else None
-            process.error = stderr if stderr else None
+            output = stdout if stdout else None
+            error = stderr if stderr else None
 
+        # Update database
+        self.process_writer.update_process_status(
+            process_id=process.id,
+            status=status,
+            output=output,
+            error=error,
+            return_code=returncode,
+            end_time=end_time,
+        )
+
+        # Update in-memory process object
+        process.output = output
+        process.error = error
         process.return_code = returncode
         process.end_time = end_time
         process.status = status
-        self.data_adapter.update(process)
+
         return process
 
     def execute(
@@ -232,10 +253,8 @@ class Runner:
         return first_process, master_queue
 
     def generate_command_id(self) -> str:
-        command_id = None
-        while command_id is None:
-            check_command_id = str(uuid.uuid4())
-            #highly unlikely to have a duplicate id but just in case
-            if ProcessRepository().by_command_id(check_command_id) is None:
-                command_id = check_command_id
-        return command_id
+        """Generate unique command ID.
+
+        Using UUID4 which has negligible collision probability.
+        """
+        return str(uuid.uuid4())
