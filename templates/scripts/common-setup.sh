@@ -23,12 +23,17 @@ fi
 chown -R mysql:$project_name /var/backups/$project_name/
 chmod -R 770 /var/backups/$project_name/
 
+mkdir -p /var/run/$project_name
 chown -R mysql:$project_name /var/run/$project_name/
-chmod -R 770 /var/run/$project_name/
+chmod -R 2770 /var/run/$project_name/
 
+mkdir -p /var/log/$project_name
+touch /var/log/$project_name/$project_name.log
 chown -R mysql:$project_name /var/log/$project_name/
 # Set setgid bit (2770) so new files inherit dbcalm group ownership
 chmod -R 2770 /var/log/$project_name/
+ls -la /var/log/$project_name/
+
 
 chown -R mysql:$project_name /var/lib/$project_name/
 # Set setgid bit (2775) so new files inherit dbcalm group ownership

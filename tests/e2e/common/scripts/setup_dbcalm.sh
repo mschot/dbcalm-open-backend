@@ -39,23 +39,18 @@ DB_TYPE=${DB_TYPE:-mariadb}
 echo "Configuring DBCalm for database type: $DB_TYPE..."
 sed -i "s/^db_type:.*/db_type: $DB_TYPE/" /etc/dbcalm/config.yml
 
-# Create runtime directory (normally done by systemd via RuntimeDirectory)
-echo "Creating runtime directory..."
-mkdir -p /var/run/dbcalm
-chmod 2774 /var/run/dbcalm
-chown root:dbcalm /var/run/dbcalm
 
 # Ensure log file exists with correct permissions
 # The volume mount overlays /var/log/dbcalm, hiding files created during RPM install
-echo "Ensuring log file exists with correct permissions..."
-if [ ! -f /var/log/dbcalm/dbcalm.log ]; then
-    touch /var/log/dbcalm/dbcalm.log
-    chown mysql:dbcalm /var/log/dbcalm/dbcalm.log
-    chmod 664 /var/log/dbcalm/dbcalm.log
-    echo "Created log file: /var/log/dbcalm/dbcalm.log"
-else
-    echo "Log file already exists"
-fi
+# echo "Ensuring log file exists with correct permissions..."
+# if [ ! -f /var/log/dbcalm/dbcalm.log ]; then
+#     touch /var/log/dbcalm/dbcalm.log
+#     chown mysql:dbcalm /var/log/dbcalm/dbcalm.log
+#     chmod 664 /var/log/dbcalm/dbcalm.log
+#     echo "Created log file: /var/log/dbcalm/dbcalm.log"
+# else
+#     echo "Log file already exists"
+# fi
 
 # Start DBCalm services manually (no systemd in container)
 echo "Starting DBCalm services..."

@@ -5,12 +5,10 @@ from pathlib import Path
 from queue import Queue
 
 from dbcalm.config.config_factory import config_factory
-from dbcalm.data.adapter.adapter_factory import (
-    adapter_factory as data_adapter_factory,
-)
 from dbcalm.data.data_types.enum_types import RestoreTarget
-from dbcalm.data.model.backup import Backup
 from dbcalm.data.model.process import Process
+from dbcalm.data.repository.backup import BackupRepository
+from dbcalm.data.repository.restore import RestoreRepository
 from dbcalm.data.transformer.process_to_backup import process_to_backup
 from dbcalm.data.transformer.process_to_restore import process_to_restore
 from dbcalm.logger.logger_factory import logger_factory
@@ -21,7 +19,8 @@ class ProcessQueueHandler:
         self.queue = queue
         self.logger = logger_factory()
         self.config = config_factory()
-        self.data_adapter = data_adapter_factory()
+        self.backup_repo = BackupRepository()
+        self.restore_repo = RestoreRepository()
 
     def handle(self) -> None:
         while True:
@@ -40,11 +39,11 @@ class ProcessQueueHandler:
 
             if process.type == "backup":
                 backup = process_to_backup(process)
-                self.data_adapter.create(backup)
+                self.backup_repo.create(backup)
                 self.logger.debug("Backup %s created", backup.id)
             elif process.type == "restore":
                 restore = process_to_restore(process)
-                self.data_adapter.create(restore)
+                self.restore_repo.create(restore)
                 self.logger.debug("Restore %s created", restore.id)
 
                 # Clean up tmp folder for database restores in background
@@ -132,12 +131,12 @@ class ProcessQueueHandler:
             # Only delete the record if the folder no longer exists
             if not folder_path.exists():
                 try:
-                    self.data_adapter.delete(Backup, {"id": backup_id})
-                    records_deleted += 1
-                    self.logger.debug(
-                        "Deleted backup record %s (folder no longer exists)",
-                        backup_id,
-                    )
+                    if self.backup_repo.delete(backup_id):
+                        records_deleted += 1
+                        self.logger.debug(
+                            "Deleted backup record %s (folder no longer exists)",
+                            backup_id,
+                        )
                 except Exception:
                     self.logger.exception(
                         "Failed to delete backup record %s from database",

@@ -54,7 +54,7 @@ def get_all_users() -> list[User]:
     """Get a list of all users"""
     user_repo = UserRepository()
     # get_list returns a tuple (list of users, total count)
-    users, _ = user_repo.adapter.get_list(User, {})
+    users, _ = user_repo.get_list(query=None, order=None, page=None, per_page=None)
     return users
 
 

@@ -1,9 +1,9 @@
 
-from sqlmodel import JSON, Column, Field, SQLModel
+from pydantic import BaseModel, Field
 
 
-class AuthCode(SQLModel, table=True):
-    code: str = Field(unique=True, primary_key=True)
+class AuthCode(BaseModel):
+    code: str
     username: str
-    scopes: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    scopes: list[str] = Field(default_factory=list)
     expires_at: int

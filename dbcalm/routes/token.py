@@ -10,11 +10,8 @@ from dbcalm.api.model.request.token_auth_code_request import TokenAuthCodeReques
 from dbcalm.api.model.request.token_client_request import TokenClientRequest
 from dbcalm.api.model.response.token_response import TokenResponse
 from dbcalm.config.config_factory import config_factory
-from dbcalm.data.adapter.adapter_factory import (
-    adapter_factory as data_adapter_factory,
-)
-from dbcalm.data.model.client import Client
 from dbcalm.data.repository.auth_code import AuthCodeRepository
+from dbcalm.data.repository.client import ClientRepository
 
 router = APIRouter()
 secret_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -70,13 +67,13 @@ async def issue_token(
         Field(discriminator="grant_type"),
     ],
 ) -> TokenResponse:
-    adapter = data_adapter_factory()
+    client_repo = ClientRepository()
     config = config_factory()
     jwt_secret_key = config.value("jwt_secret_key")
     jwt_algorithm = config.value("jwt_algorithm", default="HS256")
 
     if request_data.grant_type == "client_credentials":
-        client = adapter.get(Client, {"id":request_data.client_id})
+        client = client_repo.get(request_data.client_id)
         if not client or not secret_context.verify(
             request_data.client_secret,
             client.secret,

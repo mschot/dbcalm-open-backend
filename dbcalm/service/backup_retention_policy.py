@@ -108,7 +108,7 @@ class BackupRetentionPolicy:
         query = [
             QueryFilter(field="schedule_id", operator="eq", value=str(schedule.id)),
         ]
-        order = [QueryFilter(field="start_time", operator="eq", value="asc")]
+        order = [QueryFilter(field="start_time", operator="asc", value=None)]
 
         backups, _ = self.backup_repo.get_list(
             query=query,

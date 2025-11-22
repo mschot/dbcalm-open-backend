@@ -4,10 +4,14 @@ import argparse
 import sys
 
 from dbcalm.cli import backup, cleanup, clients, server, users
+from dbcalm.data.database.peewee_db import init_db
 
 
 def main() -> None:
     """Main entry point for dbcalm CLI"""
+    # Initialize database connection and create tables
+    init_db()
+
     parser = argparse.ArgumentParser(
         description="DBCalm - Database Backup and Management Tool",
         prog="dbcalm",

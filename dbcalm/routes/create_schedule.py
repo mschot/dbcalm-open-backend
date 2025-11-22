@@ -108,7 +108,7 @@ async def create_schedule(
         full_schedules = schedule_repo.get_list(
             query=[
                 QueryFilter(field="backup_type", operator="eq", value="full"),
-                QueryFilter(field="enabled", operator="eq", value=True),
+                QueryFilter(field="enabled", operator="eq", value="true"),
             ],
             order=None,
             page=None,

@@ -101,17 +101,11 @@ class TestValidator:
         assert "Invalid command" in message
 
     @patch("dbcalm_mariadb_cmd.command.validator.Validator.database_restore")
-    @patch("dbcalm.data.adapter.adapter_factory.adapter_factory")
     def test_validate_restore_with_other_checks(
         self,
-        mock_adapter_factory: MagicMock,
         mock_database_restore: MagicMock,
         validator: Validator,
     ) -> None:
-        # Mock adapter factory to return a mock adapter
-        mock_adapter = MagicMock()
-        mock_adapter_factory.return_value = mock_adapter
-
         # Mock database_restore to return a specific result
         mock_database_restore.return_value = (SERVICE_UNAVAILABLE, "Test error")
 

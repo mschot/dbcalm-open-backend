@@ -1,8 +1,6 @@
-from dbcalm.data.adapter.adapter_factory import (
-    adapter_factory as data_adapter_factory,
-)
 from dbcalm.data.model.backup import Backup
 from dbcalm.data.model.process import Process
+from dbcalm.data.repository.backup import BackupRepository
 
 
 def process_to_backup(process: Process) -> Backup:
@@ -15,7 +13,7 @@ def process_to_backup(process: Process) -> Backup:
         raise ValueError(msg)
 
     id = process.args.get("id")
-    if data_adapter_factory().get(Backup, {"id": id}):
+    if BackupRepository().get(id):
         msg = f"Backup with id {id} already exists and has to be unique"
         raise ValueError(msg)
 

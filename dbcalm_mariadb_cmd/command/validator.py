@@ -5,10 +5,7 @@ import sys
 from pathlib import Path
 
 from dbcalm.config.config_factory import config_factory
-from dbcalm.data.adapter.adapter_factory import (
-    adapter_factory as data_adapter_factory,
-)
-from dbcalm.data.model.backup import Backup
+from dbcalm.data.repository.backup import BackupRepository
 
 VALID_REQUEST = 200
 INVALID_REQUEST = 400
@@ -121,12 +118,12 @@ class Validator:
         # for instance backup_id_unique that way we can find the
         # model and field to validate
         unique_arguments = self.unique_args(command_data["cmd"])
-        data_adapter = data_adapter_factory()
+        backup_repo = BackupRepository()
         for arg in unique_arguments:
             if arg != "id" or not command_data["args"][arg]:
                 continue
 
-            if data_adapter.get(Backup, {"id": command_data["args"][arg]}):
+            if backup_repo.get(command_data["args"][arg]):
                 return CONFLICT, (
                     f"Backup with id {command_data['args'][arg]} already exists"
                 )

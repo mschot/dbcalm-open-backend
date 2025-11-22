@@ -12,7 +12,8 @@ from pathlib import Path
 
 # Get absolute paths for executables
 BACKEND_DIR = Path(__file__).parent.parent.resolve()
-PYTHON_PATH = str(BACKEND_DIR / ".venv" / "bin" / "python3")
+PYTHON_PATH = str(BACKEND_DIR  / ".venv" / "bin" / "python3")
+PYTHON_ARGS = ["-Xfrozen_modules=off"]
 
 
 def tail_log(log_file: str, stop_event: threading.Event) -> None:
@@ -108,20 +109,26 @@ def create_runtime_directory() -> None:
     runtime_dir = Path("/var/run/dbcalm")
 
     # Create directory if it doesn't exist
+    mkdir_cmd = ["sudo", "mkdir", "-p", str(runtime_dir)]
+    print(f"DEBUG: Running command: {mkdir_cmd}")
     subprocess.run(  # noqa: S603
-        ["sudo", "mkdir", "-p", str(runtime_dir)],  # noqa: S607
+        mkdir_cmd,
         check=True,
     )
 
     # Set ownership to dbcalm:dbcalm
+    chown_cmd = ["sudo", "chown", "dbcalm:dbcalm", str(runtime_dir)]
+    print(f"DEBUG: Running command: {chown_cmd}")
     subprocess.run(  # noqa: S603
-        ["sudo", "chown", "dbcalm:dbcalm", str(runtime_dir)],  # noqa: S607
+        chown_cmd,
         check=True,
     )
 
     # Set permissions to 2774 (setgid + rwxrwxr--)
+    chmod_cmd = ["sudo", "chmod", "2774", str(runtime_dir)]
+    print(f"DEBUG: Running command: {chmod_cmd}")
     subprocess.run(  # noqa: S603
-        ["sudo", "chmod", "2774", str(runtime_dir)],  # noqa: S607
+        chmod_cmd,
         check=True,
     )
 
@@ -140,25 +147,29 @@ def start_processes() -> list[subprocess.Popen]:
     create_runtime_directory()
 
     # Start API process as dbcalm user with debugpy on port 5678
+    api_cmd = [
+        "sudo", "-u", "dbcalm",
+        PYTHON_PATH, *PYTHON_ARGS, "-m", "debugpy",
+        "--listen", "0.0.0.0:5678",
+        str(BACKEND_DIR / "dbcalm.py"), "server",
+    ]
+    print(f"DEBUG: Running command: {api_cmd}")
     api_process = subprocess.Popen(  # noqa: S603
-        [  # noqa: S607
-            "sudo", "-u", "dbcalm",
-            PYTHON_PATH, "-m", "debugpy",
-            "--listen", "0.0.0.0:5678",
-            str(BACKEND_DIR / "dbcalm.py"), "server",
-        ],
+        api_cmd,
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(f"Started API process with PID {api_process.pid} (debugpy on port 5678)")
 
     # Start MariaDB CMD server process as mysql user with debugpy on port 5679
+    mariadb_cmd = [
+        "sudo", "-u", "mysql",
+        PYTHON_PATH, *PYTHON_ARGS, "-m", "debugpy",
+        "--listen", "0.0.0.0:5679",
+        str(BACKEND_DIR / "dbcalm-mariadb-cmd.py"),
+    ]
+    print(f"DEBUG: Running command: {mariadb_cmd}")
     mariadb_cmd_process = subprocess.Popen(  # noqa: S603
-        [  # noqa: S607
-            "sudo", "-u", "mysql",
-            PYTHON_PATH, "-m", "debugpy",
-            "--listen", "0.0.0.0:5679",
-            str(BACKEND_DIR / "dbcalm-mariadb-cmd.py"),
-        ],
+        mariadb_cmd,
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(
@@ -167,13 +178,15 @@ def start_processes() -> list[subprocess.Popen]:
     )
 
     # Start generic CMD server process as root with debugpy on port 5680
+    cmd_cmd = [
+        "sudo", "-u", "root",
+        PYTHON_PATH, *PYTHON_ARGS, "-m", "debugpy",
+        "--listen", "0.0.0.0:5680",
+        str(BACKEND_DIR / "dbcalm-cmd.py"),
+    ]
+    print(f"DEBUG: Running command: {cmd_cmd}")
     cmd_process = subprocess.Popen(  # noqa: S603
-        [  # noqa: S607
-            "sudo", "-u", "root",
-            PYTHON_PATH, "-m", "debugpy",
-            "--listen", "0.0.0.0:5680",
-            str(BACKEND_DIR / "dbcalm-cmd.py"),
-        ],
+        cmd_cmd,
         preexec_fn=os.setsid,  # noqa: PLW1509
     )
     print(

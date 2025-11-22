@@ -2,17 +2,28 @@ import uuid
 
 from passlib.context import CryptContext
 
-from dbcalm.data.adapter.adapter_factory import adapter_factory
 from dbcalm.data.model.client import Client
 
 
 class ClientRepository:
     def __init__(self) -> None:
         self.key_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        self.adapter = adapter_factory()
 
     def get(self, client_id: str) -> Client | None:
-        return self.adapter.get(Client, {"id" : client_id})
+        from peewee import DoesNotExist  # noqa: PLC0415
+
+        from dbcalm.data.model.db_client import DbClient  # noqa: PLC0415
+
+        try:
+            db_client = DbClient.get(DbClient.id == client_id)
+            return Client(
+                id=db_client.id,
+                secret=db_client.secret,
+                scopes=db_client.get_scopes(),
+                label=db_client.label,
+            )
+        except DoesNotExist:
+            return None
 
     def update_label(self, client_id: str, label: str) -> Client | None:
         """Update only the label of a client.
@@ -26,18 +37,57 @@ class ClientRepository:
         client = self.get(client_id)
         if client:
             client.label = label
-            return self.adapter.update(client)
+            return self.update(client)
         return None
 
     def get_list(
             self,
-            query: dict | None,
-            order: dict | None,
+            query: list | None,
+            order: list | None,
             page: int | None = 1,
             per_page: int | None = 10,
     ) -> tuple[list[Client], int]:
-        items, total = self.adapter.get_list(Client, query, order, page, per_page)
-        return items, total
+        from dbcalm.data.model.db_client import DbClient  # noqa: PLC0415
+
+        # Build query
+        db_query = DbClient.select()
+
+        # Apply filters
+        if query:
+            for filter_obj in query:
+                field = getattr(DbClient, filter_obj.field)
+                if filter_obj.operator == "eq":
+                    db_query = db_query.where(field == filter_obj.value)
+
+        # Get total count
+        total = db_query.count()
+
+        # Apply ordering
+        if order:
+            for filter_obj in order:
+                field = getattr(DbClient, filter_obj.field)
+                if filter_obj.operator == "desc":
+                    db_query = db_query.order_by(field.desc())
+                else:
+                    db_query = db_query.order_by(field.asc())
+
+        # Apply pagination
+        if page and per_page:
+            offset = (page - 1) * per_page
+            db_query = db_query.limit(per_page).offset(offset)
+
+        # Execute and convert
+        clients = [
+            Client(
+                id=db_client.id,
+                secret=db_client.secret,
+                scopes=db_client.get_scopes(),
+                label=db_client.label,
+            )
+            for db_client in db_query
+        ]
+
+        return clients, total
 
     def delete(self, client_id: str) -> bool:
         """Delete a client by ID.
@@ -48,7 +98,11 @@ class ClientRepository:
         Returns:
             bool: True if client was deleted, False otherwise
         """
-        return self.adapter.delete(Client, {"id": client_id})
+        from dbcalm.data.model.db_client import DbClient  # noqa: PLC0415
+
+        db_client = DbClient.get(DbClient.id == client_id)
+        db_client.delete_instance()
+        return True
 
     def create(self, label: str) -> Client:
         """Create a new client with auto-generated ID and secret.
@@ -71,8 +125,27 @@ class ClientRepository:
             scopes=["*"],
         )
 
-        self.adapter.create(client)
+        from dbcalm.data.model.db_client import DbClient  # noqa: PLC0415
+
+        db_client = DbClient(
+            id=client.id,
+            secret=client.secret,
+            label=client.label,
+        )
+        db_client.set_scopes(client.scopes)
+        db_client.save(force_insert=True)
 
         #now set back original secret as this is the only time we'll see it
         client.secret = client_secret
+        return client
+
+    def update(self, client: Client) -> Client:
+        """Update client using Peewee."""
+        from dbcalm.data.model.db_client import DbClient  # noqa: PLC0415
+
+        db_client = DbClient.get(DbClient.id == client.id)
+        db_client.secret = client.secret
+        db_client.label = client.label
+        db_client.set_scopes(client.scopes)
+        db_client.save()
         return client

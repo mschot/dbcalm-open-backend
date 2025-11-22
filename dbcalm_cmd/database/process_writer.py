@@ -9,6 +9,8 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
+from dbcalm.config.config import Config
+
 
 class ProcessWriter:
     """Lightweight database writer for Process table.
@@ -22,10 +24,10 @@ class ProcessWriter:
 
         Args:
             db_path: Path to SQLite database file.
-                Defaults to /var/lib/dbcalm/db.sqlite3
+                Defaults to Config.DB_PATH
         """
         if db_path is None:
-            db_path = "/var/lib/dbcalm/db.sqlite3"
+            db_path = Config.DB_PATH
 
         self.db_path = db_path
         self._ensure_database_exists()

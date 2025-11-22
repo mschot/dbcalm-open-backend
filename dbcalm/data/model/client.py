@@ -1,9 +1,9 @@
 
-from sqlmodel import JSON, Column, Field, SQLModel
+from pydantic import BaseModel, Field
 
 
-class Client(SQLModel, table=True):
-    id: str = Field(unique=True, primary_key=True)
+class Client(BaseModel):
+    id: str
     secret: str
-    scopes: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    scopes: list[str] = Field(default_factory=list)
     label: str

@@ -1,12 +1,11 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime
-from sqlmodel import JSON, Column, Field, SQLModel
+from pydantic import BaseModel, Field
 
 
-class Process(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+class Process(BaseModel):
+    id: int | None = None
     command: str
     command_id: str
     pid: int
@@ -14,9 +13,7 @@ class Process(SQLModel, table=True):
     output: str | None = None
     error: str | None = None
     return_code: int | None = None
-    start_time: datetime = Field(sa_column=Column(DateTime(timezone=True)))
-    end_time: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True)),
-    )
+    start_time: datetime
+    end_time: datetime | None = None
     type: str
-    args: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    args: dict = Field(default_factory=dict)
