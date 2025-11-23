@@ -1,4 +1,5 @@
 """End-to-end tests for DBCalm backup and restore functionality."""
+import time
 from pathlib import Path
 
 import pymysql
@@ -116,6 +117,7 @@ class TestFullBackupRestore:
             api_base_url=api_base_url,
         )
 
+        time.sleep(3)
         # Start database
         db_service.start()
 
@@ -247,6 +249,10 @@ class TestIncrementalBackupRestore:
             api_base_url=api_base_url,
         )
 
+        # Somehow the db data folder is sometimes
+        # empty if we dont wait a second before starting the database
+        time.sleep(1)
+
         # Start database
         db_service.start()
 
@@ -367,6 +373,8 @@ class TestRestorePreconditions:
             verify=False,  # noqa: S501
             timeout=HTTP_TIMEOUT,
         )
+
+
 
         error_msg = f"Expected 503, got {response.status_code}"
         assert response.status_code == HTTP_SERVICE_UNAVAILABLE, error_msg

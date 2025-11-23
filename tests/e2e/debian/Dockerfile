@@ -66,17 +66,6 @@ RUN python3.11 -m pip install --no-cache-dir \
 RUN mkdir -p /var/run/mysqld && \
     chown mysql:mysql /var/run/mysqld
 
-# Create DBCalm directories with proper permissions
-RUN mkdir -p /var/backups/dbcalm \
-    /var/lib/dbcalm \
-    /var/log/dbcalm \
-    /var/run/dbcalm \
-    /etc/dbcalm/ssl && \
-    chmod 755 /var/backups/dbcalm \
-    /var/lib/dbcalm \
-    /var/log/dbcalm \
-    /var/run/dbcalm
-
 # Expose ports
 EXPOSE 8335 3306
 

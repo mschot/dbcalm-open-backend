@@ -125,16 +125,37 @@ class ProcessQueueHandler:
         backup_dir = self.config.value("backup_dir").rstrip("/")
         records_deleted = 0
 
+        self.logger.info(
+            "Starting database cleanup for %d backup IDs: %s",
+            len(backup_ids),
+            backup_ids,
+        )
+
         for backup_id in backup_ids:
             folder_path = Path(f"{backup_dir}/{backup_id}")
+            self.logger.info(
+                "Checking backup %s - folder exists: %s",
+                backup_id,
+                folder_path.exists(),
+            )
 
             # Only delete the record if the folder no longer exists
             if not folder_path.exists():
+                self.logger.info(
+                    "Folder %s does not exist, deleting database record",
+                    folder_path,
+                )
                 try:
-                    if self.backup_repo.delete(backup_id):
+                    delete_result = self.backup_repo.delete(backup_id)
+                    if delete_result:
                         records_deleted += 1
-                        self.logger.debug(
-                            "Deleted backup record %s (folder no longer exists)",
+                        self.logger.info(
+                            "Successfully deleted backup record %s from database",
+                            backup_id,
+                        )
+                    else:
+                        self.logger.warning(
+                            "backup_repo.delete() returned False for %s",
                             backup_id,
                         )
                 except Exception:

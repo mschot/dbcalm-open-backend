@@ -143,6 +143,9 @@ class MariadbBackupCmdBuilder(BackupCommandBuilder):
             command.append("--copy-back")
             command.append("--target-dir")
             command.append(new_backup_path)
+            # Explicitly specify datadir to ensure files are copied to correct location
+            data_dir = self.config.value("data_dir") or "/var/lib/mysql"
+            command.append(f"--datadir={data_dir}")
             command_list.append(command)
 
         return command_list

@@ -289,7 +289,11 @@ def wait_for_cleanup_completion(
     headers = {"Authorization": f"Bearer {token}"}
     start_time = time.time()
 
+    print(f"[CLEANUP] Waiting for cleanup process {process_id} to complete...")
+
     while time.time() - start_time < timeout:
+        elapsed = time.time() - start_time
+
         # Poll the status endpoint
         response = requests.get(
             f"{api_base_url}/status/{process_id}",
@@ -301,10 +305,14 @@ def wait_for_cleanup_completion(
         process_status = response.json()
 
         status = process_status.get("status")
+        print(f"[CLEANUP] [{elapsed:.1f}s] Process {process_id} status: {status}")
+
         if status == "success":
             # Cleanup completed successfully
+            print(f"[CLEANUP] Process {process_id} completed successfully")
             return process_status
         if status == "failed":
+            print(f"[CLEANUP] Process {process_id} FAILED")
             error_msg = (
                 f"Cleanup process failed. "
                 f"Full status: {process_status}"
@@ -375,6 +383,9 @@ class MariaDBService:
             ["chmod", "664", str(log_file)],
             check=False,
         )
+
+
+
 
         # Start MariaDB in background
         cmd = ["mysqld_safe", "--log-error=/var/log/db-restart.log"]

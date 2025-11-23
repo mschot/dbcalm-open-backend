@@ -27,13 +27,19 @@ dev-install:
 dev:
 	cd dev && source ../.venv/bin/activate && pip install ../ && ./start_all.py
 
+# Clean Python cache files (prevents Docker permission errors)
+clean-pycache:
+	@echo "Cleaning Python cache files..."
+	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
 # Build Debian package (local - uses host GLIBC)
 deb:
 	source .venv/bin/activate && ./build-deb.sh
 
 # Build Debian package in Ubuntu 22.04 Docker container (recommended for production)
 # Ensures compatibility with Ubuntu 22.04, 24.04+ (GLIBC 2.35+)
-deb-docker:
+deb-docker: clean-pycache
 	@echo "Building .deb in Ubuntu 22.04 container for maximum compatibility..."
 	docker build -f build.Dockerfile -t dbcalm-builder:ubuntu22.04 .
 	docker run --rm -v $(PWD):/build -w /build dbcalm-builder:ubuntu22.04 bash -c "\
@@ -54,7 +60,7 @@ rpm:
 
 # Build RPM package in Rocky Linux 9 Docker container (recommended for production)
 # Ensures compatibility with RHEL 9, Rocky 9, AlmaLinux 9+
-rpm-docker:
+rpm-docker: clean-pycache
 	@echo "Building .rpm in Rocky Linux 9 container for maximum compatibility..."
 	docker build -f build-rpm.Dockerfile -t dbcalm-builder:rocky9 .
 	docker run --rm -v $(PWD):/build -w /build dbcalm-builder:rocky9 bash -c "\
@@ -80,7 +86,7 @@ e2e-test-mariadb-deb-quick:
 		echo "Run 'make e2e-test-mariadb-deb' first to build and test."; \
 		exit 1; \
 	fi
-	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose -p dbcalm-e2e-deb-mariadb up --abort-on-container-exit --exit-code-from test-runner
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose -p dbcalm-e2e-deb-mariadb up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
 
 e2e-shell-mariadb-deb:
 	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose run --rm test-runner /bin/bash
@@ -92,11 +98,7 @@ e2e-clean-mariadb-deb:
 	docker system prune -f || true
 
 e2e-logs-mariadb-deb:
-	@if [ -f tests/e2e/logs/test-output.log ]; then \
-		cat tests/e2e/logs/test-output.log; \
-	else \
-		echo "No test logs found. Run 'make e2e-test-mariadb-deb' first."; \
-	fi
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mariadb docker compose -p dbcalm-e2e-deb-mariadb logs --no-color test-runner
 
 # End-to-End Tests - MySQL on Debian/Ubuntu
 e2e-test-mysql-deb: deb-docker
@@ -112,7 +114,7 @@ e2e-test-mysql-deb-quick:
 		echo "Run 'make e2e-test-mysql-deb' first to build and test."; \
 		exit 1; \
 	fi
-	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose -p dbcalm-e2e-deb-mysql up --abort-on-container-exit --exit-code-from test-runner
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose -p dbcalm-e2e-deb-mysql up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
 
 e2e-shell-mysql-deb:
 	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose run --rm test-runner /bin/bash
@@ -124,11 +126,7 @@ e2e-clean-mysql-deb:
 	docker system prune -f || true
 
 e2e-logs-mysql-deb:
-	@if [ -f tests/e2e/logs/test-output.log ]; then \
-		cat tests/e2e/logs/test-output.log; \
-	else \
-		echo "No test logs found. Run 'make e2e-test-mysql-deb' first."; \
-	fi
+	cd tests/e2e/common && DISTRO=debian DISTRO_DIR=debian DB_TYPE=mysql docker compose -p dbcalm-e2e-deb-mysql logs --no-color test-runner
 
 # End-to-End Tests - MariaDB on Rocky/RHEL
 e2e-test-mariadb-rpm: rpm-docker
@@ -144,7 +142,7 @@ e2e-test-mariadb-rpm-quick:
 		echo "Run 'make e2e-test-mariadb-rpm' first to build and test."; \
 		exit 1; \
 	fi
-	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose -p dbcalm-e2e-rpm-mariadb up --abort-on-container-exit --exit-code-from test-runner
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose -p dbcalm-e2e-rpm-mariadb up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
 
 e2e-shell-mariadb-rpm:
 	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose run --rm test-runner /bin/bash
@@ -156,11 +154,7 @@ e2e-clean-mariadb-rpm:
 	docker system prune -f || true
 
 e2e-logs-mariadb-rpm:
-	@if [ -f tests/e2e/logs/test-output.log ]; then \
-		cat tests/e2e/logs/test-output.log; \
-	else \
-		echo "No test logs found. Run 'make e2e-test-mariadb-rpm' first."; \
-	fi
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mariadb docker compose -p dbcalm-e2e-rpm-mariadb logs --no-color test-runner
 
 # End-to-End Tests - MySQL on Rocky/RHEL
 e2e-test-mysql-rpm: rpm-docker
@@ -176,7 +170,7 @@ e2e-test-mysql-rpm-quick:
 		echo "Run 'make e2e-test-mysql-rpm' first to build and test."; \
 		exit 1; \
 	fi
-	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose -p dbcalm-e2e-rpm-mysql up --abort-on-container-exit --exit-code-from test-runner
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose -p dbcalm-e2e-rpm-mysql up --force-recreate --build --abort-on-container-exit --exit-code-from test-runner
 
 e2e-shell-mysql-rpm:
 	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose run --rm test-runner /bin/bash
@@ -188,11 +182,7 @@ e2e-clean-mysql-rpm:
 	docker system prune -f || true
 
 e2e-logs-mysql-rpm:
-	@if [ -f tests/e2e/logs/test-output.log ]; then \
-		cat tests/e2e/logs/test-output.log; \
-	else \
-		echo "No test logs found. Run 'make e2e-test-mysql-rpm' first."; \
-	fi
+	cd tests/e2e/common && DISTRO=rocky DISTRO_DIR=rocky DB_TYPE=mysql docker compose -p dbcalm-e2e-rpm-mysql logs --no-color test-runner
 
 # Run all E2E tests in parallel (builds packages then runs all test combinations)
 e2e-test-all:

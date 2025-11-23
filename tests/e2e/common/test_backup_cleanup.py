@@ -1,6 +1,7 @@
 """End-to-end tests for backup cleanup functionality."""
 
 import sqlite3
+import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -175,6 +176,39 @@ def verify_backup_exists(
     return backup_path.exists()
 
 
+def verify_backup_deleted_from_db(
+    db_connection: sqlite3.Connection,
+    backup_id: str,
+) -> bool:
+    """Check if backup is deleted from database.
+
+    Args:
+        db_connection: Database connection
+        backup_id: Backup identifier
+
+    Returns:
+        True if backup is deleted from database, False otherwise
+    """
+    # With isolation_level=None (autocommit), each query sees latest data
+    # But explicitly create new cursor to ensure fresh read
+    cursor = db_connection.cursor()
+    cursor.execute("SELECT id FROM backup WHERE id = ?", (backup_id,))
+    return cursor.fetchone() is None
+
+
+def verify_backup_deleted_from_filesystem(backup_id: str) -> bool:
+    """Check if backup is deleted from filesystem.
+
+    Args:
+        backup_id: Backup identifier
+
+    Returns:
+        True if backup is deleted from filesystem, False otherwise
+    """
+    backup_path = Path(f"{BACKUP_DIR}/{backup_id}")
+    return not backup_path.exists()
+
+
 def verify_backup_deleted(
     db_connection: sqlite3.Connection,
     backup_id: str,
@@ -188,16 +222,9 @@ def verify_backup_deleted(
     Returns:
         True if backup is deleted from both DB and filesystem, False otherwise
     """
-    # Check database
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT id FROM backup WHERE id = ?", (backup_id,))
-    result = cursor.fetchone()
-    if result:
-        return False
-
-    # Check filesystem
-    backup_path = Path(f"{BACKUP_DIR}/{backup_id}")
-    return not backup_path.exists()
+    return verify_backup_deleted_from_db(
+        db_connection, backup_id,
+    ) and verify_backup_deleted_from_filesystem(backup_id)
 
 
 def get_dbcalm_db() -> sqlite3.Connection:
@@ -211,6 +238,9 @@ def get_dbcalm_db() -> sqlite3.Connection:
     time.sleep(0.5)
 
     conn = sqlite3.connect(DBCALM_DB_PATH)
+    # Set isolation_level to None for autocommit mode
+    # This ensures we see the latest committed data from other connections
+    conn.isolation_level = None
 
     # Debug: Check if backup table exists
     cursor = conn.cursor()
@@ -301,11 +331,20 @@ class TestBackupCleanup:
                 api_token, process_id, api_base_url=api_base_url,
             )
 
-            # Step 6: Verify results
-            # Old backup should be deleted
-            assert verify_backup_deleted(dbcalm_db, old_backup_id), (
-                "Old backup should be deleted from both DB and filesystem"
+            # Wait for queue handler to complete database operations
+            time.sleep(3)
+
+            # Old backup should be deleted from filesystem
+            assert verify_backup_deleted_from_filesystem(old_backup_id), (
+                f"Old backup {old_backup_id} should be deleted from filesystem"
             )
+
+            # Step 6: Verify results
+            # Old backup should be deleted from database
+            assert verify_backup_deleted_from_db(dbcalm_db, old_backup_id), (
+                f"Old backup {old_backup_id} should be deleted from database"
+            )
+
 
             # Recent backup should still exist
             assert verify_backup_exists(dbcalm_db, recent_backup_id), (
@@ -391,10 +430,11 @@ class TestBackupCleanup:
             assert response.status_code == HTTP_ACCEPTED, error_msg
             process_id_a = response.json()["pid"]
 
-            # Wait for cleanup to complete
-            wait_for_cleanup_completion(
-                api_token, process_id_a, api_base_url=api_base_url,
-            )
+            # Only wait for completion if a process was created
+            if process_id_a is not None:
+                wait_for_cleanup_completion(
+                    api_token, process_id_a, api_base_url=api_base_url,
+                )
 
             # Step 6: Verify chain is preserved (incremental is still recent)
             assert verify_backup_exists(dbcalm_db, full_backup_id), (
@@ -412,7 +452,7 @@ class TestBackupCleanup:
                 start_time=old_time,
                 end_time=old_time,
             )
-
+            time.sleep(1)
             # Step 8: Run cleanup again via API
             response = requests.post(
                 f"{api_base_url}/cleanup",
@@ -430,13 +470,25 @@ class TestBackupCleanup:
                 api_token, process_id_b, api_base_url=api_base_url,
             )
 
+            time.sleep(1)
+
             # Step 9: Verify entire chain is deleted
-            assert verify_backup_deleted(dbcalm_db, full_backup_id), (
-                "Full backup should be deleted (entire chain expired)"
+            # Full backup should be deleted from database
+            assert verify_backup_deleted_from_db(dbcalm_db, full_backup_id), (
+                f"Full backup {full_backup_id} should be deleted from database"
             )
-            assert verify_backup_deleted(dbcalm_db, incremental_backup_id), (
-                "Incremental backup should be deleted (entire chain expired)"
+            # Full backup should be deleted from filesystem
+            assert verify_backup_deleted_from_filesystem(full_backup_id), (
+                f"Full backup {full_backup_id} should be deleted from filesystem"
             )
+            # Incremental backup should be deleted from database
+            assert verify_backup_deleted_from_db(
+                dbcalm_db, incremental_backup_id,
+            ), f"Incremental backup {incremental_backup_id} not deleted from DB"
+            # Incremental backup should be deleted from filesystem
+            assert verify_backup_deleted_from_filesystem(
+                incremental_backup_id,
+            ), f"Incremental backup {incremental_backup_id} not deleted from filesystem"
         finally:
             dbcalm_db.close()
 

@@ -128,9 +128,22 @@ class BackupRepository:
             return None
 
     def delete(self, backup_id: str) -> bool:
-        """Delete a backup by ID."""
+        """Delete a backup by ID.
+
+        Args:
+            backup_id: The ID of the backup to delete
+
+        Returns:
+            bool: True if backup was deleted, False if not found
+        """
+        from peewee import DoesNotExist  # noqa: PLC0415
+
         from dbcalm.data.model.db_backup import DbBackup  # noqa: PLC0415
 
-        db_backup = DbBackup.get(DbBackup.id == backup_id)
-        db_backup.delete_instance()
-        return True
+        try:
+            db_backup = DbBackup.get(DbBackup.id == backup_id)
+            db_backup.delete_instance()
+        except DoesNotExist:
+            return False
+        else:
+            return True
